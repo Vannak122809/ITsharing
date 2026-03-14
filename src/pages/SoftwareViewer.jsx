@@ -3,65 +3,169 @@ import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Download, Monitor, Apple, CheckCircle, ShieldAlert, Zap, Box } from 'lucide-react';
 
 const mockSoftwareDB = {
-  'postman': {
-    title: 'Postman IDE',
-    os: 'windows',
-    version: 'v10.15',
-    size: '150 MB',
-    developer: 'Postman, Inc.',
-    description: 'An API platform for building and using APIs completely for free. It simplifies each step of the API lifecycle and streamlines collaboration so you can create better APIs.',
-    requirements: ['Windows 10/11 64-bit', '4GB RAM Minimum', 'Dual Core CPU'],
-    features: ['API Mocking', 'Automated Testing', 'Workspace Collaboration']
+  // === WINDOWS SOFTWARE ===
+  'win11': {
+    title: 'Windows 11 ISO (23H2)',
+    os: 'windows', version: '23H2', size: '5.2 GB', developer: 'Microsoft',
+    description: 'Official Windows 11 installation media. Update to the latest 23H2 version for improved UI, gaming features, and security.',
+    requirements: ['64-bit Compatible CPU (1 GHz+)', '4GB RAM', 'TPM 2.0 & Secure Boot'],
+    features: ['Modern UI', 'DirectX 12 Ultimate', 'Snap Layouts']
   },
-  'iterm2': {
-    title: 'iTerm2',
-    os: 'mac',
-    version: 'v3.4.19',
-    size: '22 MB',
-    developer: 'George Nachman',
-    description: 'A terminal emulator for macOS that brings the terminal into the modern age with features you never knew you always wanted, such as split panes, hotkey windows, and powerful search.',
-    requirements: ['macOS 10.14+', 'Intel or Apple Silicon'],
-    features: ['Split Panes', 'Hotkey Window', 'Autocomplete Feature']
+  'win10': {
+    title: 'Windows 10 ISO',
+    os: 'windows', version: '22H2', size: '4.8 GB', developer: 'Microsoft',
+    description: 'Official Windows 10 installation media. The most stable and widely used OS.',
+    requirements: ['1 GHz Processor', '2GB RAM (64-bit)', '20GB Storage'],
+    features: ['Highly Stable', 'Universal App Support', 'Cortana Integration']
+  },
+  'office-win': {
+    title: 'Microsoft Office 2021',
+    os: 'windows', version: 'Pro Plus', size: '4.5 GB', developer: 'Microsoft',
+    description: 'The industry-standard office suite including Word, Excel, PowerPoint, Access, and Outlook. One-time purchase edition.',
+    requirements: ['Windows 10/11', '4GB RAM', '4GB Available Disk Space'],
+    features: ['Dark Mode Support', 'XLOOKUP in Excel', 'Dynamic Arrays']
+  },
+  'libreoffice-win': {
+    title: 'LibreOffice',
+    os: 'windows', version: 'v7.6', size: '340 MB', developer: 'The Document Foundation',
+    description: 'A powerful, free, and open-source office suite that is fully compatible with MS Office files.',
+    requirements: ['Windows 7 SP1+', '256MB RAM', '1.5GB Disk Space'],
+    features: ['Writer (Word Processing)', 'Calc (Spreadsheets)', 'Impress (Presentations)']
   },
   'vscode-win': {
     title: 'Visual Studio Code',
-    os: 'windows',
-    version: 'v1.82',
-    size: '88 MB',
-    developer: 'Microsoft Corporation',
-    description: 'A lightweight but powerful source code editor which runs on your desktop. It comes with built-in support for JavaScript, TypeScript, and Node.js.',
+    os: 'windows', version: 'v1.82', size: '88 MB', developer: 'Microsoft',
+    description: 'A lightweight but powerful source code editor which runs on your desktop.',
     requirements: ['Windows 10/11 64-bit', '1.6 GHz Processor', '1 GB RAM'],
-    features: ['IntelliSense', 'Built-in Git', 'Vast Extension Ecosystem']
-  },
-  'vscode-mac': {
-    title: 'Visual Studio Code',
-    os: 'mac',
-    version: 'v1.82',
-    size: '115 MB',
-    developer: 'Microsoft Corporation',
-    description: 'A lightweight but powerful source code editor which runs on your desktop. This is the Universal binary for both Apple Silicon and Intel Macs.',
-    requirements: ['macOS 10.11+', '1.6 GHz Processor', '1 GB RAM'],
     features: ['IntelliSense', 'Built-in Git', 'Vast Extension Ecosystem']
   },
   'docker-desktop-win': {
     title: 'Docker Desktop',
-    os: 'windows',
-    version: 'v4.22',
-    size: '620 MB',
-    developer: 'Docker Inc.',
-    description: 'The fastest way to containerize applications on your machine. Includes Docker Engine, CLI, Docker Compose, and Kubernetes integration.',
+    os: 'windows', version: 'v4.22', size: '620 MB', developer: 'Docker Inc.',
+    description: 'The fastest way to containerize applications on your machine.',
     requirements: ['Windows 10 Pro/Ent or WSL2', '4GB RAM', 'Hardware Virtualization enabled'],
     features: ['WSL2 Backend', 'Built-in Kubernetes', 'Extensions Support']
   },
+  'postman': {
+    title: 'Postman IDE',
+    os: 'windows', version: 'v10.15', size: '150 MB', developer: 'Postman, Inc.',
+    description: 'An API platform for building and using APIs completely for free.',
+    requirements: ['Windows 10/11 64-bit', '4GB RAM', 'Dual Core CPU'],
+    features: ['API Mocking', 'Automated Testing', 'Workspace Collaboration']
+  },
+  'git-win': {
+    title: 'Git for Windows',
+    os: 'windows', version: 'v2.42', size: '50 MB', developer: 'Git Project',
+    description: 'Brings the Git terminal (Git Bash) and GUI to Windows.',
+    requirements: ['Windows 7+', '1GB RAM'],
+    features: ['Git Bash', 'Git GUI', 'Shell Integration']
+  },
+  'epson-win': {
+    title: 'Epson L3110 Driver',
+    os: 'windows', version: 'v2.60', size: '30 MB', developer: 'Epson',
+    description: 'Official printer and scanner drivers for the Epson EcoTank L3110 series.',
+    requirements: ['Windows 7+', 'USB Connection'],
+    features: ['Print Management', 'High Quality Scanning Utility']
+  },
+  'hp-universal-win': {
+    title: 'HP Universal Print Driver',
+    os: 'windows', version: 'v7.1', size: '20 MB', developer: 'HP',
+    description: 'A single, intelligent driver that gives users access to a range of HP print devices without downloading separate drivers.',
+    requirements: ['Windows 10/11'],
+    features: ['Network Auto-Discovery', 'Dynamic Print Settings']
+  },
+  'rufus': {
+    title: 'Rufus',
+    os: 'windows', version: 'v4.2', size: '1.4 MB', developer: 'Pete Batard',
+    description: 'A utility that helps format and create bootable USB flash drives, such as USB keys/pendrives, memory sticks, etc.',
+    requirements: ['Windows 8+ (32 or 64 bit)'],
+    features: ['Bypass Windows 11 TPM checks', 'Extremely Fast', 'Open Source']
+  },
+  '7zip': {
+    title: '7-Zip',
+    os: 'windows', version: 'v23.01', size: '1.5 MB', developer: 'Igor Pavlov',
+    description: 'A file archiver with a high compression ratio. Supports .7z, .zip, .rar, .tar, and more.',
+    requirements: ['Windows NT/2000/XP to Windows 11'],
+    features: ['AES-256 Encryption', 'High Compression Ratio', 'Context Menu Integration']
+  },
+
+  // === MAC SOFTWARE ===
+  'macos-sonoma': {
+    title: 'macOS Sonoma',
+    os: 'mac', version: '14.0', size: '12 GB', developer: 'Apple',
+    description: 'The latest major release of macOS featuring desktop widgets, new screensavers, and huge Safari updates.',
+    requirements: ['Mac 2018 or later', '20GB Free Space'],
+    features: ['Interactive Widgets', 'Game Mode', 'Presenter Overlay']
+  },
+  'macos-ventura': {
+    title: 'macOS Ventura',
+    os: 'mac', version: '13.5', size: '12 GB', developer: 'Apple',
+    description: 'A stable macOS release bringing Stage Manager and Continuity Camera.',
+    requirements: ['Mac 2017 or later', '15GB Free Space'],
+    features: ['Stage Manager', 'Continuity Camera', 'Passkeys']
+  },
+  'office-mac': {
+    title: 'Microsoft Office 2021',
+    os: 'mac', version: 'Home & Business', size: '2.8 GB', developer: 'Microsoft',
+    description: 'Word, Excel, PowerPoint, and Outlook optimized for Apple Silicon and Intel Macs.',
+    requirements: ['macOS Monterey (12.0)+', '4GB RAM'],
+    features: ['Apple Silicon Native', 'Real-time Co-authoring']
+  },
+  'libreoffice-mac': {
+    title: 'LibreOffice',
+    os: 'mac', version: 'v7.6', size: '310 MB', developer: 'The Document Foundation',
+    description: 'Powerful open-source office suite for macOS.',
+    requirements: ['macOS 10.14+'],
+    features: ['Native ARM64 Support', 'Free to use']
+  },
+  'vscode-mac': {
+    title: 'Visual Studio Code',
+    os: 'mac', version: 'v1.82', size: '115 MB', developer: 'Microsoft',
+    description: 'A lightweight but powerful source code editor. Universal Binary.',
+    requirements: ['macOS 10.11+', '1.6 GHz Processor', '1 GB RAM'],
+    features: ['IntelliSense', 'Built-in Git', 'Vast Extension Ecosystem']
+  },
+  'iterm2': {
+    title: 'iTerm2',
+    os: 'mac', version: 'v3.4.19', size: '22 MB', developer: 'George Nachman',
+    description: 'A terminal emulator for macOS that replaces Terminal and does amazing things.',
+    requirements: ['macOS 10.14+', 'Intel or Apple Silicon'],
+    features: ['Split Panes', 'Hotkey Window', 'Autocomplete Feature']
+  },
   'docker-desktop-mac': {
     title: 'Docker Desktop (Apple Silicon)',
-    os: 'mac',
-    version: 'v4.22',
-    size: '590 MB',
-    developer: 'Docker Inc.',
+    os: 'mac', version: 'v4.22', size: '590 MB', developer: 'Docker Inc.',
     description: 'The fastest way to containerize applications on your machine, optimized specifically for M-series (Apple Silicon) chips.',
     requirements: ['macOS Big Sur 11+', 'Apple Silicon (M1/M2/M3)'],
     features: ['Rosetta 2 Emulation', 'Built-in Kubernetes', 'Extensions Support']
+  },
+  'homebrew': {
+    title: 'Homebrew',
+    os: 'mac', version: 'Latest', size: '10 KB', developer: 'Homebrew Community',
+    description: 'The Missing Package Manager for macOS. Install packages directly from your terminal.',
+    requirements: ['macOS Catalina+', 'Command Line Tools for Xcode'],
+    features: ['Terminal Based', 'Huge Package Repo', 'Easy Upgrades']
+  },
+  'canon-mac': {
+    title: 'Canon PIXMA G3010 Driver',
+    os: 'mac', version: 'v1.3.0', size: '45 MB', developer: 'Canon',
+    description: 'Official driver suite for Mac users. Enables printing and wireless scanning.',
+    requirements: ['macOS 10.13+'],
+    features: ['AirPrint Support', 'Wireless Setup Assistant']
+  },
+  'unarchiver': {
+    title: 'The Unarchiver',
+    os: 'mac', version: 'v4.3.6', size: '15 MB', developer: 'MacPaw',
+    description: 'A small and easy to use program that can unarchive many different kinds of archive files, replacing the native Archive Utility.',
+    requirements: ['macOS 10.7+'],
+    features: ['Extracts RAR/7z/ZIP', 'Extracts ISOs', 'Free']
+  },
+  'vlc-mac': {
+    title: 'VLC Media Player',
+    os: 'mac', version: 'v3.0.18', size: '55 MB', developer: 'VideoLAN',
+    description: 'Free and open source cross-platform multimedia player that plays most multimedia files as well as DVDs, Audio CDs, VCDs, and various streaming protocols.',
+    requirements: ['macOS 10.7+'],
+    features: ['Plays Everything', 'Hardware Decoding', 'No Spyware']
   }
 };
 
@@ -96,7 +200,7 @@ const SoftwareViewer = () => {
         {/* Header Section */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '24px' }}>
           <div>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(255, 255, 255, 0.05)', padding: '6px 16px', borderRadius: '20px', fontSize: '0.85rem', marginBottom: '16px', color: 'var(--text-muted)' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'var(--surface-badge)', padding: '6px 16px', borderRadius: '20px', fontSize: '0.85rem', marginBottom: '16px', color: 'var(--text-muted)' }}>
               {software.os === 'windows' ? <Monitor size={14} color="#00fa9a" /> : <Apple size={14} color="#ff2a7a" />}
               {software.os === 'windows' ? 'Windows OS' : 'macOS Application'} • {software.version}
             </div>
@@ -119,23 +223,23 @@ const SoftwareViewer = () => {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '32px', marginTop: '16px' }}>
           
           {/* Overview */}
-          <div style={{ background: 'rgba(0,0,0,0.3)', padding: '32px', borderRadius: '16px', border: '1px solid var(--surface-border)' }}>
+          <div style={{ background: 'var(--card-dark)', padding: '32px', borderRadius: '16px', border: '1px solid var(--surface-border)' }}>
             <h3 style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '1.5rem', marginBottom: '16px', color: 'var(--primary)' }}>
               <Box size={24} /> Overview
             </h3>
-            <p style={{ lineHeight: '1.8', color: '#e0e0e0', fontSize: '1.05rem' }}>
+            <p style={{ lineHeight: '1.8', color: 'var(--text-main)', fontSize: '1.05rem' }}>
               {software.description}
             </p>
           </div>
 
           {/* Key Features */}
-          <div style={{ background: 'rgba(0,0,0,0.3)', padding: '32px', borderRadius: '16px', border: '1px solid var(--surface-border)' }}>
+          <div style={{ background: 'var(--card-dark)', padding: '32px', borderRadius: '16px', border: '1px solid var(--surface-border)' }}>
             <h3 style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '1.5rem', marginBottom: '16px', color: '#00fa9a' }}>
               <Zap size={24} /> Key Features
             </h3>
             <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {software.features.map((feature, i) => (
-                <li key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#e0e0e0', fontSize: '1.05rem' }}>
+                <li key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--text-main)', fontSize: '1.05rem' }}>
                   <CheckCircle size={18} color="#00fa9a" /> {feature}
                 </li>
               ))}
@@ -143,13 +247,13 @@ const SoftwareViewer = () => {
           </div>
 
           {/* System Requirements */}
-          <div style={{ background: 'rgba(0,0,0,0.3)', padding: '32px', borderRadius: '16px', border: '1px solid var(--surface-border)' }}>
+          <div style={{ background: 'var(--card-dark)', padding: '32px', borderRadius: '16px', border: '1px solid var(--surface-border)' }}>
             <h3 style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '1.5rem', marginBottom: '16px', color: '#ff2a7a' }}>
               <ShieldAlert size={24} /> Requirements
             </h3>
             <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {software.requirements.map((req, i) => (
-                <li key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#e0e0e0', fontSize: '1.05rem' }}>
+                <li key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--text-main)', fontSize: '1.05rem' }}>
                   <div style={{ width: '6px', height: '6px', background: '#ff2a7a', borderRadius: '50%' }} />
                   {req}
                 </li>

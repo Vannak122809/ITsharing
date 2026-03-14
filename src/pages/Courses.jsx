@@ -102,9 +102,9 @@ const Courses = () => {
       <div className="card-grid">
         {filteredCourses.map(course => (
           <div key={course.id} className="card glass-panel flex flex-col">
-            <div style={{ height: '180px', background: 'rgba(0,0,0,0.5)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+            <div style={{ height: '180px', background: 'var(--card-dark)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
               <PlayCircle size={64} color={course.color} />
-              <span style={{ position: 'absolute', top: '12px', right: '12px', background: 'rgba(0,0,0,0.7)', padding: '4px 12px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 'bold', color: course.color }}>
+              <span style={{ position: 'absolute', top: '12px', right: '12px', background: 'var(--card-dark)', padding: '4px 12px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 'bold', color: course.color }}>
                 {course.category}
               </span>
             </div>
