@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Download, Monitor, Apple, CheckCircle, ShieldAlert, Zap, Box } from 'lucide-react';
+import { softwareData } from './Software';
 
 const mockSoftwareDB = {
   // === WINDOWS SOFTWARE ===
   'win11': {
-    title: 'Windows 11 ISO (23H2)',
-    os: 'windows', version: '23H2', size: '5.2 GB', developer: 'Microsoft',
-    description: 'Official Windows 11 installation media. Update to the latest 23H2 version for improved UI, gaming features, and security.',
+    title: 'Windows 11 ISO (24H2)',
+    os: 'windows', version: '24H2', size: '5.2 GB', developer: 'Microsoft',
+    downloadUrl: 'https://files.kichhoat24h.com/download/Windows/Win11_24H2_English_x64.iso',
+    description: 'Official Windows 11 installation media. Update to the latest 24H2 version for improved UI, gaming features, and security.',
     requirements: ['64-bit Compatible CPU (1 GHz+)', '4GB RAM', 'TPM 2.0 & Secure Boot'],
     features: ['Modern UI', 'DirectX 12 Ultimate', 'Snap Layouts']
   },
@@ -177,6 +179,22 @@ const SoftwareViewer = () => {
     // In reality, this would fetch from Firebase or R2 mapping
     if (mockSoftwareDB[id]) {
       setSoftware(mockSoftwareDB[id]);
+    } else {
+      // Dynamic fallback for newly added items
+      const fallback = softwareData.find(s => s.id === id);
+      if (fallback) {
+        setSoftware({
+          title: fallback.title,
+          os: fallback.os,
+          version: fallback.version || 'Latest',
+          size: fallback.size || 'Unknown',
+          developer: fallback.folder === 'Mac OS' ? 'Apple' : (['Windows', 'Office', 'Windows Server'].includes(fallback.folder) ? 'Microsoft' : 'Unknown Developer'),
+          downloadUrl: fallback.url || `https://files.kichhoat24h.com/download/${encodeURIComponent(fallback.folder)}/${encodeURIComponent(fallback.title)}`,
+          description: fallback.desc || `Official download for ${fallback.title}. This package is available securely from the IT Sharing repository.`,
+          requirements: ['Standard Specifications', 'Compatible Operating System', `${fallback.size ? fallback.size + ' Free Disk Space' : 'Sufficient Disk Space'}`],
+          features: ['Direct Download', 'Verified Integrity', 'Easy Installation']
+        });
+      }
     }
   }, [id]);
 
@@ -196,7 +214,7 @@ const SoftwareViewer = () => {
       </Link>
 
       <div className="glass-panel" style={{ padding: '40px', display: 'flex', flexDirection: 'column', gap: '40px' }}>
-        
+
         {/* Header Section */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '24px' }}>
           <div>
@@ -204,15 +222,15 @@ const SoftwareViewer = () => {
               {software.os === 'windows' ? <Monitor size={14} color="#00fa9a" /> : <Apple size={14} color="#ff2a7a" />}
               {software.os === 'windows' ? 'Windows OS' : 'macOS Application'} • {software.version}
             </div>
-            
+
             <h1 style={{ fontSize: '3rem', marginBottom: '8px' }} className="text-gradient">{software.title}</h1>
             <p style={{ fontSize: '1.1rem', color: 'var(--text-muted)' }}>By: {software.developer}</p>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', minWidth: '200px' }}>
-            <button className="btn btn-primary" style={{ padding: '16px', fontSize: '1.1rem', boxShadow: '0 8px 30px rgba(69, 243, 255, 0.4)' }}>
+            <a href={software.downloadUrl || "https://files.kichhoat24h.com/download"} target="_blank" rel="noreferrer" className="btn btn-primary" style={{ padding: '16px', fontSize: '1.1rem', boxShadow: '0 8px 30px rgba(69, 243, 255, 0.4)', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
               <Download size={20} /> Download Now
-            </button>
+            </a>
             <div style={{ textAlign: 'center', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
               File Size: <strong>{software.size}</strong>
             </div>
@@ -221,7 +239,7 @@ const SoftwareViewer = () => {
 
         {/* Info Grid */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '32px', marginTop: '16px' }}>
-          
+
           {/* Overview */}
           <div style={{ background: 'var(--card-dark)', padding: '32px', borderRadius: '16px', border: '1px solid var(--surface-border)' }}>
             <h3 style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '1.5rem', marginBottom: '16px', color: 'var(--primary)' }}>

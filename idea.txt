@@ -1,0 +1,10 @@
+please update document page:
+i want to add more document, please add more document to the document page.
+please analyze the document page and make it better.
+i have url : https://dash.cloudflare.com/baefceb90c0d256e27440b3d07f4631e/r2/default/buckets/document?prefix=documents%2F
+and image 
+i have R2 user token : Token value : trFEbxPXr7vqFnbhp9JBMXlDuGYA_6wykPf5Wvcn
+Access Key ID : 3e6da7821e3dcf7f241da16746438d16
+Secret Access Key :47ad76cb6e267453a3e37af30d85dac79d5abc9c445fd77dca8fdc97dac165ab
+endpoints for S3 clients:https://baefceb90c0d256e27440b3d07f4631e.r2.cloudflarestorage.com
+
