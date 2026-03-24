@@ -430,7 +430,7 @@ const Software = () => {
                     onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                      {software.title.endsWith('.iso') ? <ModernIsoIcon /> : <ModernScriptIcon />}
+                      {(software.title.toLowerCase().includes('iso') || (software.url && software.url.toLowerCase().includes('.iso'))) ? <ModernIsoIcon /> : <ModernScriptIcon />}
                       <div style={{ display: 'flex', flexDirection: 'column' }}>
                         <a 
                           href={software.url || `https://files.kichhoat24h.com/download/${encodeURIComponent(software.folder)}/${encodeURIComponent(software.title)}`}
@@ -486,7 +486,9 @@ const Software = () => {
                 <div key={software.id} className="card glass-panel flex flex-col" style={{ padding: '24px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
                     <div style={{ background: 'rgba(69, 243, 255, 0.1)', padding: '16px', borderRadius: '16px', color: 'var(--primary)' }}>
-                      {software.os === 'windows' ? <Monitor size={32} /> : <Apple size={32} />}
+                      {(software.title.toLowerCase().includes('iso') || (software.url && software.url.toLowerCase().includes('.iso'))) ? (
+                        <ModernIsoIcon size={32} />
+                      ) : (software.os === 'windows' ? <Monitor size={32} /> : <Apple size={32} />)}
                     </div>
                     
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'flex-end' }}>

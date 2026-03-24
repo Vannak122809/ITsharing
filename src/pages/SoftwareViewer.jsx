@@ -281,6 +281,35 @@ const SoftwareViewer = () => {
 
         </div>
 
+        {/* Ratings & Reviews System */}
+        <div className="card-dark" style={{ padding: '32px', borderRadius: '16px', border: '1px solid var(--surface-border)', marginTop: '24px' }}>
+          <h3 style={{ fontSize: '1.5rem', marginBottom: '24px', color: 'var(--primary)' }}>Community Feedback</h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '32px' }}>
+            <div style={{ fontSize: '3rem', fontWeight: 'bold', color: 'white' }}>4.8</div>
+            <div>
+              <div style={{ color: '#ff9900', fontSize: '1.2rem', marginBottom: '4px' }}>★★★★★</div>
+              <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Based on 124 user ratings</div>
+            </div>
+          </div>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ padding: '16px', background: 'var(--surface)', borderRadius: '12px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <strong style={{ color: 'var(--text-main)' }}>TechStudent99</strong>
+                <span style={{ color: '#ff9900' }}>★★★★★</span>
+              </div>
+              <p style={{ color: 'var(--text-muted)', margin: 0 }}>Works perfectly. Installed without any issues.</p>
+            </div>
+            <div style={{ padding: '16px', background: 'var(--surface)', borderRadius: '12px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <strong style={{ color: 'var(--text-main)' }}>Alex Devel</strong>
+                <span style={{ color: '#ff9900' }}>★★★★☆</span>
+              </div>
+              <p style={{ color: 'var(--text-muted)', margin: 0 }}>Great software, but the download speed was slightly slow today.</p>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   );
