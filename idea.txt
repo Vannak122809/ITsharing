@@ -8,3 +8,12 @@ Access Key ID : 3e6da7821e3dcf7f241da16746438d16
 Secret Access Key :47ad76cb6e267453a3e37af30d85dac79d5abc9c445fd77dca8fdc97dac165ab
 endpoints for S3 clients:https://baefceb90c0d256e27440b3d07f4631e.r2.cloudflarestorage.com
 
+in documents i want to create folder ហើយនៅក្នុង folder មាន sub folder ទៀត ឧទាហរណ៍ 
+example : folder Network have sub folder Cisco, Juniper, Mikrotik, Fortinet, Ubiquiti, TP-Link, D-Link, Netgear, Zyxel, Huawei,
+and in folder Programming have sub folder Python, JavaScript, Java, C++, C#, PHP, Ruby, Go, Rust, Swift, Kotlin, TypeScript, HTML, CSS, SQL, Bash, PowerShell, Python, JavaScript, Java, C++, C#, PHP, Ruby, Go, Rust, Swift, Kotlin, TypeScript, HTML, CSS, SQL, Bash, PowerShell
+then folder database have sub folder Mysql, Postgresql, Mongodb, Sqlserver, Oracle, Mysql, Postgresql, Mongodb, Sqlserver, Oracle
+in folder security have sub folder Firewall, Antivirus, IDS, IPS, VPN, Firewall, Antivirus, IDS, IPS, VPN
+in folder cloud have sub folder AWS, Azure, GCP, AWS, Azure, GCP
+ហើយខ្ញុំចង់បង្កើត options short by name, date, size, type ដើម្បីអោយ user អាច search file បានកាន់តែងាយស្រួល។
+មួយទៀតខ្ញុំត្រូវការ options មួយដែល user អាច short ជាភាសាខ្មែរឬ អង់គ្លេស
+

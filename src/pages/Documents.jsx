@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Download, FileText, Share2, Globe, Filter, Eye, Folder, ChevronRight, ArrowLeft, Cloud, Network, Terminal, Database, ShieldCheck, ArrowUpDown } from 'lucide-react';
+import { Download, FileText, Share2, Globe, Filter, Eye, Folder, ChevronRight, ChevronDown, ArrowLeft, Cloud, Network, Terminal, Database, ShieldCheck, ArrowUpDown, LayoutGrid, List, Search, File } from 'lucide-react';
 
 const ModernFolderIcon = ({ size = 48, color = "#14b8a6" }) => (
   <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -39,18 +39,23 @@ const documentStructure = {
 const Documents = () => {
   const [currentFolder, setCurrentFolder] = useState(null);
   const [currentSubfolder, setCurrentSubfolder] = useState(null);
+  const [expandedFolders, setExpandedFolders] = useState({});
   
   const [searchQuery, setSearchQuery] = useState('');
   const [activeLang, setActiveLang] = useState('All');
-  const [sortBy, setSortBy] = useState('name'); // name, date, size, type
+  const [sortBy, setSortBy] = useState('name');
+  const [viewMode, setViewMode] = useState('grid'); 
 
-  // Convert sizes like '1.2 MB' or '400 KB' to KB for sorting
+  const toggleFolder = (folderName) => {
+    setExpandedFolders(prev => ({ ...prev, [folderName]: !prev[folderName] }));
+  };
+
   const parseSize = (sizeStr) => {
     if (!sizeStr) return 0;
     const value = parseFloat(sizeStr.split(' ')[0]) || 0;
     if (sizeStr.includes('MB')) return value * 1024;
     if (sizeStr.includes('GB')) return value * 1024 * 1024;
-    return value; // KB
+    return value;
   };
 
   const docData = [
@@ -69,17 +74,10 @@ const Documents = () => {
 
   const processedData = useMemo(() => {
     let result = docData;
-
-    // Filter by Folder/Subfolder (only if not globally searching)
     if (!searchQuery) {
-      if (currentFolder) {
-        result = result.filter(doc => doc.category === currentFolder);
-      }
-      if (currentSubfolder) {
-        result = result.filter(doc => doc.subfolder === currentSubfolder);
-      }
+      if (currentFolder) result = result.filter(doc => doc.category === currentFolder);
+      if (currentSubfolder) result = result.filter(doc => doc.subfolder === currentSubfolder);
     } else {
-      // Global search overrides folder view
       result = result.filter(doc => 
         doc.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
         doc.desc.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -87,228 +85,315 @@ const Documents = () => {
         doc.subfolder.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
-
-    // Filter by Language
-    if (activeLang !== 'All') {
-      result = result.filter(doc => doc.lang === activeLang);
-    }
-
-    // Sort Data
+    if (activeLang !== 'All') result = result.filter(doc => doc.lang === activeLang);
     result = [...result].sort((a, b) => {
       if (sortBy === 'name') return a.title.localeCompare(b.title);
-      if (sortBy === 'date') return new Date(b.date) - new Date(a.date); // newest first
-      if (sortBy === 'size') return parseSize(b.size) - parseSize(a.size); // largest first
+      if (sortBy === 'date') return new Date(b.date) - new Date(a.date);
+      if (sortBy === 'size') return parseSize(b.size) - parseSize(a.size);
       if (sortBy === 'type') return a.type.localeCompare(b.type);
       return 0;
     });
-
     return result;
   }, [currentFolder, currentSubfolder, searchQuery, activeLang, sortBy]);
 
   return (
-    <div className="container" style={{ paddingTop: '80px', minHeight: '80vh', paddingBottom: '80px' }}>
+    <div className="container" style={{ paddingTop: '100px', paddingBottom: '80px', minHeight: '100vh', display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
       
-      {/* HEADER & GLOBAL TOOLS */}
-      <div style={{ marginBottom: '40px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
-        <div>
-          <h1 className="text-gradient" style={{ fontSize: '2.5rem', marginBottom: '8px' }}>Documents Hub</h1>
-          <p style={{ color: 'var(--text-muted)' }}>Browse tutorials, configurations, and books structured by tech domains.</p>
+      {/* SIDEBAR EXPLORER */}
+      <div className="glass-panel" style={{ width: '280px', flex: '1 1 280px', maxWidth: '100%', padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', height: 'fit-content', maxHeight: 'calc(100vh - 120px)', position: 'sticky', top: '100px', overflowY: 'auto' }}>
+        <h2 style={{ fontSize: '1.2rem', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-main)' }}>
+          <Folder size={20} color="var(--primary)" /> Explorer
+        </h2>
+        
+        <div 
+          onClick={() => { setCurrentFolder(null); setCurrentSubfolder(null); setSearchQuery(''); }}
+          style={{ padding: '10px 12px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', background: (!currentFolder && !searchQuery) ? 'var(--surface-badge)' : 'transparent', color: (!currentFolder && !searchQuery) ? 'var(--primary)' : 'var(--text-main)', transition: 'var(--transition)' }}
+        >
+          <LayoutGrid size={18} /> <span style={{ fontWeight: 500 }}>All Documents</span>
         </div>
 
-        <div className="glass-panel" style={{ padding: '16px', display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'center', justifyContent: 'space-between' }}>
-          
-          <input 
-            type="text" 
-            placeholder="Search documents anywhere..." 
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            style={{ flex: '1 1 300px', padding: '12px 16px', background: 'var(--card-dark)', border: '1px solid var(--surface-border)', borderRadius: '12px', color: 'var(--text-main)', outline: 'none' }}
-          />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          {Object.entries(documentStructure).map(([folderName, folderData]) => {
+            const isExpanded = expandedFolders[folderName];
+            const isActiveFolder = currentFolder === folderName && !currentSubfolder;
 
-          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Globe size={18} color="var(--text-muted)" />
-              <select 
-                value={activeLang} 
-                onChange={(e) => setActiveLang(e.target.value)}
-                style={{ padding: '10px 16px', background: 'var(--card-dark)', border: '1px solid var(--surface-border)', borderRadius: '8px', color: 'var(--text-main)', outline: 'none', cursor: 'pointer' }}
-              >
-                <option value="All">All Languages 🌐</option>
-                <option value="Khmer">Khmer 🇰🇭</option>
-                <option value="English">English 🇺🇸</option>
-              </select>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <ArrowUpDown size={18} color="var(--text-muted)" />
-              <select 
-                value={sortBy} 
-                onChange={(e) => setSortBy(e.target.value)}
-                style={{ padding: '10px 16px', background: 'var(--card-dark)', border: '1px solid var(--surface-border)', borderRadius: '8px', color: 'var(--text-main)', outline: 'none', cursor: 'pointer' }}
-              >
-                <option value="name">Sort by Name (A-Z)</option>
-                <option value="date">Sort by Date (Newest)</option>
-                <option value="size">Sort by Size (Largest)</option>
-                <option value="type">Sort by Type (Ext)</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* BREADCRUMBS */}
-      {!searchQuery && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '32px', fontSize: '1.1rem', fontWeight: 500 }}>
-          <span 
-            onClick={() => { setCurrentFolder(null); setCurrentSubfolder(null); }}
-            style={{ color: currentFolder ? 'var(--text-muted)' : 'var(--primary)', cursor: 'pointer', transition: 'var(--transition)' }}
-          >
-            Root
-          </span>
-          
-          {currentFolder && (
-            <>
-              <ChevronRight size={18} color="var(--text-muted)" />
-              <span 
-                onClick={() => setCurrentSubfolder(null)}
-                style={{ color: currentSubfolder ? 'var(--text-muted)' : documentStructure[currentFolder].color, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
-              >
-                {documentStructure[currentFolder].icon} {currentFolder}
-              </span>
-            </>
-          )}
-
-          {currentSubfolder && (
-            <>
-              <ChevronRight size={18} color="var(--text-muted)" />
-              <span style={{ color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Folder size={18} /> {currentSubfolder}
-              </span>
-            </>
-          )}
-
-          {(currentFolder || currentSubfolder) && (
-            <button 
-              onClick={() => { if (currentSubfolder) setCurrentSubfolder(null); else setCurrentFolder(null); }}
-              className="btn btn-outline" 
-              style={{ padding: '4px 12px', fontSize: '0.8rem', marginLeft: 'auto', border: 'none' }}
-            >
-              <ArrowLeft size={14} /> Back
-            </button>
-          )}
-        </div>
-      )}
-
-      {/* FOLDERS VIEW (Only show if not searching globally and no subfolder selected) */}
-      {!searchQuery && !currentSubfolder && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px', marginBottom: '40px' }}>
-          
-          {/* Level 1: Main Categories */}
-          {!currentFolder && Object.entries(documentStructure).map(([folderName, folderData]) => (
-            <div 
-              key={folderName} 
-              onClick={() => setCurrentFolder(folderName)}
-              className="glass-panel"
-              style={{ padding: '24px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '16px', transition: 'var(--transition)', borderLeft: `4px solid ${folderData.color}` }}
-              onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = `0 10px 30px ${folderData.color}33`; }}
-              onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'var(--shadow-glass)'; }}
-            >
-              <ModernFolderIcon size={48} color={folderData.color} />
-              <div style={{flex: 1}}>
-                <h3 style={{ margin: 0, fontSize: '1.2rem', color: 'var(--text-main)' }}>{folderName}</h3>
-                <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{folderData.subfolders.length} subfolders</span>
-              </div>
-              <ChevronRight color="var(--text-muted)" />
-            </div>
-          ))}
-
-          {/* Level 2: Subfolders */}
-          {currentFolder && documentStructure[currentFolder].subfolders.map((subName) => {
-            const itemCount = docData.filter(d => d.category === currentFolder && d.subfolder === subName).length;
             return (
-              <div 
-                key={subName} 
-                onClick={() => setCurrentSubfolder(subName)}
-                className="glass-panel"
-                style={{ padding: '20px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '16px', transition: 'var(--transition)' }}
-                onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--surface-badge)'}
-                onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'var(--surface)'}
-              >
-                <div style={{ background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '12px' }}>
-                  <Folder color={documentStructure[currentFolder].color} size={28} />
+              <div key={folderName} style={{ display: 'flex', flexDirection: 'column' }}>
+                <div 
+                  onClick={() => { toggleFolder(folderName); setCurrentFolder(folderName); setCurrentSubfolder(null); setSearchQuery(''); }}
+                  style={{ padding: '10px 12px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', background: isActiveFolder ? 'var(--surface-badge)' : 'transparent', color: isActiveFolder ? folderData.color : 'var(--text-main)', transition: 'var(--transition)' }}
+                  onMouseOver={(e) => { if (!isActiveFolder) e.currentTarget.style.background = 'var(--surface-border)'; }}
+                  onMouseOut={(e) => { if (!isActiveFolder) e.currentTarget.style.background = 'transparent'; }}
+                >
+                  <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '20px' }}>
+                    {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                  </span>
+                  {folderData.icon} 
+                  <span style={{ fontWeight: 500 }}>{folderName}</span>
                 </div>
-                <div style={{flex: 1}}>
-                  <h4 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-main)' }}>{subName}</h4>
-                  <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>{itemCount} files</span>
-                </div>
+
+                {isExpanded && (
+                  <div style={{ display: 'flex', flexDirection: 'column', marginLeft: '32px', marginTop: '4px', gap: '2px' }}>
+                    {folderData.subfolders.map(sub => {
+                      const isActiveSub = currentFolder === folderName && currentSubfolder === sub;
+                      return (
+                        <div 
+                          key={sub}
+                          onClick={() => { setCurrentFolder(folderName); setCurrentSubfolder(sub); setSearchQuery(''); }}
+                          style={{ padding: '8px 12px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', background: isActiveSub ? 'var(--surface-badge)' : 'transparent', color: isActiveSub ? 'var(--primary)' : 'var(--text-muted)', transition: 'var(--transition)' }}
+                          onMouseOver={(e) => { if (!isActiveSub) e.currentTarget.style.background = 'var(--surface-border)'; }}
+                          onMouseOut={(e) => { if (!isActiveSub) e.currentTarget.style.background = 'transparent'; }}
+                        >
+                          <Folder size={14} /> {sub}
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
               </div>
             );
           })}
         </div>
-      )}
+      </div>
 
-      {/* FILES GRID VIEW */}
-      {((currentFolder && currentSubfolder) || searchQuery || (!searchQuery && !currentFolder && processedData.length === 0)) && (
-        <div className="card-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))' }}>
-          {processedData.map((doc) => (
-            <div key={doc.id} className="card glass-panel flex flex-col" style={{ padding: '24px' }}>
-              
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                  <div style={{ background: 'var(--surface-badge)', padding: '14px', borderRadius: '12px', color: doc.color || 'var(--primary)' }}>
-                    <FileText size={28} />
-                  </div>
-                  <div>
-                    <h3 style={{ fontSize: '1.1rem', marginBottom: '4px', lineHeight: 1.2, wordBreak: 'break-word' }}>
-                      {doc.title}
-                    </h3>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', marginTop: '6px' }}>
-                      <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>{doc.size}</span>
-                      <span style={{ fontSize: '0.7rem', background: 'var(--card-dark)', padding: '2px 8px', borderRadius: '10px', color: doc.lang === 'Khmer' ? '#00fa9a' : '#45f3ff' }}>
-                        {doc.lang}
-                      </span>
-                      {doc.type && (
-                        <span style={{ fontSize: '0.7rem', border: '1px solid var(--surface-border)', padding: '1px 6px', borderRadius: '6px', color: 'var(--text-muted)' }}>
-                          {doc.type}
-                        </span>
-                      )}
+      {/* MAIN CONTENT AREA */}
+      <div style={{ flex: '2 1 600px', display: 'flex', flexDirection: 'column', gap: '24px', minWidth: 0 }}>
+        
+        {/* TOP TOOLBAR */}
+        <div className="glass-panel" style={{ padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+            
+            {/* Breadcrumbs */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '1.1rem', fontWeight: 600 }}>
+              <span onClick={() => { setCurrentFolder(null); setCurrentSubfolder(null); setSearchQuery(''); }} style={{ cursor: 'pointer', color: 'var(--text-muted)', transition: 'var(--transition)' }} onMouseOver={(e) => e.currentTarget.style.color = 'var(--primary)'} onMouseOut={(e) => e.currentTarget.style.color = 'var(--text-muted)'}>Root</span>
+              {currentFolder && (
+                <>
+                  <ChevronRight size={16} color="var(--text-muted)" />
+                  <span onClick={() => setCurrentSubfolder(null)} style={{ cursor: 'pointer', color: documentStructure[currentFolder].color, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    {documentStructure[currentFolder].icon} {currentFolder}
+                  </span>
+                </>
+              )}
+              {currentSubfolder && (
+                <>
+                  <ChevronRight size={16} color="var(--text-muted)" />
+                  <span style={{ color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Folder size={16} /> {currentSubfolder}
+                  </span>
+                </>
+              )}
+            </div>
+
+            {/* View Mode & Global Filters */}
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+               <div style={{ position: 'relative' }}>
+                  <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                  <input 
+                    type="text" 
+                    placeholder="Search files..." 
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    style={{ padding: '8px 16px 8px 36px', background: 'var(--card-dark)', border: '1px solid var(--surface-border)', borderRadius: '20px', color: 'var(--text-main)', outline: 'none', fontSize: '0.9rem', width: '220px', transition: 'var(--transition)' }}
+                    onFocus={(e) => e.currentTarget.style.borderColor = 'var(--primary)'}
+                    onBlur={(e) => e.currentTarget.style.borderColor = 'var(--surface-border)'}
+                  />
+               </div>
+               
+               <div style={{ display: 'flex', background: 'var(--card-dark)', borderRadius: '8px', border: '1px solid var(--surface-border)', overflow: 'hidden' }}>
+                 <button onClick={() => setViewMode('grid')} style={{ padding: '8px 12px', background: viewMode === 'grid' ? 'var(--surface-badge)' : 'transparent', border: 'none', cursor: 'pointer', color: viewMode === 'grid' ? 'var(--primary)' : 'var(--text-muted)', transition: 'var(--transition)' }}><LayoutGrid size={18} /></button>
+                 <button onClick={() => setViewMode('list')} style={{ padding: '8px 12px', background: viewMode === 'list' ? 'var(--surface-badge)' : 'transparent', border: 'none', cursor: 'pointer', color: viewMode === 'list' ? 'var(--primary)' : 'var(--text-muted)', transition: 'var(--transition)' }}><List size={18} /></button>
+               </div>
+            </div>
+          </div>
+          
+          <div style={{ display: 'flex', gap: '16px', paddingTop: '12px', borderTop: '1px solid var(--surface-border)', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Globe size={16} color="var(--text-muted)" />
+              <select 
+                value={activeLang} 
+                onChange={(e) => setActiveLang(e.target.value)}
+                style={{ padding: '6px 12px', background: 'transparent', border: '1px solid var(--surface-border)', borderRadius: '6px', color: 'var(--text-main)', outline: 'none', cursor: 'pointer', fontSize: '0.85rem' }}
+              >
+                <option value="All" style={{ background: 'var(--card-dark)' }}>All Languages</option>
+                <option value="Khmer" style={{ background: 'var(--card-dark)' }}>Khmer</option>
+                <option value="English" style={{ background: 'var(--card-dark)' }}>English</option>
+              </select>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <ArrowUpDown size={16} color="var(--text-muted)" />
+              <select 
+                value={sortBy} 
+                onChange={(e) => setSortBy(e.target.value)}
+                style={{ padding: '6px 12px', background: 'transparent', border: '1px solid var(--surface-border)', borderRadius: '6px', color: 'var(--text-main)', outline: 'none', cursor: 'pointer', fontSize: '0.85rem' }}
+              >
+                <option value="name" style={{ background: 'var(--card-dark)' }}>Name (A-Z)</option>
+                <option value="date" style={{ background: 'var(--card-dark)' }}>Date (Newest)</option>
+                <option value="size" style={{ background: 'var(--card-dark)' }}>Size (Largest)</option>
+                <option value="type" style={{ background: 'var(--card-dark)' }}>Type</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* FOLDERS / FILES DISPLAY */}
+        <div style={{ flex: 1 }}>
+          
+          {/* Subfolders Grid if Category is selected without Subfolder */}
+          {!searchQuery && currentFolder && !currentSubfolder && (
+            <div style={{ marginBottom: '32px' }}>
+              <h3 style={{ fontSize: '1.2rem', marginBottom: '16px', color: 'var(--text-main)' }}>Folders in {currentFolder}</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' }}>
+                {documentStructure[currentFolder].subfolders.map((subName) => {
+                  const itemCount = docData.filter(d => d.category === currentFolder && d.subfolder === subName).length;
+                  return (
+                    <div 
+                      key={subName}
+                      onClick={() => setCurrentSubfolder(subName)}
+                      className="glass-panel"
+                      style={{ padding: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', transition: 'var(--transition)' }}
+                      onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = 'var(--shadow-glass)'; e.currentTarget.style.borderColor = documentStructure[currentFolder].color; }}
+                      onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.borderColor = 'var(--surface-border)'; }}
+                    >
+                      <Folder color={documentStructure[currentFolder].color} size={32} fill={`${documentStructure[currentFolder].color}22`} />
+                      <div>
+                        <h4 style={{ margin: 0, fontSize: '1rem', color: 'var(--text-main)' }}>{subName}</h4>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>{itemCount} files</span>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              </div>
-              
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '16px', flexGrow: 1, borderTop: '1px dashed var(--surface-border)', paddingTop: '16px' }}>{doc.desc}</p>
-              
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '16px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Folder size={12} /> {doc.category} / {doc.subfolder}</span>
-                <span style={{ marginLeft: 'auto' }}>{doc.date}</span>
-              </div>
-
-              <div style={{ display: 'flex', gap: '12px', marginTop: 'auto' }}>
-                {doc.url ? (
-                  <>
-                    <a href={doc.url} target="_blank" rel="noreferrer" className="btn btn-outline" style={{ flex: 1, padding: '8px', fontSize: '0.9rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', textDecoration: 'none' }}><Eye size={16} /> View</a>
-                    <a href={doc.url} download target="_blank" rel="noreferrer" className="btn btn-primary" style={{ flex: 1, padding: '8px', fontSize: '0.9rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', textDecoration: 'none' }}><Download size={16} /></a>
-                  </>
-                ) : (
-                  <>
-                    <button className="btn btn-outline" style={{ flex: 1, padding: '8px', fontSize: '0.9rem' }}><Share2 size={16} /> Share</button>
-                    <button className="btn btn-primary" style={{ flex: 1, padding: '8px', fontSize: '0.9rem' }}><Download size={16} /> Download</button>
-                  </>
-                )}
+                  );
+                })}
               </div>
             </div>
-          ))}
+          )}
 
-          {processedData.length === 0 && (
-            <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '60px 40px', color: 'var(--text-muted)', background: 'var(--surface)', borderRadius: '16px', border: '1px solid var(--surface-border)' }}>
-              <Filter size={48} style={{ margin: '0 auto', marginBottom: '16px', opacity: 0.5 }} />
-              <h3>No documents found</h3>
-              <p>No files match your current filters or folder selection.</p>
+          {/* Quick Access Grid if at Root */}
+          {!searchQuery && !currentFolder && (
+            <div style={{ marginBottom: '32px' }}>
+               <h3 style={{ fontSize: '1.2rem', marginBottom: '16px', color: 'var(--text-main)' }}>Quick Access</h3>
+               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '16px' }}>
+                  {Object.entries(documentStructure).map(([folderName, folderData]) => (
+                    <div 
+                      key={folderName}
+                      onClick={() => { setCurrentFolder(folderName); toggleFolder(folderName); }}
+                      className="glass-panel"
+                      style={{ padding: '20px', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', textAlign: 'center', transition: 'var(--transition)' }}
+                      onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = `0 10px 30px ${folderData.color}22`; e.currentTarget.style.borderColor = folderData.color; }}
+                      onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'var(--shadow-glass)'; e.currentTarget.style.borderColor = 'var(--surface-border)'; }}
+                    >
+                      <ModernFolderIcon size={64} color={folderData.color} />
+                      <div>
+                        <h4 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-main)' }}>{folderName}</h4>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{folderData.subfolders.length} Subdirectories</span>
+                      </div>
+                    </div>
+                  ))}
+               </div>
+            </div>
+          )}
+
+          {/* Regular Files Section */}
+          {((currentFolder && currentSubfolder) || searchQuery || (!searchQuery && !currentFolder)) && (
+            <div>
+              <h3 style={{ fontSize: '1.2rem', marginBottom: '16px', color: 'var(--text-main)' }}>Files {searchQuery && `matching "${searchQuery}"`}</h3>
+              
+              {processedData.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted)', background: 'var(--surface)', borderRadius: '16px', border: '1px dashed var(--surface-border)' }}>
+                  <File size={48} style={{ margin: '0 auto', marginBottom: '16px', opacity: 0.5 }} />
+                  <p>No files found.</p>
+                </div>
+              ) : viewMode === 'grid' ? (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
+                  {processedData.map((doc) => (
+                    <div key={doc.id} className="glass-panel" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px', transition: 'var(--transition)', cursor: 'default' }}
+                      onMouseOver={(e) => { e.currentTarget.style.borderColor = doc.color || 'var(--primary)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                      onMouseOut={(e) => { e.currentTarget.style.borderColor = 'var(--surface-border)'; e.currentTarget.style.transform = 'translateY(0)'; }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                        <div style={{ background: `${doc.color || 'var(--primary)'}15`, padding: '12px', borderRadius: '12px', color: doc.color || 'var(--primary)' }}>
+                          <FileText size={24} />
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <h4 style={{ margin: 0, fontSize: '1rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: 'var(--text-main)' }} title={doc.title}>{doc.title}</h4>
+                          <div style={{ display: 'flex', gap: '8px', fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                            <span>{doc.size}</span>
+                            <span>• {doc.type}</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', flex: 1, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{doc.desc}</p>
+                      
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--surface-border)', paddingTop: '12px', marginTop: 'auto' }}>
+                        <span style={{ fontSize: '0.75rem', background: 'var(--surface-badge)', padding: '4px 8px', borderRadius: '6px', color: doc.lang === 'Khmer' ? '#00fa9a' : '#45f3ff', fontWeight: 500 }}>{doc.lang}</span>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          {doc.url ? (
+                            <>
+                              <a href={doc.url} target="_blank" rel="noreferrer" style={{ padding: '8px', background: 'var(--card-dark)', borderRadius: '8px', color: 'var(--text-main)', display: 'flex', transition: 'var(--transition)' }} onMouseOver={(e) => e.currentTarget.style.color = 'var(--primary)'} onMouseOut={(e) => e.currentTarget.style.color = 'var(--text-main)'}><Eye size={16} /></a>
+                              <a href={doc.url} download target="_blank" rel="noreferrer" style={{ padding: '8px', background: 'var(--primary)', borderRadius: '8px', color: '#fff', display: 'flex', transition: 'var(--transition)' }} onMouseOver={(e) => e.currentTarget.style.filter = 'brightness(1.1)'} onMouseOut={(e) => e.currentTarget.style.filter = 'brightness(1)'}><Download size={16} /></a>
+                            </>
+                          ) : (
+                            <>
+                              <button style={{ padding: '8px', background: 'var(--card-dark)', borderRadius: '8px', color: 'var(--text-main)', display: 'flex', border: 'none', cursor: 'pointer', transition: 'var(--transition)' }} onMouseOver={(e) => e.currentTarget.style.color = 'var(--primary)'} onMouseOut={(e) => e.currentTarget.style.color = 'var(--text-main)'}><Share2 size={16} /></button>
+                              <button style={{ padding: '8px', background: 'var(--primary)', borderRadius: '8px', color: '#fff', display: 'flex', border: 'none', cursor: 'pointer', transition: 'var(--transition)' }} onMouseOver={(e) => e.currentTarget.style.filter = 'brightness(1.1)'} onMouseOut={(e) => e.currentTarget.style.filter = 'brightness(1)'}><Download size={16} /></button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="glass-panel" style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', minWidth: '600px', borderCollapse: 'collapse', textAlign: 'left' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '1px solid var(--surface-border)', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                        <th style={{ padding: '16px', fontWeight: 500 }}>Name</th>
+                        <th style={{ padding: '16px', fontWeight: 500 }}>Location</th>
+                        <th style={{ padding: '16px', fontWeight: 500 }}>Language</th>
+                        <th style={{ padding: '16px', fontWeight: 500 }}>Size</th>
+                        <th style={{ padding: '16px', fontWeight: 500 }}>Date</th>
+                        <th style={{ padding: '16px', fontWeight: 500, textAlign: 'right' }}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {processedData.map((doc, idx) => (
+                        <tr key={doc.id} style={{ borderBottom: idx === processedData.length - 1 ? 'none' : '1px solid var(--surface-border)', transition: 'background 0.2s' }} onMouseOver={(e) => e.currentTarget.style.background = 'var(--surface-badge)'} onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}>
+                          <td style={{ padding: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <FileText size={18} color={doc.color || 'var(--primary)'} />
+                            <div>
+                              <div style={{ fontWeight: 500, color: 'var(--text-main)' }}>{doc.title}</div>
+                              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{doc.type}</div>
+                            </div>
+                          </td>
+                          <td style={{ padding: '16px', fontSize: '0.9rem', color: 'var(--text-muted)' }}>{doc.category}/{doc.subfolder}</td>
+                          <td style={{ padding: '16px' }}><span style={{ fontSize: '0.75rem', background: 'var(--surface-badge)', padding: '4px 8px', borderRadius: '6px', color: doc.lang === 'Khmer' ? '#00fa9a' : '#45f3ff', fontWeight: 500 }}>{doc.lang}</span></td>
+                          <td style={{ padding: '16px', fontSize: '0.9rem', color: 'var(--text-muted)' }}>{doc.size}</td>
+                          <td style={{ padding: '16px', fontSize: '0.9rem', color: 'var(--text-muted)' }}>{doc.date}</td>
+                          <td style={{ padding: '16px', textAlign: 'right' }}>
+                            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                              {doc.url ? (
+                                <>
+                                  <a href={doc.url} target="_blank" rel="noreferrer" style={{ padding: '8px', background: 'var(--card-dark)', borderRadius: '8px', color: 'var(--text-main)', transition: 'var(--transition)' }} onMouseOver={(e) => e.currentTarget.style.color = 'var(--primary)'} onMouseOut={(e) => e.currentTarget.style.color = 'var(--text-main)'}><Eye size={16} /></a>
+                                  <a href={doc.url} download target="_blank" rel="noreferrer" style={{ padding: '8px', background: 'var(--primary)', borderRadius: '8px', color: '#fff', transition: 'var(--transition)' }} onMouseOver={(e) => e.currentTarget.style.filter = 'brightness(1.1)'} onMouseOut={(e) => e.currentTarget.style.filter = 'brightness(1)'}><Download size={16} /></a>
+                                </>
+                              ) : (
+                                <>
+                                  <button style={{ padding: '8px', background: 'var(--card-dark)', borderRadius: '8px', color: 'var(--text-main)', border: 'none', cursor: 'pointer', transition: 'var(--transition)' }} onMouseOver={(e) => e.currentTarget.style.color = 'var(--primary)'} onMouseOut={(e) => e.currentTarget.style.color = 'var(--text-main)'}><Share2 size={16} /></button>
+                                  <button style={{ padding: '8px', background: 'var(--primary)', borderRadius: '8px', color: '#fff', border: 'none', cursor: 'pointer', transition: 'var(--transition)' }} onMouseOver={(e) => e.currentTarget.style.filter = 'brightness(1.1)'} onMouseOut={(e) => e.currentTarget.style.filter = 'brightness(1)'}><Download size={16} /></button>
+                                </>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           )}
         </div>
-      )}
+      </div>
     </div>
   );
 };
