@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Download, FileText, Share2, Globe, Filter, Eye, Folder, ChevronRight, ChevronDown, ArrowLeft, Cloud, Network, Terminal, Database, ShieldCheck, ArrowUpDown, LayoutGrid, List, Search, File } from 'lucide-react';
+import { Download, FileText, Share2, Globe, Filter, Eye, Folder, ChevronRight, ChevronDown, ArrowLeft, Cloud, Network, Terminal, Database, ShieldCheck, ArrowUpDown, LayoutGrid, List, Search, File, Loader2 } from 'lucide-react';
 
 const ModernFolderIcon = ({ size = 48, color = "#14b8a6" }) => (
   <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -45,6 +45,7 @@ const Documents = () => {
   const [activeLang, setActiveLang] = useState('All');
   const [sortBy, setSortBy] = useState('name');
   const [viewMode, setViewMode] = useState('grid'); 
+  const [downloadingId, setDownloadingId] = useState(null);
 
   const toggleFolder = (folderName) => {
     setExpandedFolders(prev => ({ ...prev, [folderName]: !prev[folderName] }));
@@ -58,6 +59,33 @@ const Documents = () => {
     return value;
   };
 
+  const handleDownloadFile = async (e, url, title, type, docId) => {
+    if (!url) return;
+    e.preventDefault();
+    setDownloadingId(docId);
+    try {
+      // Adding a timestamp to prevent the browser/Cloudflare from serving a cached non-CORS response
+      const response = await fetch(url + '?t=' + Date.now());
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      let ext = '.pdf';
+      if (type && type.toLowerCase() === 'docx') ext = '.docx';
+      else if (type && type.toLowerCase() === 'pptx') ext = '.pptx';
+      link.download = `${title.replace(/[^a-zA-Z0-9 ]/g, '')}${ext}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (error) {
+      console.error('Download failed', error);
+      window.open(url, '_blank');
+    } finally {
+      setDownloadingId(null);
+    }
+  };
+
   const docData = [
     { id: 1, title: 'K8s Setup Guide', category: 'Cloud', subfolder: 'AWS', lang: 'English', size: '420 KB', date: '2025-10-14', type: 'PDF', desc: 'YAML files and cluster setup docs.', color: '#45f3ff' },
     { id: 2, title: 'Design Patterns Java', category: 'Programming', subfolder: 'Java', lang: 'English', size: '1.2 MB', date: '2024-05-20', type: 'PDF', desc: 'Gang of four simplified in modern Java.', color: 'var(--primary)' },
@@ -66,10 +94,13 @@ const Documents = () => {
     { id: 5, title: 'Basic Security Principles', category: 'Security', subfolder: 'Firewall', lang: 'Khmer', size: '1.5 MB', date: '2025-12-05', type: 'PDF', desc: 'Introduction to cybersecurity for beginners in Khmer.', color: '#ff2a7a' },
     { id: 6, title: 'Python Data Structures', category: 'Programming', subfolder: 'Python', lang: 'Khmer', size: '3.1 MB', date: '2025-09-22', type: 'PPTX', desc: 'Deep dive into Python arrays, dictionaries, and sets.', color: 'var(--primary)' },
     { id: 7, title: 'Example PDF Document', category: 'Programming', subfolder: 'HTML', lang: 'English', size: '12 KB', date: '2025-01-10', type: 'PDF', desc: 'A sample PDF document uploaded directly to Cloudflare R2.', color: 'var(--primary)', url: 'https://pub-6cc8bfdf378b409aaa8b139265103fc2.r2.dev/documents/example-1773817512924.pdf' },
-    { id: 8, title: 'CCNA1: Explorer Network', category: 'Network', subfolder: 'Cisco', lang: 'English', size: '2.75 MB', date: '2026-01-15', type: 'PDF', desc: 'Chapters 1,2 - Explorer Network & Configure NOS', color: '#00fa9a', url: `https://pub-6cc8bfdf378b409aaa8b139265103fc2.r2.dev/documents/${encodeURIComponent('CCNA1-Chapter1,2 - Explorer Network & Configure NOS.pdf')}` },
-    { id: 9, title: 'CCNA1: Network Protocol', category: 'Network', subfolder: 'Cisco', lang: 'English', size: '2.73 MB', date: '2026-01-16', type: 'PDF', desc: 'Chapters 3,4,5 - Network Protocol, Access, Ethernet', color: '#00fa9a', url: `https://pub-6cc8bfdf378b409aaa8b139265103fc2.r2.dev/documents/${encodeURIComponent('CCNA1-Chapter3,4,5 - Network Protocol, Access, Ethernet.pdf')}` },
-    { id: 10, title: 'CCNA1: Network Layer & IP', category: 'Network', subfolder: 'Cisco', lang: 'English', size: '2.74 MB', date: '2026-01-17', type: 'PDF', desc: 'Chapters 6,7,8 - Network Layer, IP Address, Subnet', color: '#00fa9a', url: `https://pub-6cc8bfdf378b409aaa8b139265103fc2.r2.dev/documents/${encodeURIComponent('CCNA1-Chapter6,7,8 - Network Layer, IP Address, Subnet.pdf')}` },
-    { id: 11, title: 'CCNA1: Build Network', category: 'Network', subfolder: 'Cisco', lang: 'English', size: '2.72 MB', date: '2026-01-18', type: 'PDF', desc: 'Chapters 9,10,11 - Transport, Application, Build Network', color: '#00fa9a', url: `https://pub-6cc8bfdf378b409aaa8b139265103fc2.r2.dev/documents/${encodeURIComponent('CCNA1-Chapter9,10,11 - Transport, Application, Build Network.pdf')}` }
+    { id: 8, title: 'CCNA1: Explorer Network', category: 'Network', subfolder: 'Cisco', lang: 'English', size: '2.75 MB', date: '2026-01-15', type: 'PDF', desc: 'Chapters 1,2 - Explorer Network & Configure NOS', color: '#00fa9a', url: 'https://pub-564a73e336f14a32b457c2d7fa1b0446.r2.dev/documents/CCNA1-Chapter1%2C2%20-%20Explorer%20Network%20%26%20Configure%20NOS.pdf' },
+    { id: 9, title: 'CCNA1: Network Protocol', category: 'Network', subfolder: 'Cisco', lang: 'English', size: '2.73 MB', date: '2026-01-16', type: 'PDF', desc: 'Chapters 3,4,5 - Network Protocol, Access, Ethernet', color: '#00fa9a', url: 'https://pub-564a73e336f14a32b457c2d7fa1b0446.r2.dev/documents/CCNA1-Chapter3%2C4%2C5%20-%20Network%20Protocol%2C%20Access%2C%20Ethernet.pdf' },
+    { id: 10, title: 'CCNA1: Network Layer & IP', category: 'Network', subfolder: 'Cisco', lang: 'English', size: '2.74 MB', date: '2026-01-17', type: 'PDF', desc: 'Chapters 6,7,8 - Network Layer, IP Address, Subnet', color: '#00fa9a', url: 'https://pub-564a73e336f14a32b457c2d7fa1b0446.r2.dev/documents/CCNA1-Chapter6%2C7%2C8%20-%20Network%20Layer%2C%20IP%20Address%2C%20Subnet.pdf' },
+    { id: 11, title: 'CCNA1: Build Network', category: 'Network', subfolder: 'Cisco', lang: 'English', size: '2.72 MB', date: '2026-01-18', type: 'PDF', desc: 'Chapters 9,10,11 - Transport, Application, Build Network', color: '#00fa9a', url: 'https://pub-564a73e336f14a32b457c2d7fa1b0446.r2.dev/documents/CCNA1-Chapter9%2C10%2C11%20-%20Transport%2C%20Application%2C%20Build%20Network.pdf' },
+    { id: 12, title: 'MikroTik & UniFi Essentials', category: 'Network', subfolder: 'Mikrotik', lang: 'English', size: '2.8 MB', date: '2026-03-25', type: 'PDF', desc: 'MikroTik & UniFi Networking Essentials', color: '#00fa9a', url: 'https://pub-564a73e336f14a32b457c2d7fa1b0446.r2.dev/Mikrotik%20and%20Unify/Mikrotik%20%26%20UniFi%20Networking%20Essentials.pdf' },
+    { id: 13, title: 'MikroTik & UniFi Essentials', category: 'Network', subfolder: 'Ubiquiti', lang: 'English', size: '2.8 MB', date: '2026-03-25', type: 'PDF', desc: 'MikroTik & UniFi Networking Essentials', color: '#00fa9a', url: 'https://pub-564a73e336f14a32b457c2d7fa1b0446.r2.dev/Mikrotik%20and%20Unify/Mikrotik%20%26%20UniFi%20Networking%20Essentials.pdf' },
+    { id: 14, title: 'Mikrotik Manual (Khmer)', category: 'Network', subfolder: 'Mikrotik', lang: 'Khmer', size: 'Unknown', date: '2026-03-25', type: 'PDF', desc: 'Mikrotik networking manual and configuration guide in Khmer.', color: '#00fa9a', url: 'https://pub-564a73e336f14a32b457c2d7fa1b0446.r2.dev/Mikrotik%20and%20Unify/mikrotik-khmer_compress.pdf' }
   ];
 
   const processedData = useMemo(() => {
@@ -328,13 +359,13 @@ const Documents = () => {
                         <div style={{ display: 'flex', gap: '8px' }}>
                           {doc.url ? (
                             <>
-                              <a href={doc.url} target="_blank" rel="noreferrer" style={{ padding: '8px', background: 'var(--card-dark)', borderRadius: '8px', color: 'var(--text-main)', display: 'flex', transition: 'var(--transition)' }} onMouseOver={(e) => e.currentTarget.style.color = 'var(--primary)'} onMouseOut={(e) => e.currentTarget.style.color = 'var(--text-main)'}><Eye size={16} /></a>
-                              <a href={doc.url} download target="_blank" rel="noreferrer" style={{ padding: '8px', background: 'var(--primary)', borderRadius: '8px', color: '#fff', display: 'flex', transition: 'var(--transition)' }} onMouseOver={(e) => e.currentTarget.style.filter = 'brightness(1.1)'} onMouseOut={(e) => e.currentTarget.style.filter = 'brightness(1)'}><Download size={16} /></a>
+                              <a href={doc.url} target="_blank" rel="noreferrer" style={{ padding: '8px 12px', background: 'var(--card-dark)', borderRadius: '8px', color: 'var(--text-main)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 500, transition: 'var(--transition)' }} onMouseOver={(e) => { e.currentTarget.style.color = 'var(--primary)'; e.currentTarget.style.background = 'var(--surface)'; }} onMouseOut={(e) => { e.currentTarget.style.color = 'var(--text-main)'; e.currentTarget.style.background = 'var(--card-dark)'; }}><Eye size={16} /> View</a>
+                              <button disabled={downloadingId === doc.id} onClick={(e) => handleDownloadFile(e, doc.url, doc.title, doc.type, doc.id)} style={{ padding: '8px 12px', background: 'var(--primary)', borderRadius: '8px', color: '#fff', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 500, border: 'none', cursor: downloadingId === doc.id ? 'not-allowed' : 'pointer', transition: 'var(--transition)', opacity: downloadingId === doc.id ? 0.7 : 1 }} onMouseOver={(e) => { if(downloadingId !== doc.id) e.currentTarget.style.filter = 'brightness(1.1)' }} onMouseOut={(e) => { if(downloadingId !== doc.id) e.currentTarget.style.filter = 'brightness(1)' }}>{downloadingId === doc.id ? <><Loader2 size={16} className="spin" /> Downloading...</> : <><Download size={16} /> Download</>}</button>
                             </>
                           ) : (
                             <>
-                              <button style={{ padding: '8px', background: 'var(--card-dark)', borderRadius: '8px', color: 'var(--text-main)', display: 'flex', border: 'none', cursor: 'pointer', transition: 'var(--transition)' }} onMouseOver={(e) => e.currentTarget.style.color = 'var(--primary)'} onMouseOut={(e) => e.currentTarget.style.color = 'var(--text-main)'}><Share2 size={16} /></button>
-                              <button style={{ padding: '8px', background: 'var(--primary)', borderRadius: '8px', color: '#fff', display: 'flex', border: 'none', cursor: 'pointer', transition: 'var(--transition)' }} onMouseOver={(e) => e.currentTarget.style.filter = 'brightness(1.1)'} onMouseOut={(e) => e.currentTarget.style.filter = 'brightness(1)'}><Download size={16} /></button>
+                              <button style={{ padding: '8px 12px', background: 'var(--card-dark)', borderRadius: '8px', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 500, border: 'none', cursor: 'pointer', transition: 'var(--transition)' }} onMouseOver={(e) => { e.currentTarget.style.color = 'var(--primary)'; e.currentTarget.style.background = 'var(--surface)'; }} onMouseOut={(e) => { e.currentTarget.style.color = 'var(--text-main)'; e.currentTarget.style.background = 'var(--card-dark)'; }}><Eye size={16} /> View</button>
+                              <button style={{ padding: '8px 12px', background: 'var(--primary)', borderRadius: '8px', color: '#fff', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 500, border: 'none', cursor: 'pointer', transition: 'var(--transition)' }} onMouseOver={(e) => e.currentTarget.style.filter = 'brightness(1.1)'} onMouseOut={(e) => e.currentTarget.style.filter = 'brightness(1)'}><Download size={16} /> Download</button>
                             </>
                           )}
                         </div>
@@ -373,13 +404,13 @@ const Documents = () => {
                             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                               {doc.url ? (
                                 <>
-                                  <a href={doc.url} target="_blank" rel="noreferrer" style={{ padding: '8px', background: 'var(--card-dark)', borderRadius: '8px', color: 'var(--text-main)', transition: 'var(--transition)' }} onMouseOver={(e) => e.currentTarget.style.color = 'var(--primary)'} onMouseOut={(e) => e.currentTarget.style.color = 'var(--text-main)'}><Eye size={16} /></a>
-                                  <a href={doc.url} download target="_blank" rel="noreferrer" style={{ padding: '8px', background: 'var(--primary)', borderRadius: '8px', color: '#fff', transition: 'var(--transition)' }} onMouseOver={(e) => e.currentTarget.style.filter = 'brightness(1.1)'} onMouseOut={(e) => e.currentTarget.style.filter = 'brightness(1)'}><Download size={16} /></a>
+                                  <a href={doc.url} target="_blank" rel="noreferrer" style={{ padding: '8px 12px', background: 'var(--card-dark)', borderRadius: '8px', color: 'var(--text-main)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 500, transition: 'var(--transition)' }} onMouseOver={(e) => { e.currentTarget.style.color = 'var(--primary)'; e.currentTarget.style.background = 'var(--surface)'; }} onMouseOut={(e) => { e.currentTarget.style.color = 'var(--text-main)'; e.currentTarget.style.background = 'var(--card-dark)'; }}><Eye size={16} /> View</a>
+                                  <button disabled={downloadingId === doc.id} onClick={(e) => handleDownloadFile(e, doc.url, doc.title, doc.type, doc.id)} style={{ padding: '8px 12px', background: 'var(--primary)', borderRadius: '8px', color: '#fff', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 500, border: 'none', cursor: downloadingId === doc.id ? 'not-allowed' : 'pointer', transition: 'var(--transition)', opacity: downloadingId === doc.id ? 0.7 : 1 }} onMouseOver={(e) => { if(downloadingId !== doc.id) e.currentTarget.style.filter = 'brightness(1.1)' }} onMouseOut={(e) => { if(downloadingId !== doc.id) e.currentTarget.style.filter = 'brightness(1)' }}>{downloadingId === doc.id ? <><Loader2 size={16} className="spin" /> Downloading...</> : <><Download size={16} /> Download</>}</button>
                                 </>
                               ) : (
                                 <>
-                                  <button style={{ padding: '8px', background: 'var(--card-dark)', borderRadius: '8px', color: 'var(--text-main)', border: 'none', cursor: 'pointer', transition: 'var(--transition)' }} onMouseOver={(e) => e.currentTarget.style.color = 'var(--primary)'} onMouseOut={(e) => e.currentTarget.style.color = 'var(--text-main)'}><Share2 size={16} /></button>
-                                  <button style={{ padding: '8px', background: 'var(--primary)', borderRadius: '8px', color: '#fff', border: 'none', cursor: 'pointer', transition: 'var(--transition)' }} onMouseOver={(e) => e.currentTarget.style.filter = 'brightness(1.1)'} onMouseOut={(e) => e.currentTarget.style.filter = 'brightness(1)'}><Download size={16} /></button>
+                                  <button style={{ padding: '8px 12px', background: 'var(--card-dark)', borderRadius: '8px', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 500, border: 'none', cursor: 'pointer', transition: 'var(--transition)' }} onMouseOver={(e) => { e.currentTarget.style.color = 'var(--primary)'; e.currentTarget.style.background = 'var(--surface)'; }} onMouseOut={(e) => { e.currentTarget.style.color = 'var(--text-main)'; e.currentTarget.style.background = 'var(--card-dark)'; }}><Eye size={16} /> View</button>
+                                  <button style={{ padding: '8px 12px', background: 'var(--primary)', borderRadius: '8px', color: '#fff', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 500, border: 'none', cursor: 'pointer', transition: 'var(--transition)' }} onMouseOver={(e) => e.currentTarget.style.filter = 'brightness(1.1)'} onMouseOut={(e) => e.currentTarget.style.filter = 'brightness(1)'}><Download size={16} /> Download</button>
                                 </>
                               )}
                             </div>

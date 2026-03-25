@@ -380,3 +380,12 @@ a:hover {
   .hero-btns { flex-direction: column; width: 100%; max-width: 300px; }
   .input-field { font-size: 1rem; }
 }
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}

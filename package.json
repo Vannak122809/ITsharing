@@ -12,6 +12,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1008.0",
     "@aws-sdk/s3-request-presigner": "^3.1011.0",
+    "bootstrap": "^5.3.8",
     "firebase": "^12.10.0",
     "lucide-react": "^0.577.0",
     "react": "^19.2.4",
