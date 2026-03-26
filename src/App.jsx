@@ -42,7 +42,6 @@ function App() {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
-        // Auto-save all user info to Firestore on every login
         const profile = await syncUserToFirestore(currentUser);
         setUserProfile(profile);
       } else {
@@ -51,6 +50,15 @@ function App() {
     });
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    // Apply guest-mode if not logged in and not on the login page
+    if (!user && location.pathname !== '/login') {
+      document.body.classList.add('guest-mode');
+    } else {
+      document.body.classList.remove('guest-mode');
+    }
+  }, [user, location.pathname]);
 
   // Close drawer on route change
   useEffect(() => {
@@ -66,16 +74,22 @@ function App() {
     }
   };
 
-  const mainNavItems = [
+  const mainNavItems = user ? [
     { name: 'Software', path: '/software', icon: <DownloadCloud size={18} /> },
     { name: 'Documents', path: '/documents', icon: <FileText size={18} /> },
     { name: 'Courses', path: '/courses', icon: <Video size={18} /> },
     { name: 'Forum', path: '/community', icon: <Users size={18} /> },
+  ] : [
+    { name: 'Software', path: '/software', icon: <DownloadCloud size={18} /> },
+    { name: 'Documents', path: '/documents', icon: <FileText size={18} /> },
+    { name: 'Courses', path: '/courses', icon: <Video size={18} /> },
   ];
 
-  const moreNavItems = [
+  const moreNavItems = user ? [
     { name: 'Experiences', path: '/experiences', icon: <BookOpen size={18} /> },
     { name: 'Request', path: '/request', icon: <HelpCircle size={18} /> },
+  ] : [
+    { name: 'Experiences', path: '/experiences', icon: <BookOpen size={18} /> },
   ];
 
   const allNavItems = [...mainNavItems, ...moreNavItems];

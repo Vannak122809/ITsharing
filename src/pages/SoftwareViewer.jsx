@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Download, Monitor, Apple, CheckCircle, ShieldAlert, Zap, Box } from 'lucide-react';
 import { softwareData } from './Software';
+import { auth } from '../firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 
 const mockSoftwareDB = {
   // === WINDOWS SOFTWARE ===
@@ -174,6 +176,13 @@ const mockSoftwareDB = {
 const SoftwareViewer = () => {
   const { id } = useParams();
   const [software, setSoftware] = useState(null);
+  const [user, setUser] = useState(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, setUser);
+    return () => unsub();
+  }, []);
 
   useEffect(() => {
     // In reality, this would fetch from Firebase or R2 mapping
@@ -228,7 +237,7 @@ const SoftwareViewer = () => {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', minWidth: '200px' }}>
-            <a href={software.downloadUrl || "https://files.kichhoat24h.com/download"} target="_blank" rel="noreferrer" className="btn btn-primary" style={{ padding: '16px', fontSize: '1.1rem', boxShadow: '0 8px 30px rgba(69, 243, 255, 0.4)', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+            <a href={software.downloadUrl || "https://files.kichhoat24h.com/download"} target="_blank" rel="noreferrer" onClick={(e) => { if (!user) { e.preventDefault(); navigate('/login'); } }} className="btn btn-primary" style={{ padding: '16px', fontSize: '1.1rem', boxShadow: '0 8px 30px rgba(69, 243, 255, 0.4)', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
               <Download size={20} /> Download Now
             </a>
             <div style={{ textAlign: 'center', fontSize: '0.85rem', color: 'var(--text-muted)' }}>

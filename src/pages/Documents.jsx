@@ -1,4 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { auth } from '../firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 import { Download, FileText, Share2, Globe, Filter, Eye, Folder, ChevronRight, ChevronDown, ArrowLeft, Cloud, Network, Terminal, Database, ShieldCheck, ArrowUpDown, LayoutGrid, List, Search, File, Loader2 } from 'lucide-react';
 
 const ModernFolderIcon = ({ size = 48, color = "#14b8a6" }) => (
@@ -46,6 +49,13 @@ const Documents = () => {
   const [sortBy, setSortBy] = useState('name');
   const [viewMode, setViewMode] = useState('grid'); 
   const [downloadingId, setDownloadingId] = useState(null);
+  const [user, setUser] = useState(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, setUser);
+    return () => unsub();
+  }, []);
 
   const toggleFolder = (folderName) => {
     setExpandedFolders(prev => ({ ...prev, [folderName]: !prev[folderName] }));
@@ -60,8 +70,12 @@ const Documents = () => {
   };
 
   const handleDownloadFile = async (e, url, title, type, docId) => {
-    if (!url) return;
     e.preventDefault();
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    if (!url) return;
     setDownloadingId(docId);
     try {
       // Adding a timestamp to prevent the browser/Cloudflare from serving a cached non-CORS response
@@ -359,13 +373,13 @@ const Documents = () => {
                         <div style={{ display: 'flex', gap: '8px' }}>
                           {doc.url ? (
                             <>
-                              <a href={doc.url} target="_blank" rel="noreferrer" style={{ padding: '8px 12px', background: 'var(--card-dark)', borderRadius: '8px', color: 'var(--text-main)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 500, transition: 'var(--transition)' }} onMouseOver={(e) => { e.currentTarget.style.color = 'var(--primary)'; e.currentTarget.style.background = 'var(--surface)'; }} onMouseOut={(e) => { e.currentTarget.style.color = 'var(--text-main)'; e.currentTarget.style.background = 'var(--card-dark)'; }}><Eye size={16} /> View</a>
+                              <a href={doc.url} target="_blank" rel="noreferrer" onClick={(e) => { if (!user) { e.preventDefault(); navigate('/login'); } }} style={{ padding: '8px 12px', background: 'var(--card-dark)', borderRadius: '8px', color: 'var(--text-main)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 500, transition: 'var(--transition)' }} onMouseOver={(e) => { e.currentTarget.style.color = 'var(--primary)'; e.currentTarget.style.background = 'var(--surface)'; }} onMouseOut={(e) => { e.currentTarget.style.color = 'var(--text-main)'; e.currentTarget.style.background = 'var(--card-dark)'; }}><Eye size={16} /> View</a>
                               <button disabled={downloadingId === doc.id} onClick={(e) => handleDownloadFile(e, doc.url, doc.title, doc.type, doc.id)} style={{ padding: '8px 12px', background: 'var(--primary)', borderRadius: '8px', color: '#fff', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 500, border: 'none', cursor: downloadingId === doc.id ? 'not-allowed' : 'pointer', transition: 'var(--transition)', opacity: downloadingId === doc.id ? 0.7 : 1 }} onMouseOver={(e) => { if(downloadingId !== doc.id) e.currentTarget.style.filter = 'brightness(1.1)' }} onMouseOut={(e) => { if(downloadingId !== doc.id) e.currentTarget.style.filter = 'brightness(1)' }}>{downloadingId === doc.id ? <><Loader2 size={16} className="spin" /> Downloading...</> : <><Download size={16} /> Download</>}</button>
                             </>
                           ) : (
                             <>
-                              <button style={{ padding: '8px 12px', background: 'var(--card-dark)', borderRadius: '8px', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 500, border: 'none', cursor: 'pointer', transition: 'var(--transition)' }} onMouseOver={(e) => { e.currentTarget.style.color = 'var(--primary)'; e.currentTarget.style.background = 'var(--surface)'; }} onMouseOut={(e) => { e.currentTarget.style.color = 'var(--text-main)'; e.currentTarget.style.background = 'var(--card-dark)'; }}><Eye size={16} /> View</button>
-                              <button style={{ padding: '8px 12px', background: 'var(--primary)', borderRadius: '8px', color: '#fff', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 500, border: 'none', cursor: 'pointer', transition: 'var(--transition)' }} onMouseOver={(e) => e.currentTarget.style.filter = 'brightness(1.1)'} onMouseOut={(e) => e.currentTarget.style.filter = 'brightness(1)'}><Download size={16} /> Download</button>
+                              <button onClick={(e) => { if (!user) navigate('/login'); }} style={{ padding: '8px 12px', background: 'var(--card-dark)', borderRadius: '8px', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 500, border: 'none', cursor: 'pointer', transition: 'var(--transition)' }} onMouseOver={(e) => { e.currentTarget.style.color = 'var(--primary)'; e.currentTarget.style.background = 'var(--surface)'; }} onMouseOut={(e) => { e.currentTarget.style.color = 'var(--text-main)'; e.currentTarget.style.background = 'var(--card-dark)'; }}><Eye size={16} /> View</button>
+                              <button onClick={(e) => { if (!user) navigate('/login'); }} style={{ padding: '8px 12px', background: 'var(--primary)', borderRadius: '8px', color: '#fff', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 500, border: 'none', cursor: 'pointer', transition: 'var(--transition)' }} onMouseOver={(e) => e.currentTarget.style.filter = 'brightness(1.1)'} onMouseOut={(e) => e.currentTarget.style.filter = 'brightness(1)'}><Download size={16} /> Download</button>
                             </>
                           )}
                         </div>
@@ -404,13 +418,13 @@ const Documents = () => {
                             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                               {doc.url ? (
                                 <>
-                                  <a href={doc.url} target="_blank" rel="noreferrer" style={{ padding: '8px 12px', background: 'var(--card-dark)', borderRadius: '8px', color: 'var(--text-main)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 500, transition: 'var(--transition)' }} onMouseOver={(e) => { e.currentTarget.style.color = 'var(--primary)'; e.currentTarget.style.background = 'var(--surface)'; }} onMouseOut={(e) => { e.currentTarget.style.color = 'var(--text-main)'; e.currentTarget.style.background = 'var(--card-dark)'; }}><Eye size={16} /> View</a>
+                                  <a href={doc.url} target="_blank" rel="noreferrer" onClick={(e) => { if (!user) { e.preventDefault(); navigate('/login'); } }} style={{ padding: '8px 12px', background: 'var(--card-dark)', borderRadius: '8px', color: 'var(--text-main)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 500, transition: 'var(--transition)' }} onMouseOver={(e) => { e.currentTarget.style.color = 'var(--primary)'; e.currentTarget.style.background = 'var(--surface)'; }} onMouseOut={(e) => { e.currentTarget.style.color = 'var(--text-main)'; e.currentTarget.style.background = 'var(--card-dark)'; }}><Eye size={16} /> View</a>
                                   <button disabled={downloadingId === doc.id} onClick={(e) => handleDownloadFile(e, doc.url, doc.title, doc.type, doc.id)} style={{ padding: '8px 12px', background: 'var(--primary)', borderRadius: '8px', color: '#fff', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 500, border: 'none', cursor: downloadingId === doc.id ? 'not-allowed' : 'pointer', transition: 'var(--transition)', opacity: downloadingId === doc.id ? 0.7 : 1 }} onMouseOver={(e) => { if(downloadingId !== doc.id) e.currentTarget.style.filter = 'brightness(1.1)' }} onMouseOut={(e) => { if(downloadingId !== doc.id) e.currentTarget.style.filter = 'brightness(1)' }}>{downloadingId === doc.id ? <><Loader2 size={16} className="spin" /> Downloading...</> : <><Download size={16} /> Download</>}</button>
                                 </>
                               ) : (
                                 <>
-                                  <button style={{ padding: '8px 12px', background: 'var(--card-dark)', borderRadius: '8px', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 500, border: 'none', cursor: 'pointer', transition: 'var(--transition)' }} onMouseOver={(e) => { e.currentTarget.style.color = 'var(--primary)'; e.currentTarget.style.background = 'var(--surface)'; }} onMouseOut={(e) => { e.currentTarget.style.color = 'var(--text-main)'; e.currentTarget.style.background = 'var(--card-dark)'; }}><Eye size={16} /> View</button>
-                                  <button style={{ padding: '8px 12px', background: 'var(--primary)', borderRadius: '8px', color: '#fff', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 500, border: 'none', cursor: 'pointer', transition: 'var(--transition)' }} onMouseOver={(e) => e.currentTarget.style.filter = 'brightness(1.1)'} onMouseOut={(e) => e.currentTarget.style.filter = 'brightness(1)'}><Download size={16} /> Download</button>
+                                  <button onClick={(e) => { if (!user) navigate('/login'); }} style={{ padding: '8px 12px', background: 'var(--card-dark)', borderRadius: '8px', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 500, border: 'none', cursor: 'pointer', transition: 'var(--transition)' }} onMouseOver={(e) => { e.currentTarget.style.color = 'var(--primary)'; e.currentTarget.style.background = 'var(--surface)'; }} onMouseOut={(e) => { e.currentTarget.style.color = 'var(--text-main)'; e.currentTarget.style.background = 'var(--card-dark)'; }}><Eye size={16} /> View</button>
+                                  <button onClick={(e) => { if (!user) navigate('/login'); }} style={{ padding: '8px 12px', background: 'var(--primary)', borderRadius: '8px', color: '#fff', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 500, border: 'none', cursor: 'pointer', transition: 'var(--transition)' }} onMouseOver={(e) => e.currentTarget.style.filter = 'brightness(1.1)'} onMouseOut={(e) => e.currentTarget.style.filter = 'brightness(1)'}><Download size={16} /> Download</button>
                                 </>
                               )}
                             </div>

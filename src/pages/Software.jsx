@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Monitor, Apple, ChevronRight, Folder, File, ArrowLeft, Eye } from 'lucide-react';
+import { auth } from '../firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 
 const ModernIsoIcon = ({ size = 42 }) => (
   <img src="/iso.png" alt="ISO" style={{ width: size, height: size, objectFit: 'contain' }} />
@@ -155,6 +157,13 @@ const Software = () => {
   const [currentFolder, setCurrentFolder] = useState(null);
   const [currentSubfolder, setCurrentSubfolder] = useState(null);
   const [currentTypeFolder, setCurrentTypeFolder] = useState(null);
+  const [user, setUser] = useState(null);
+  const navigate = useNavigate();
+
+  React.useEffect(() => {
+    const unsub = onAuthStateChanged(auth, setUser);
+    return () => unsub();
+  }, []);
 
   // Folder Icon color - Bright Orange
   const folderColor = '#e88f15';
@@ -436,6 +445,7 @@ const Software = () => {
                           href={software.url || `https://files.kichhoat24h.com/download/${encodeURIComponent(software.folder)}/${encodeURIComponent(software.title)}`}
                           target="_blank" 
                           rel="noreferrer"
+                          onClick={(e) => { if (!user) { e.preventDefault(); navigate('/login'); } }}
                           style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--text-main)', wordBreak: 'break-all', textDecoration: 'none' }}
                           onMouseOver={(e) => e.target.style.color = 'var(--primary)'}
                           onMouseOut={(e) => e.target.style.color = 'var(--text-main)'}
@@ -465,6 +475,7 @@ const Software = () => {
                         href={software.url || `https://files.kichhoat24h.com/download/${encodeURIComponent(software.folder)}/${encodeURIComponent(software.title)}`}
                         target="_blank" 
                         rel="noreferrer"
+                        onClick={(e) => { if (!user) { e.preventDefault(); navigate('/login'); } }}
                         style={{ display: 'flex', alignItems: 'center', color: 'var(--primary)', opacity: 0.8, textDecoration: 'none' }}
                       >
                         <ChevronRight size={20} />
@@ -505,6 +516,7 @@ const Software = () => {
                     href={software.downloadUrl || software.url || `https://files.kichhoat24h.com/download/${encodeURIComponent(software.folder)}/${encodeURIComponent(software.title)}`}
                     target="_blank" 
                     rel="noreferrer"
+                    onClick={(e) => { if (!user) { e.preventDefault(); navigate('/login'); } }}
                     style={{ textDecoration: 'none', color: 'inherit' }}
                   >
                     <h3 
@@ -519,7 +531,7 @@ const Software = () => {
                   
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '24px', paddingTop: '16px', borderTop: '1px solid var(--surface-border)' }}>
                     <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Size: {software.size}</span>
-                    <Link to={`/software/${software.id}`} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 'bold', color: 'var(--primary)' }}>
+                    <Link to={`/software/${software.id}`} onClick={(e) => { if (!user) { e.preventDefault(); navigate('/login'); } }} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 'bold', color: 'var(--primary)' }}>
                       <Eye size={16} /> View
                     </Link>
                   </div>

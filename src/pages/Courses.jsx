@@ -1,8 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { PlayCircle, Award, Search, Filter } from 'lucide-react';
+import { auth } from '../firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 
 const Courses = () => {
   const [activeCategory, setActiveCategory] = useState('All');
+  const [user, setUser] = useState(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, setUser);
+    return () => unsub();
+  }, []);
 
   const categories = ['All', 'Network', 'Code', 'Computer', 'Security', 'Cloud'];
 
@@ -114,7 +124,7 @@ const Courses = () => {
             <p className="card-desc" style={{ marginTop: '8px' }}>{course.desc}</p>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px' }}>
               <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{course.lessons} videos</span>
-              <button className="btn btn-primary" style={{ padding: '8px 16px', fontSize: '0.9rem' }}>Start Course</button>
+              <button onClick={() => { if (!user) navigate('/login'); else alert('Course playback feature coming soon!'); }} className="btn btn-primary" style={{ padding: '8px 16px', fontSize: '0.9rem' }}>Start Course</button>
             </div>
           </div>
         ))}
