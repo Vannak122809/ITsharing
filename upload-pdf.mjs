@@ -3,10 +3,10 @@ import fs from "fs";
 
 const r2Client = new S3Client({
   region: "auto",
-  endpoint: "https://baefceb90c0d256e27440b3d07f4631e.r2.cloudflarestorage.com",
+  endpoint: process.env.VITE_R2_ENDPOINT,
   credentials: {
-    accessKeyId: "f58ef276a3500d78bc65109bed37bffe",
-    secretAccessKey: "8332930b1a25a9d46156802f6d8868c402a20186d1dedb57677067b8e281de37",
+    accessKeyId: process.env.VITE_R2_ACCESS_KEY_ID,
+    secretAccessKey: process.env.VITE_R2_SECRET_ACCESS_KEY,
   },
 });
 

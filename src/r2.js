@@ -1,14 +1,24 @@
 import { S3Client } from "@aws-sdk/client-s3";
 
-// Your Cloudflare R2 Configuration
-// Ensure you create R2 API keys and a bucket in the Cloudflare Dashboard
+// ── Documents bucket ("document") ────────────────────────────────────────────
 export const r2Client = new S3Client({
   region: "auto",
-  endpoint: "https://baefceb90c0d256e27440b3d07f4631e.r2.cloudflarestorage.com",
+  endpoint: import.meta.env.VITE_R2_ENDPOINT,
   credentials: {
-    accessKeyId: "3e6da7821e3dcf7f241da16746438d16",
-    secretAccessKey: "47ad76cb6e267453a3e37af30d85dac79d5abc9c445fd77dca8fdc97dac165ab",
+    accessKeyId:     import.meta.env.VITE_R2_ACCESS_KEY_ID,
+    secretAccessKey: import.meta.env.VITE_R2_SECRET_ACCESS_KEY,
   },
 });
+export const BUCKET_NAME = import.meta.env.VITE_R2_BUCKET_NAME;
 
-export const BUCKET_NAME = "document";
+// ── Image bucket ("image") — for avatars, cover photos, user uploads ──────────
+export const imageR2Client = new S3Client({
+  region: "auto",
+  endpoint: import.meta.env.VITE_R2_IMAGE_ENDPOINT,
+  credentials: {
+    accessKeyId:     import.meta.env.VITE_R2_ACCESS_KEY_ID,
+    secretAccessKey: import.meta.env.VITE_R2_SECRET_ACCESS_KEY,
+  },
+});
+export const IMAGE_BUCKET     = import.meta.env.VITE_R2_IMAGE_BUCKET;
+export const IMAGE_PUBLIC_URL = import.meta.env.VITE_R2_IMAGE_PUBLIC_URL;

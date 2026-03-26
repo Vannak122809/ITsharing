@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
-import { Terminal, Video, FileText, BookOpen, Layers, User, LogOut, DownloadCloud, Sun, Moon, Users, HelpCircle } from 'lucide-react';
+import { Terminal, Video, FileText, BookOpen, Layers, User, LogOut, DownloadCloud, Sun, Moon, Users, HelpCircle, Menu, X } from 'lucide-react';
 
 import { auth } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { syncUserToFirestore } from './userService';
 
 import Home from './pages/Home';
 import Courses from './pages/Courses';
@@ -17,13 +18,16 @@ import RequestResource from './pages/RequestResource';
 import Profile from './pages/Profile';
 import AdminDashboard from './pages/AdminDashboard';
 import GlobalSearch from './components/GlobalSearch';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   const location = useLocation();
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
+  const [userProfile, setUserProfile] = useState(null); // Firestore profile data
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
   const [showMore, setShowMore] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   useEffect(() => {
     if (theme === 'dark') {
@@ -35,11 +39,23 @@ function App() {
   }, [theme]);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
+      if (currentUser) {
+        // Auto-save all user info to Firestore on every login
+        const profile = await syncUserToFirestore(currentUser);
+        setUserProfile(profile);
+      } else {
+        setUserProfile(null);
+      }
     });
     return () => unsubscribe();
   }, []);
+
+  // Close drawer on route change
+  useEffect(() => {
+    setDrawerOpen(false);
+  }, [location.pathname]);
 
   const handleSignOut = async () => {
     try {
@@ -62,41 +78,49 @@ function App() {
     { name: 'Request', path: '/request', icon: <HelpCircle size={18} /> },
   ];
 
+  const allNavItems = [...mainNavItems, ...moreNavItems];
+
+  const isActive = (path) =>
+    path !== '/' && location.pathname.startsWith(path) ? 'active' : location.pathname === path ? 'active' : '';
+
   return (
     <>
+      {/* ─── NAVBAR ─── */}
       <nav className="navbar">
         <div className="container nav-container">
           <Link to="/" className="logo">
             <Layers color="var(--primary)" size={28} />
             IT<span className="text-gradient">Share</span>
           </Link>
+
+          {/* Desktop links */}
           <div className="nav-links">
             {mainNavItems.map((item) => (
-              <Link 
-                key={item.path} 
-                to={item.path} 
-                className={`nav-link ${location.pathname.startsWith(item.path) && item.path !== '/' ? 'active' : location.pathname === item.path ? 'active' : ''}`}
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`nav-link ${isActive(item.path)}`}
                 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
               >
                 {item.icon}
                 {item.name}
               </Link>
             ))}
-            
-            <div 
-              className="nav-link" 
+
+            <div
+              className="nav-link"
               style={{ position: 'relative', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 0' }}
               onMouseEnter={() => setShowMore(true)}
               onMouseLeave={() => setShowMore(false)}
             >
               <Layers size={16} /> More ▾
-              
+
               {showMore && (
                 <div className="glass-panel" style={{ position: 'absolute', top: '100%', left: '0', minWidth: '180px', display: 'flex', flexDirection: 'column', padding: '8px', zIndex: 1000, marginTop: '-8px' }}>
                   {moreNavItems.map((item) => (
-                    <Link 
-                      key={item.path} 
-                      to={item.path} 
+                    <Link
+                      key={item.path}
+                      to={item.path}
                       onClick={() => setShowMore(false)}
                       style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', color: 'var(--text-main)', textDecoration: 'none', borderRadius: '8px', transition: 'var(--transition)' }}
                       onMouseOver={(e) => { e.currentTarget.style.backgroundColor = 'var(--surface-badge)'; e.currentTarget.style.color = 'var(--primary)'; }}
@@ -109,9 +133,11 @@ function App() {
               )}
             </div>
           </div>
-          <div className="nav-actions" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+
+          {/* Desktop actions */}
+          <div className="nav-actions" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <GlobalSearch />
-            <button 
+            <button
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
               className="btn btn-outline"
               style={{ padding: '6px 12px', border: 'none' }}
@@ -122,9 +148,14 @@ function App() {
             {user ? (
               <>
                 <Link to="/profile" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', color: 'var(--text-muted)', textDecoration: 'none' }}>
-                  <User size={16} color="var(--primary)" />
-                  <span style={{ maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={user.email}>
-                    {user.email}
+                  {userProfile?.avatarUrl ? (
+                    <img src={userProfile.avatarUrl} alt="avatar"
+                      style={{ width: '26px', height: '26px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary)' }} />
+                  ) : (
+                    <User size={16} color="var(--primary)" />
+                  )}
+                  <span className="nav-user-email" style={{ maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={user.email}>
+                    {userProfile?.nickname || user.email}
                   </span>
                 </Link>
                 <button onClick={handleSignOut} className="btn btn-outline" style={{ padding: '6px 12px', fontSize: '0.85rem' }} title="Sign Out">
@@ -136,9 +167,73 @@ function App() {
                 Sign In
               </Link>
             )}
+
+            {/* Hamburger button (mobile only) */}
+            <button
+              className={`nav-hamburger ${drawerOpen ? 'open' : ''}`}
+              onClick={() => setDrawerOpen(!drawerOpen)}
+              aria-label="Toggle mobile menu"
+            >
+              <span />
+              <span />
+              <span />
+            </button>
           </div>
         </div>
       </nav>
+
+      {/* ─── MOBILE DRAWER ─── */}
+      <div className={`nav-drawer ${drawerOpen ? 'open' : ''}`}>
+        {/* Click overlay to close */}
+        <div className="nav-drawer-overlay" onClick={() => setDrawerOpen(false)} />
+        <div className="nav-drawer-panel">
+          <Link to="/" className="drawer-logo">
+            <Layers color="var(--primary)" size={22} />
+            IT<span className="text-gradient">Share</span>
+          </Link>
+
+          {allNavItems.map((item) => (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={`drawer-nav-link ${isActive(item.path)}`}
+            >
+              {item.icon}
+              {item.name}
+            </Link>
+          ))}
+
+          <div className="drawer-divider" />
+
+          <div className="drawer-actions">
+            <button
+              onClick={() => { setTheme(theme === 'dark' ? 'light' : 'dark'); }}
+              className="btn btn-outline"
+              style={{ justifyContent: 'center', gap: '8px' }}
+            >
+              {theme === 'dark' ? <><Sun size={16} /> Light Mode</> : <><Moon size={16} /> Dark Mode</>}
+            </button>
+
+            {user ? (
+              <>
+                <Link to="/profile" className="drawer-nav-link" style={{ background: 'var(--surface-badge)', borderRadius: '12px' }}>
+                  <User size={16} color="var(--primary)" />
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '0.85rem' }}>
+                    {user.email}
+                  </span>
+                </Link>
+                <button onClick={handleSignOut} className="btn btn-outline" style={{ justifyContent: 'center', gap: '8px' }}>
+                  <LogOut size={16} /> Sign Out
+                </button>
+              </>
+            ) : (
+              <Link to="/login" className="btn btn-primary" style={{ justifyContent: 'center' }}>
+                Sign In
+              </Link>
+            )}
+          </div>
+        </div>
+      </div>
 
       <main>
         <Routes>
@@ -150,12 +245,20 @@ function App() {
           <Route path="/software/:id" element={<SoftwareViewer />} />
           <Route path="/community" element={<Community />} />
           <Route path="/request" element={<RequestResource />} />
-          <Route path="/profile" element={<Profile user={user} />} />
-          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/profile" element={
+            <ProtectedRoute>
+              <Profile user={user} />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin" element={
+            <ProtectedRoute>
+              <AdminDashboard />
+            </ProtectedRoute>
+          } />
           <Route path="/login" element={<Login />} />
         </Routes>
       </main>
-      
+
       <footer style={{ marginTop: '100px', padding: '40px 0', borderTop: '1px solid var(--surface-border)', textAlign: 'center', background: 'var(--nav-bg)' }}>
         <p style={{ color: 'var(--text-muted)' }}>&copy; {new Date().getFullYear()} ITShare. Built for the tech community.</p>
       </footer>
@@ -164,3 +267,5 @@ function App() {
 }
 
 export default App;
+
+
