@@ -1,11 +1,24 @@
-import React, { useState } from 'react';
 import { Send, CheckCircle } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { auth } from '../firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 
 const RequestResource = () => {
   const [type, setType] = useState('software');
   const [name, setName] = useState('');
   const [details, setDetails] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (u) => {
+      if (!u || u.isAnonymous) {
+        navigate('/login');
+      }
+    });
+    return () => unsub();
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();

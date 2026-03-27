@@ -29,6 +29,9 @@ function App() {
   const [showMore, setShowMore] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
+  // Guest means not logged in AT ALL or logged in ANONYMOUSLY
+  const isGuest = !user || user.isAnonymous;
+
   useEffect(() => {
     if (theme === 'dark') {
       document.documentElement.classList.add('dark-mode');
@@ -52,13 +55,13 @@ function App() {
   }, []);
 
   useEffect(() => {
-    // Apply guest-mode if not logged in and not on the login page
-    if (!user && location.pathname !== '/login') {
+    // Apply guest-mode if user is a guest and not on the login page
+    if (isGuest && location.pathname !== '/login') {
       document.body.classList.add('guest-mode');
     } else {
       document.body.classList.remove('guest-mode');
     }
-  }, [user, location.pathname]);
+  }, [isGuest, location.pathname]);
 
   // Close drawer on route change
   useEffect(() => {
@@ -74,7 +77,7 @@ function App() {
     }
   };
 
-  const mainNavItems = user ? [
+  const mainNavItems = !isGuest ? [
     { name: 'Software', path: '/software', icon: <DownloadCloud size={18} /> },
     { name: 'Documents', path: '/documents', icon: <FileText size={18} /> },
     { name: 'Courses', path: '/courses', icon: <Video size={18} /> },
@@ -85,7 +88,7 @@ function App() {
     { name: 'Courses', path: '/courses', icon: <Video size={18} /> },
   ];
 
-  const moreNavItems = user ? [
+  const moreNavItems = !isGuest ? [
     { name: 'Experiences', path: '/experiences', icon: <BookOpen size={18} /> },
     { name: 'Request', path: '/request', icon: <HelpCircle size={18} /> },
   ] : [
@@ -161,15 +164,15 @@ function App() {
             </button>
             {user ? (
               <>
-                <Link to="/profile" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', color: 'var(--text-muted)', textDecoration: 'none' }}>
-                  {userProfile?.avatarUrl ? (
+                <Link to={user.isAnonymous ? "#" : "/profile"} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', color: 'var(--text-muted)', textDecoration: 'none', cursor: user.isAnonymous ? 'default' : 'pointer' }}>
+                  {userProfile?.avatarUrl && !user.isAnonymous ? (
                     <img src={userProfile.avatarUrl} alt="avatar"
                       style={{ width: '26px', height: '26px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary)' }} />
                   ) : (
                     <User size={16} color="var(--primary)" />
                   )}
-                  <span className="nav-user-email" style={{ maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={user.email}>
-                    {userProfile?.nickname || user.email}
+                  <span className="nav-user-email" style={{ maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={user.isAnonymous ? 'Guest' : user.email}>
+                    {user.isAnonymous ? 'Guest User' : (userProfile?.nickname || user.email)}
                   </span>
                 </Link>
                 <button onClick={handleSignOut} className="btn btn-outline" style={{ padding: '6px 12px', fontSize: '0.85rem' }} title="Sign Out">
@@ -230,12 +233,12 @@ function App() {
 
             {user ? (
               <>
-                <Link to="/profile" className="drawer-nav-link" style={{ background: 'var(--surface-badge)', borderRadius: '12px' }}>
+                <div className="drawer-nav-link" style={{ background: 'var(--surface-badge)', borderRadius: '12px' }}>
                   <User size={16} color="var(--primary)" />
                   <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '0.85rem' }}>
-                    {user.email}
+                    {user.isAnonymous ? 'Guest User' : user.email}
                   </span>
-                </Link>
+                </div>
                 <button onClick={handleSignOut} className="btn btn-outline" style={{ justifyContent: 'center', gap: '8px' }}>
                   <LogOut size={16} /> Sign Out
                 </button>

@@ -24,8 +24,8 @@ const ProtectedRoute = ({ children }) => {
     );
   }
 
-  if (!user) {
-    // Redirect to login page if user is not authenticated
+  if (!user || user.isAnonymous) {
+    // Redirect to login page if user is not authenticated or is an anonymous guest
     return <Navigate to="/login" replace />;
   }
 

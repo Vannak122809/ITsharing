@@ -165,6 +165,8 @@ const Software = () => {
     return () => unsub();
   }, []);
 
+  const isGuest = !user || user.isAnonymous;
+
   // Folder Icon color - Bright Orange
   const folderColor = '#e88f15';
   const folderBg = '#fdf4e7'; // light orange for the background of the icon
@@ -445,7 +447,7 @@ const Software = () => {
                           href={software.url || `https://files.kichhoat24h.com/download/${encodeURIComponent(software.folder)}/${encodeURIComponent(software.title)}`}
                           target="_blank" 
                           rel="noreferrer"
-                          onClick={(e) => { if (!user) { e.preventDefault(); navigate('/login'); } }}
+                          onClick={(e) => { if (isGuest) { e.preventDefault(); navigate('/login'); } }}
                           style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--text-main)', wordBreak: 'break-all', textDecoration: 'none' }}
                           onMouseOver={(e) => e.target.style.color = 'var(--primary)'}
                           onMouseOut={(e) => e.target.style.color = 'var(--text-main)'}
@@ -475,7 +477,7 @@ const Software = () => {
                         href={software.url || `https://files.kichhoat24h.com/download/${encodeURIComponent(software.folder)}/${encodeURIComponent(software.title)}`}
                         target="_blank" 
                         rel="noreferrer"
-                        onClick={(e) => { if (!user) { e.preventDefault(); navigate('/login'); } }}
+                        onClick={(e) => { if (isGuest) { e.preventDefault(); navigate('/login'); } }}
                         style={{ display: 'flex', alignItems: 'center', color: 'var(--primary)', opacity: 0.8, textDecoration: 'none' }}
                       >
                         <ChevronRight size={20} />
@@ -516,7 +518,7 @@ const Software = () => {
                     href={software.downloadUrl || software.url || `https://files.kichhoat24h.com/download/${encodeURIComponent(software.folder)}/${encodeURIComponent(software.title)}`}
                     target="_blank" 
                     rel="noreferrer"
-                    onClick={(e) => { if (!user) { e.preventDefault(); navigate('/login'); } }}
+                    onClick={(e) => { if (isGuest) { e.preventDefault(); navigate('/login'); } }}
                     style={{ textDecoration: 'none', color: 'inherit' }}
                   >
                     <h3 
@@ -531,7 +533,7 @@ const Software = () => {
                   
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '24px', paddingTop: '16px', borderTop: '1px solid var(--surface-border)' }}>
                     <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Size: {software.size}</span>
-                    <Link to={`/software/${software.id}`} onClick={(e) => { if (!user) { e.preventDefault(); navigate('/login'); } }} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 'bold', color: 'var(--primary)' }}>
+                    <Link to={`/software/${software.id}`} onClick={(e) => { if (isGuest) { e.preventDefault(); navigate('/login'); } }} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 'bold', color: 'var(--primary)' }}>
                       <Eye size={16} /> View
                     </Link>
                   </div>

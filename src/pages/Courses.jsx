@@ -14,6 +14,8 @@ const Courses = () => {
     return () => unsub();
   }, []);
 
+  const isGuest = !user || user.isAnonymous;
+
   const categories = ['All', 'Network', 'Code', 'Computer', 'Security', 'Cloud'];
 
   const courseData = [
@@ -124,7 +126,7 @@ const Courses = () => {
             <p className="card-desc" style={{ marginTop: '8px' }}>{course.desc}</p>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px' }}>
               <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{course.lessons} videos</span>
-              <button onClick={() => { if (!user) navigate('/login'); else alert('Course playback feature coming soon!'); }} className="btn btn-primary" style={{ padding: '8px 16px', fontSize: '0.9rem' }}>Start Course</button>
+              <button onClick={() => { if (isGuest) navigate('/login'); else alert('Course playback feature coming soon!'); }} className="btn btn-primary" style={{ padding: '8px 16px', fontSize: '0.9rem' }}>Start Course</button>
             </div>
           </div>
         ))}

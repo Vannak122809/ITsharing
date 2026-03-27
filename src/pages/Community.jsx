@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { MessageSquare, ThumbsUp, User, Send, Ghost } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { auth, db } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import {
@@ -12,6 +13,7 @@ const Community = () => {
   const [user, setUser]           = useState(null);
   const [nickname, setNickname]   = useState('');
   const [posts, setPosts]         = useState([]);
+  const navigate = useNavigate();
   const [newTitle, setNewTitle]   = useState('');
   const [newContent, setNewContent] = useState('');
   const [posting, setPosting]     = useState(false);
@@ -24,6 +26,12 @@ const Community = () => {
       if (u && !u.isAnonymous) {
         const nick = await getUserNickname(u.uid);
         setNickname(nick === 'Unknown' ? '' : nick);
+      } else if (u && u.isAnonymous) {
+        // Redirect anonymous guest away from community
+        navigate('/login');
+      } else if (!u) {
+        // Redirect unauthenticated guest away from community
+        navigate('/login');
       } else {
         setNickname('');
       }
