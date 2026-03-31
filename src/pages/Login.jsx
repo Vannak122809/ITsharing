@@ -6,7 +6,6 @@ import {
   sendPasswordResetEmail,
   signInWithPopup,
   GoogleAuthProvider,
-  signInAnonymously,
   setPersistence,
   browserLocalPersistence,
   browserSessionPersistence,
@@ -152,12 +151,6 @@ const Login = () => {
     finally { setLoading(false); }
   };
 
-  const handleGuest = async () => {
-    setError(''); setLoading(true);
-    try { await signInAnonymously(auth); navigate('/'); }
-    catch (err) { setError(friendlyError(err.code)); }
-    finally { setLoading(false); }
-  };
 
   // ── Password strength ──────────────────────────────────────────────
   const strengthColor = password.length >= 8 ? '#00c97d' : password.length >= 6 ? '#f59e0b' : '#ff2a7a';
@@ -290,13 +283,6 @@ const Login = () => {
             <Divider />
             <GoogleBtn label="Continue with Google" />
 
-            {/* Guest */}
-            <button type="button" onClick={handleGuest} disabled={loading}
-              style={{ width:'100%', background:'none', border:'none', color:'var(--text-muted)', cursor:'pointer', fontSize:'0.88rem', display:'flex', alignItems:'center', justifyContent:'center', gap:'8px', padding:'10px', borderRadius:'12px', transition:'var(--transition)', fontFamily:'inherit' }}
-              onMouseOver={e => { e.currentTarget.style.background='var(--surface-badge)'; e.currentTarget.style.color='var(--primary)'; }}
-              onMouseOut={e  => { e.currentTarget.style.background='none';               e.currentTarget.style.color='var(--text-muted)'; }}>
-              <Ghost size={16} /> Continue as Guest
-            </button>
 
             <SwitchRow text="Don't have an account?" action="signup" label="Sign Up" />
           </form>

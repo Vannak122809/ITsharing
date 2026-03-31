@@ -26,6 +26,70 @@ const ModernFolderIcon = ({ size = 48, className = '' }) => (
   </svg>
 );
 
+const SoftwareIcon = ({ id, os, size = 32 }) => {
+  const iconMap = {
+    'chrome-win': 'google.com',
+    'chrome-mac': 'google.com',
+    'vscode-win': 'visualstudio.com',
+    'vscode-mac': 'visualstudio.com',
+    'git-win': 'git-scm.com',
+    'docker-desktop-win': 'docker.com',
+    'docker-desktop-mac': 'docker.com',
+    'firefox-win': 'mozilla.org',
+    'firefox-mac': 'mozilla.org',
+    'zoom-win': 'zoom.us',
+    'zoom-mac': 'zoom.us',
+    'slack-win': 'slack.com',
+    'slack-mac': 'slack.com',
+    'discord-win': 'discord.com',
+    'discord-mac': 'discord.com',
+    'teams-win': 'microsoft.com',
+    'teams-mac': 'microsoft.com',
+    'vlc-mac': 'videolan.org',
+    'postman': 'postman.com',
+    'nodejs-win': 'nodejs.org',
+    'nodejs-mac': 'nodejs.org',
+    'python-win': 'python.org',
+    'python-mac': 'python.org',
+    'anydesk-win': 'anydesk.com',
+    'anydesk-mac': 'anydesk.com',
+    'teamviewer-win': 'teamviewer.com',
+    'teamviewer-mac': 'teamviewer.com',
+    'winrar': 'win-rar.com',
+    '7zip': '7-zip.org',
+    'rufus': 'rufus.ie',
+    'filezilla-win': 'filezilla-project.org',
+    'filezilla-mac': 'filezilla-project.org',
+    'iterm2': 'iterm2.com',
+    'homebrew': 'brew.sh',
+    'raycast': 'raycast.com',
+    'keka': 'keka.io',
+    'notepadpp': 'notepad-plus-plus.org',
+    'unarchiver': 'theunarchiver.com',
+    'vs-community': 'visualstudio.com',
+    'office-win': 'microsoft.com',
+    'office-mac': 'microsoft.com',
+    'libreoffice-win': 'libreoffice.org',
+    'libreoffice-mac': 'libreoffice.org',
+    'macos-sonoma': 'apple.com',
+    'macos-ventura': 'apple.com',
+  };
+
+  const domain = iconMap[id];
+  if (domain) {
+    return (
+      <img 
+        src={`https://www.google.com/s2/favicons?sz=64&domain=${domain}`} 
+        className="software-real-icon"
+        alt={id} 
+        style={{ width: size, height: size, objectFit: 'contain' }}
+      />
+    );
+  }
+
+  return os === 'windows' ? <Monitor size={size} /> : <Apple size={size} />;
+};
+
 export const softwareData = [
   // === WINDOWS ===
   { id: 'win11', title: 'Windows 11 ISO', desc: 'Official Windows 11 installation media (24H2).', os: 'windows', folder: 'Windows', size: '5.2 GB', version: '24H2', url: 'https://files.kichhoat24h.com/download/Windows/Win11_24H2_English_x64.iso' },
@@ -158,14 +222,18 @@ const Software = () => {
   const [currentSubfolder, setCurrentSubfolder] = useState(null);
   const [currentTypeFolder, setCurrentTypeFolder] = useState(null);
   const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
   const navigate = useNavigate();
 
   React.useEffect(() => {
-    const unsub = onAuthStateChanged(auth, setUser);
+    const unsub = onAuthStateChanged(auth, (u) => {
+      setUser(u);
+      setAuthLoading(false);
+    });
     return () => unsub();
   }, []);
 
-  const isGuest = !user || user.isAnonymous;
+  const isGuest = !authLoading && (!user || user.isAnonymous);
 
   // Folder Icon color - Bright Orange
   const folderColor = '#e88f15';
@@ -441,13 +509,18 @@ const Software = () => {
                     onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                      {(software.title.toLowerCase().includes('iso') || (software.url && software.url.toLowerCase().includes('.iso'))) ? <ModernIsoIcon /> : <ModernScriptIcon />}
+                      {(software.title.toLowerCase().includes('iso') || (software.url && software.url.toLowerCase().includes('.iso'))) 
+                        ? <ModernIsoIcon /> 
+                        : <SoftwareIcon id={software.id} os={software.os} size={32} />}
                       <div style={{ display: 'flex', flexDirection: 'column' }}>
                         <a 
                           href={software.url || `https://files.kichhoat24h.com/download/${encodeURIComponent(software.folder)}/${encodeURIComponent(software.title)}`}
                           target="_blank" 
                           rel="noreferrer"
-                          onClick={(e) => { if (isGuest) { e.preventDefault(); navigate('/login'); } }}
+                          onClick={(e) => { 
+                            if (authLoading) return;
+                            if (isGuest) { e.preventDefault(); navigate('/login'); } 
+                          }}
                           style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--text-main)', wordBreak: 'break-all', textDecoration: 'none' }}
                           onMouseOver={(e) => e.target.style.color = 'var(--primary)'}
                           onMouseOut={(e) => e.target.style.color = 'var(--text-main)'}
@@ -477,7 +550,10 @@ const Software = () => {
                         href={software.url || `https://files.kichhoat24h.com/download/${encodeURIComponent(software.folder)}/${encodeURIComponent(software.title)}`}
                         target="_blank" 
                         rel="noreferrer"
-                        onClick={(e) => { if (isGuest) { e.preventDefault(); navigate('/login'); } }}
+                        onClick={(e) => { 
+                          if (authLoading) return;
+                          if (isGuest) { e.preventDefault(); navigate('/login'); } 
+                        }}
                         style={{ display: 'flex', alignItems: 'center', color: 'var(--primary)', opacity: 0.8, textDecoration: 'none' }}
                       >
                         <ChevronRight size={20} />
@@ -498,10 +574,12 @@ const Software = () => {
               {filteredSoftware.map(software => (
                 <div key={software.id} className="card glass-panel flex flex-col" style={{ padding: '24px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
-                    <div style={{ background: 'rgba(69, 243, 255, 0.1)', padding: '16px', borderRadius: '16px', color: 'var(--primary)' }}>
+                    <div style={{ background: 'rgba(69, 243, 255, 0.1)', padding: '12px', borderRadius: '16px', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       {(software.title.toLowerCase().includes('iso') || (software.url && software.url.toLowerCase().includes('.iso'))) ? (
                         <ModernIsoIcon size={32} />
-                      ) : (software.os === 'windows' ? <Monitor size={32} /> : <Apple size={32} />)}
+                      ) : (
+                        <SoftwareIcon id={software.id} os={software.os} size={36} />
+                      )}
                     </div>
                     
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'flex-end' }}>
@@ -518,7 +596,10 @@ const Software = () => {
                     href={software.downloadUrl || software.url || `https://files.kichhoat24h.com/download/${encodeURIComponent(software.folder)}/${encodeURIComponent(software.title)}`}
                     target="_blank" 
                     rel="noreferrer"
-                    onClick={(e) => { if (isGuest) { e.preventDefault(); navigate('/login'); } }}
+                    onClick={(e) => { 
+                      if (authLoading) return;
+                      if (isGuest) { e.preventDefault(); navigate('/login'); } 
+                    }}
                     style={{ textDecoration: 'none', color: 'inherit' }}
                   >
                     <h3 
@@ -533,7 +614,14 @@ const Software = () => {
                   
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '24px', paddingTop: '16px', borderTop: '1px solid var(--surface-border)' }}>
                     <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Size: {software.size}</span>
-                    <Link to={`/software/${software.id}`} onClick={(e) => { if (isGuest) { e.preventDefault(); navigate('/login'); } }} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 'bold', color: 'var(--primary)' }}>
+                    <Link 
+                      to={isGuest ? '#' : `/software/${software.id}`} 
+                      onClick={(e) => { 
+                        if (authLoading) return;
+                        if (isGuest) { e.preventDefault(); navigate('/login'); } 
+                      }} 
+                      style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 'bold', color: 'var(--primary)' }}
+                    >
                       <Eye size={16} /> View
                     </Link>
                   </div>
@@ -555,4 +643,3 @@ const Software = () => {
 };
 
 export default Software;
-

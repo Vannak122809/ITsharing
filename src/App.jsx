@@ -19,6 +19,7 @@ import Profile from './pages/Profile';
 import AdminDashboard from './pages/AdminDashboard';
 import GlobalSearch from './components/GlobalSearch';
 import ProtectedRoute from './components/ProtectedRoute';
+import CoffeeDonate from './components/CoffeeDonate';
 
 function App() {
   const location = useLocation();
@@ -29,8 +30,8 @@ function App() {
   const [showMore, setShowMore] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  // Guest means not logged in AT ALL or logged in ANONYMOUSLY
-  const isGuest = !user || user.isAnonymous;
+  // Check if user is logged in
+  const isLoggedIn = !!user;
 
   useEffect(() => {
     if (theme === 'dark') {
@@ -55,13 +56,13 @@ function App() {
   }, []);
 
   useEffect(() => {
-    // Apply guest-mode if user is a guest and not on the login page
-    if (isGuest && location.pathname !== '/login') {
+    // Apply guest-mode if user is not logged in and not on the login page
+    if (!isLoggedIn && location.pathname !== '/login') {
       document.body.classList.add('guest-mode');
     } else {
       document.body.classList.remove('guest-mode');
     }
-  }, [isGuest, location.pathname]);
+  }, [isLoggedIn, location.pathname]);
 
   // Close drawer on route change
   useEffect(() => {
@@ -77,7 +78,7 @@ function App() {
     }
   };
 
-  const mainNavItems = !isGuest ? [
+  const mainNavItems = isLoggedIn ? [
     { name: 'Software', path: '/software', icon: <DownloadCloud size={18} /> },
     { name: 'Documents', path: '/documents', icon: <FileText size={18} /> },
     { name: 'Courses', path: '/courses', icon: <Video size={18} /> },
@@ -88,7 +89,7 @@ function App() {
     { name: 'Courses', path: '/courses', icon: <Video size={18} /> },
   ];
 
-  const moreNavItems = !isGuest ? [
+  const moreNavItems = isLoggedIn ? [
     { name: 'Experiences', path: '/experiences', icon: <BookOpen size={18} /> },
     { name: 'Request', path: '/request', icon: <HelpCircle size={18} /> },
   ] : [
@@ -164,15 +165,15 @@ function App() {
             </button>
             {user ? (
               <>
-                <Link to={user.isAnonymous ? "#" : "/profile"} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', color: 'var(--text-muted)', textDecoration: 'none', cursor: user.isAnonymous ? 'default' : 'pointer' }}>
-                  {userProfile?.avatarUrl && !user.isAnonymous ? (
+                <Link to="/profile" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', color: 'var(--text-muted)', textDecoration: 'none' }}>
+                  {userProfile?.avatarUrl ? (
                     <img src={userProfile.avatarUrl} alt="avatar"
                       style={{ width: '26px', height: '26px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary)' }} />
                   ) : (
                     <User size={16} color="var(--primary)" />
                   )}
-                  <span className="nav-user-email" style={{ maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={user.isAnonymous ? 'Guest' : user.email}>
-                    {user.isAnonymous ? 'Guest User' : (userProfile?.nickname || user.email)}
+                  <span className="nav-user-email" style={{ maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={userProfile?.nickname || user.email}>
+                    {userProfile?.nickname || user.email}
                   </span>
                 </Link>
                 <button onClick={handleSignOut} className="btn btn-outline" style={{ padding: '6px 12px', fontSize: '0.85rem' }} title="Sign Out">
@@ -236,7 +237,7 @@ function App() {
                 <div className="drawer-nav-link" style={{ background: 'var(--surface-badge)', borderRadius: '12px' }}>
                   <User size={16} color="var(--primary)" />
                   <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '0.85rem' }}>
-                    {user.isAnonymous ? 'Guest User' : user.email}
+                    {userProfile?.nickname || user.email}
                   </span>
                 </div>
                 <button onClick={handleSignOut} className="btn btn-outline" style={{ justifyContent: 'center', gap: '8px' }}>
@@ -279,6 +280,9 @@ function App() {
       <footer style={{ marginTop: '100px', padding: '40px 0', borderTop: '1px solid var(--surface-border)', textAlign: 'center', background: 'var(--nav-bg)' }}>
         <p style={{ color: 'var(--text-muted)' }}>&copy; {new Date().getFullYear()} ITShare. Built for the tech community.</p>
       </footer>
+
+      {/* Coffee Donate Floating Icon */}
+      <CoffeeDonate />
     </>
   );
 }

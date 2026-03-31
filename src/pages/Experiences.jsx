@@ -1,7 +1,34 @@
-import React from 'react';
-import { BookOpen, User, Calendar } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { User, Calendar } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { auth } from '../firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 
 const Experiences = () => {
+  const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (u) => {
+      setUser(u);
+      setAuthLoading(false);
+    });
+    return () => unsub();
+  }, []);
+
+  const isGuest = !authLoading && (!user || user.isAnonymous);
+
+  const handleReadStory = (e) => {
+    e.preventDefault();
+    if (authLoading) return;
+    if (isGuest) {
+      navigate('/login');
+    } else {
+      alert('Full story reading feature coming soon!');
+    }
+  };
+
   return (
     <div className="container" style={{ paddingTop: '80px', minHeight: '80vh' }}>
       <header style={{ marginBottom: '60px', textAlign: 'center' }}>
@@ -22,7 +49,9 @@ const Experiences = () => {
           <p style={{ color: 'var(--text-main)', lineHeight: '1.8' }}>
             When our user base crossed the 1M mark, our Postgres database was screaming. We were looking at 5-second load times on the main dashboard. The culprit? An ORM query that was silently causing an N+1 problem on a very nested relationship. By implementing lateral joins and replacing the ORM...
           </p>
-          <a href="#" style={{ display: 'inline-block', marginTop: '24px', fontWeight: 'bold' }}>Read Full Story &rarr;</a>
+          <a href="#" onClick={handleReadStory} style={{ display: 'inline-block', marginTop: '24px', fontWeight: 'bold', color: 'var(--primary)', textDecoration: 'none' }}>
+            Read Full Story &rarr;
+          </a>
         </article>
 
         <article className="glass-panel" style={{ padding: '32px' }}>
@@ -34,7 +63,9 @@ const Experiences = () => {
           <p style={{ color: 'var(--text-main)', lineHeight: '1.8' }}>
             I spent 3 months grinding LeetCode, going through "Grokking the System Design Interview", and mocking. Despite all this, I bombed the behavioral rounds. I treated it like a technical test instead of a conversation. Let me share my study notes and what I'm doing differently next time...
           </p>
-          <a href="#" style={{ display: 'inline-block', marginTop: '24px', fontWeight: 'bold', color: '#ff2a7a' }}>Read Full Story &rarr;</a>
+          <a href="#" onClick={handleReadStory} style={{ display: 'inline-block', marginTop: '24px', fontWeight: 'bold', color: '#ff2a7a', textDecoration: 'none' }}>
+            Read Full Story &rarr;
+          </a>
         </article>
 
       </div>

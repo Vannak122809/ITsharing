@@ -654,16 +654,7 @@ a:hover {
   animation: spin 1s linear infinite;
 }
 
-/* ── Guest Mode Restrictions ── */
+/* ── Guest Mode ── */
 body.guest-mode main {
-  pointer-events: none !important;
-  user-select: none !important;
-}
-
-body.guest-mode main a,
-body.guest-mode main button,
-body.guest-mode main .folder-item,
-body.guest-mode main .file-item,
-body.guest-mode main .card {
-  opacity: 0.8 !important;
+  user-select: none;
 }

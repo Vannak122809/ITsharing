@@ -23,17 +23,13 @@ const Community = () => {
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (u) => {
       setUser(u);
-      if (u && !u.isAnonymous) {
+      if (u) {
         const nick = await getUserNickname(u.uid);
         setNickname(nick === 'Unknown' ? '' : nick);
-      } else if (u && u.isAnonymous) {
-        // Redirect anonymous guest away from community
-        navigate('/login');
-      } else if (!u) {
-        // Redirect unauthenticated guest away from community
-        navigate('/login');
       } else {
         setNickname('');
+        // Redirect unauthenticated guest away from community
+        navigate('/login');
       }
     });
     return () => unsub();
@@ -72,8 +68,7 @@ const Community = () => {
 
   // ── Determine display name ─────────────────────────────────────────
   const authorName = () => {
-    if (!user) return 'Anonymous';
-    if (user.isAnonymous) return 'Guest';
+    if (!user) return 'User';
     return nickname || user.email?.split('@')[0] || 'User';
   };
 
@@ -82,7 +77,7 @@ const Community = () => {
     e.preventDefault();
     if (!newTitle.trim() || !newContent.trim()) return;
     if (!user) { alert('Please sign in to post a question.'); return; }
-    if (!nickname && !user.isAnonymous) {
+    if (!nickname) {
       alert('Please set a nickname in your Profile first, then come back to post!');
       return;
     }
@@ -121,7 +116,7 @@ const Community = () => {
     } catch { /* offline */ }
   };
 
-  const needsNickname = user && !user.isAnonymous && !nickname;
+  const needsNickname = user && !nickname;
 
   return (
     <div className="container" style={{ paddingTop: '80px', minHeight: '80vh', paddingBottom: '60px' }}>
@@ -186,7 +181,7 @@ const Community = () => {
           {/* Who am I posting as */}
           {user && (
             <div className="glass-panel" style={{ padding: '14px 18px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.88rem', color: 'var(--text-muted)', border: '1px solid var(--surface-border)' }}>
-              {user.isAnonymous ? <Ghost size={16} /> : <User size={16} color="var(--primary)" />}
+              <User size={16} color="var(--primary)" />
               Posting as <strong style={{ color: 'var(--primary)', marginLeft: '4px' }}>{authorName()}</strong>
             </div>
           )}
