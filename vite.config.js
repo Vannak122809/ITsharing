@@ -8,7 +8,7 @@ export default defineConfig({
     react(),
     cloudflare()
   ],
-  base: '/ITsharing/',
+  base: '/',
   build: {
     chunkSizeWarningLimit: 10000,
     rollupOptions: {
