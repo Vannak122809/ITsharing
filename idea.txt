@@ -40,3 +40,11 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
+
+
+ប្រសិនបើ user មិនទាន់ login ខ្ញុំចង់អោយ user អាច មើលឃើញ (software,document,courses,experiance) តែ user អាចចុចបានគ្រាប់ options ប៉ុន្តែ user ចុច views , download ,Start Course វានឹង show pop up មួយអោយ user login មុននឹង user អាចចុចបាន។
+ខ្ញុំចង់ form donate មួយ ដោយគ្រាន់តែបង្កើត icon caffeeដែលមានផ្សែងហុយៗ នៅលើ left side bar 
+i want to book cover in Document page you can provide by yourself
+please update community page react options and reply
+i think in oftware page ui is not good i want to make it better 
+នៅក្នុង community រាល់ post message ម្ដង់វាមានរយះពេលតែ២៤ ម៉ោងទេ បន្ទាប់ពី២៤ ម៉ោងវានឹងលុបដោយអូតូ ប៉ុន្តែ user អាច repost ម្ដងទៀតបាន។

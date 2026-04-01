@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Monitor, Apple, ChevronRight, Folder, File, ArrowLeft, Eye } from 'lucide-react';
+import { Monitor, Apple, ChevronRight, Folder, File, ArrowLeft, Eye, Download as DownloadIcon, PlayCircle, Cpu, Settings } from 'lucide-react';
 import { auth } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 
@@ -17,9 +17,23 @@ const ModernScriptIcon = () => (
   </svg>
 );
 
-const ModernFolderIcon = ({ size = 48, className = '' }) => (
-  <Folder size={size} className={className} color="var(--primary)" fill="rgba(99, 102, 241, 0.15)" strokeWidth={1.5} />
-);
+const ModernFolderIcon = ({ size = 48, className = '', folderName = '' }) => {
+  let Icon = Folder;
+  let color = "var(--primary)";
+  let fillColor = "rgba(99, 102, 241, 0.15)";
+
+  if (folderName === 'Download') {
+    Icon = DownloadIcon;
+  } else if (folderName === 'Media') {
+    Icon = PlayCircle;
+  } else if (folderName === 'Driver' || folderName === 'Tools') {
+    Icon = Settings;
+  } else if (folderName === 'Windows Server') {
+    Icon = Cpu;
+  }
+
+  return <Icon size={size} className={className} color={color} fill={fillColor} strokeWidth={1.5} />;
+};
 
 const SoftwareIcon = ({ id, os, size = 32 }) => {
   const iconMap = {
@@ -68,6 +82,21 @@ const SoftwareIcon = ({ id, os, size = 32 }) => {
     'libreoffice-mac': 'libreoffice.org',
     'macos-sonoma': 'apple.com',
     'macos-ventura': 'apple.com',
+    'idm': 'internetdownloadmanager.com',
+    'utorrent': 'utorrent.com',
+    'qbittorrent': 'qbittorrent.org',
+    'freetube': 'freetubeapp.io',
+    'potplayer': 'potplayer.daum.net',
+    'kmplayer': 'kmplayer.com',
+    'obs-win': 'obsproject.com',
+    'obs-mac': 'obsproject.com',
+    'handbrake-win': 'handbrake.fr',
+    'vlc-win': 'videolan.org',
+    'vlc-mac-media': 'videolan.org',
+    'streamlabs-win': 'streamlabs.com',
+    'klite-win': 'codecguide.com',
+    'zktime-5': 'zkteco.com',
+    'zktimenet-4': 'zkteco.com',
   };
 
   const domain = iconMap[id];
@@ -142,6 +171,8 @@ export const softwareData = [
   { id: 'macos-ventura', title: 'macOS Ventura', desc: 'The previous major release of macOS.', os: 'mac', folder: 'Mac OS', size: '12 GB', version: '13.5' },
   { id: 'docker-desktop-win', title: 'Docker Desktop', desc: 'The fastest way to containerize applications on Windows.', os: 'windows', folder: 'Software', size: '620 MB', version: 'v4.22', url: 'https://desktop.docker.com/win/main/amd64/Docker%20Desktop%20Installer.exe' },
   { id: 'docker-desktop-mac', title: 'Docker Desktop (Mac)', desc: 'Optimized for M-series chips.', os: 'mac', folder: 'Software', size: '590 MB', version: 'v4.22' },
+  { id: 'zktime-5', title: 'ZKTime 5.0', desc: 'Attendance management software for ZKteco devices.', os: 'windows', folder: 'Software', subfolder: 'Attendance', size: '55 MB', version: 'v5.0', url: 'https://pub-5961bc36cb774286a50691aa994b2653.r2.dev/ZKTime5.0.zip' },
+  { id: 'zktimenet-4', title: 'ZKTimenet 4.0 Thailand', desc: 'Thai version of ZKTimenet 4.0 attendance software.', os: 'windows', folder: 'Software', subfolder: 'Attendance', size: '120 MB', version: 'v4.2.0.0', url: 'https://pub-5961bc36cb774286a50691aa994b2653.r2.dev/ZKTimenet4.0_Thailand_4.2.0.0.zip' },
   { id: 'postman', title: 'Postman IDE', desc: 'An API platform for building and using APIs.', os: 'windows', folder: 'Software', size: '150 MB', version: 'v10.15', url: 'https://dl.pstmn.io/download/latest/win64' },
   { id: 'vlc-mac', title: 'VLC Media Player', desc: 'Free and open source multimedia player.', os: 'mac', folder: 'Software', size: '55 MB', version: 'v3.0.18' },
   { id: 'chrome-win', title: 'Google Chrome', desc: 'Fast, secure, and free web browser built for the modern web.', os: 'windows', folder: 'Software', size: '90 MB', version: 'Latest', url: 'https://dl.google.com/tag/s/appguid%3D%7B8A69D345-D564-463C-AFF1-A69D9E530F96%7D%26iid%3D%7B135FF71F-176A-1B63-3CE5-129016ABBA58%7D%26lang%3Den%26browser%3D4%26usagestats%3D1%26appname%3DGoogle%2520Chrome%26needsadmin%3Dprefers%26ap%3D-arch_x64-statsdef_1%26installdataindex%3Dempty/update2/installers/ChromeSetup.exe' },
@@ -159,13 +190,13 @@ export const softwareData = [
 
   // === TOOLS ===
   { id: 'git-win', title: 'Git for Windows', desc: 'Brings the Git terminal and GUI to Windows.', os: 'windows', folder: 'Tools', size: '50 MB', version: 'v2.53.0.2', url: 'https://github.com/git-for-windows/git/releases/download/v2.53.0.windows.2/Git-2.53.0.2-64-bit.exe' },
-  { id: 'epson-win', title: 'Epson L3110 Driver', desc: 'Printer and scanner drivers for Epson L3110.', os: 'windows', folder: 'Tools', size: '30 MB', version: 'v2.60' },
-  { id: 'hp-universal-win', title: 'HP Universal Print Driver', desc: 'A single driver for a range of HP print devices.', os: 'windows', folder: 'Tools', size: '20 MB', version: 'v7.1' },
+  { id: 'epson-win', title: 'Epson L3110 Driver', desc: 'Printer and scanner drivers for Epson L3110.', os: 'windows', folder: 'Driver', size: '30 MB', version: 'v2.60' },
+  { id: 'hp-universal-win', title: 'HP Universal Print Driver', desc: 'A single driver for a range of HP print devices.', os: 'windows', folder: 'Driver', size: '20 MB', version: 'v7.1' },
   { id: 'rufus', title: 'Rufus', desc: 'Create bootable USB drives the easy way.', os: 'windows', folder: 'Tools', size: '1.4 MB', version: 'v4.13', url: 'https://github.com/pbatard/rufus/releases/download/v4.13/rufus-4.13.exe' },
   { id: '7zip', title: '7-Zip', desc: 'A file archiver with a high compression ratio.', os: 'windows', folder: 'Tools', size: '1.5 MB', version: 'v23.01' },
   { id: 'iterm2', title: 'iTerm2', desc: 'A terminal emulator for macOS.', os: 'mac', folder: 'Tools', size: '22 MB', version: 'v3.4.19' },
   { id: 'homebrew', title: 'Homebrew', desc: 'The Missing Package Manager for macOS.', os: 'mac', folder: 'Tools', size: '10 KB', version: 'Latest' },
-  { id: 'canon-mac', title: 'Canon PIXMA G3010 Driver', desc: 'Official driver suite for Mac users.', os: 'mac', folder: 'Tools', size: '45 MB', version: 'v1.3.0' },
+  { id: 'canon-mac', title: 'Canon PIXMA G3010 Driver', desc: 'Official driver suite for Mac users.', os: 'mac', folder: 'Driver', size: '45 MB', version: 'v1.3.0' },
   { id: 'unarchiver', title: 'The Unarchiver', desc: 'Small and easy program to unarchive files.', os: 'mac', folder: 'Tools', size: '15 MB', version: 'v4.3.6' },
   { id: 'nodejs-win', title: 'Node.js', desc: 'JavaScript runtime built on Chrome\'s V8 JavaScript engine.', os: 'windows', folder: 'Tools', size: '30 MB', version: 'v20.17' },
   { id: 'nodejs-mac', title: 'Node.js (Mac)', desc: 'JavaScript runtime built on Chrome\'s V8 JavaScript engine.', os: 'mac', folder: 'Tools', size: '45 MB', version: 'v20.17' },
@@ -181,6 +212,23 @@ export const softwareData = [
   { id: 'raycast', title: 'Raycast', desc: 'Blazingly fast, totally extendable launcher for macOS.', os: 'mac', folder: 'Tools', size: '35 MB', version: 'Latest' },
   { id: 'filezilla-win', title: 'FileZilla Client', desc: 'Fast and reliable cross-platform FTP, FTPS and SFTP client.', os: 'windows', folder: 'Tools', size: '12 MB', version: 'Latest' },
   { id: 'filezilla-mac', title: 'FileZilla Client (Mac)', desc: 'Fast and reliable cross-platform FTP, FTPS and SFTP client.', os: 'mac', folder: 'Tools', size: '15 MB', version: 'Latest' },
+
+  // === DOWNLOAD ===
+  { id: 'idm', title: 'Internet Download Manager', desc: 'Accelerate downloads by up to 5 times, schedule, and resume broken downloads.', os: 'windows', folder: 'Download', size: '12 MB', version: 'v6.42.6.3', url: 'https://pub-5961bc36cb774286a50691aa994b2653.r2.dev/Internet.Download.Manager.6.42.63.0.zip' },
+  { id: 'utorrent', title: 'uTorrent Pro', desc: 'A very popular BitTorrent client for Windows.', os: 'windows', folder: 'Download', size: '5 MB', version: 'v3.6', url: 'https://www.utorrent.com/web/downloads/complete/track/stable/os/win/' },
+  { id: 'qbittorrent', title: 'qBittorrent', desc: 'Free and open-source BitTorrent client.', os: 'windows', folder: 'Download', size: '30 MB', version: 'v4.6', url: 'https://www.qbittorrent.org/download' },
+  { id: 'freetube', title: 'FreeTube', desc: 'Private YouTube client for Windows and Mac.', os: 'windows', folder: 'Download', size: '80 MB', version: 'v1.10' },
+
+  // === MEDIA ===
+  { id: 'vlc-win', title: 'VLC Media Player', desc: 'The best multi-format media player.', os: 'windows', folder: 'Media', subfolder: 'Video Player', size: '42 MB', version: 'v3.0.23', url: 'https://get.videolan.org/vlc/3.0.23/win64/vlc-3.0.23-win64.exe' },
+  { id: 'potplayer', title: 'PotPlayer', desc: 'Powerful and feature-rich media player for Windows.', os: 'windows', folder: 'Media', subfolder: 'Video Player', size: '35 MB', version: 'Latest', url: 'https://t1.daumcdn.net/potplayer/PotPlayer/Version/Latest/PotPlayerSetup64.exe' },
+  { id: 'kmplayer', title: 'KMPlayer', desc: 'Versatile media player which can cover various types of contained formats.', os: 'windows', folder: 'Media', subfolder: 'Video Player', size: '48 MB', version: 'v4.2.3.33', url: 'https://pub-5961bc36cb774286a50691aa994b2653.r2.dev/KMPlayer_4.2.3.33.exe' },
+  { id: 'klite-win', title: 'K-Lite Codec Pack Full', desc: 'A collection of audio and video codecs for Microsoft Windows that enables the operating system and its software to play various audio and video formats.', os: 'windows', folder: 'Media', subfolder: 'Video Player', size: '60 MB', version: 'v19.6.0', url: 'https://pub-5961bc36cb774286a50691aa994b2653.r2.dev/K-Lite_Codec_Pack_1960_Full.exe' },
+  { id: 'obs-win', title: 'OBS Studio', desc: 'Free and open source software for video recording and live streaming.', os: 'windows', folder: 'Media', subfolder: 'Video Editor', size: '120 MB', version: 'v32.1.0', url: 'https://cdn-fastly.obsproject.com/downloads/OBS-Studio-32.1.0-Windows-x64-Installer.exe' },
+  { id: 'streamlabs-win', title: 'Streamlabs Desktop', desc: 'Live streaming software that simplifies the process of going live on Twitch, YouTube, or Facebook.', os: 'windows', folder: 'Media', subfolder: 'Video Editor', size: '250 MB', version: 'Latest', url: 'https://streamlabs.com/streamlabs-desktop/download?sdb=0' },
+  { id: 'handbrake-win', title: 'Handbrake', desc: 'Open-source video transcoder.', os: 'windows', folder: 'Media', subfolder: 'Video Editor', size: '25 MB', version: 'v1.7' },
+  { id: 'vlc-mac-media', title: 'VLC Media Player (Mac)', desc: 'Optimized for macOS.', os: 'mac', folder: 'Media', subfolder: 'Video Player', size: '55 MB', version: 'v3.0.18' },
+  { id: 'obs-mac', title: 'OBS Studio (Mac)', desc: 'Pro video recording for Mac.', os: 'mac', folder: 'Media', subfolder: 'Video Editor', size: '130 MB', version: 'v30.0' },
 ];
 
 const windowsFolders = [
@@ -189,7 +237,10 @@ const windowsFolders = [
   'Office',
   'Visual Studio',
   'Software',
-  'Tools'
+  'Tools',
+  'Download',
+  'Media',
+  'Driver'
 ];
 
 const macFolders = [
@@ -197,7 +248,10 @@ const macFolders = [
   'Office',
   'Visual Studio',
   'Software',
-  'Tools'
+  'Tools',
+  'Download',
+  'Media',
+  'Driver'
 ];
 
 const officeSubfolders = [
@@ -243,6 +297,14 @@ const Software = () => {
     if (!currentSubfolder && item.folder === 'Office' && item.subfolder) return false;
     return true;
   });
+
+  const availableSubfolders = currentFolder
+    ? Array.from(new Set(
+        softwareData
+          .filter(item => item.os === activeOS && item.folder === currentFolder && item.subfolder)
+          .map(item => item.subfolder)
+      ))
+    : [];
 
   const availableTypes = currentFolder === 'Office' && currentSubfolder
     ? Array.from(new Set(
@@ -331,7 +393,7 @@ const Software = () => {
                     justifyContent: 'center', border: '1px solid var(--surface-border)',
                     boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.1)'
                   }}>
-                    <ModernFolderIcon size={40} />
+                    <ModernFolderIcon size={40} folderName={folderName} />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     <span style={{ fontWeight: 700, fontSize: '1.15rem', color: 'var(--text-main)', letterSpacing: '0.3px' }}>
@@ -347,7 +409,7 @@ const Software = () => {
             </div>
           </div>
         </>
-      ) : currentFolder === 'Office' && !currentSubfolder ? (
+      ) : currentFolder && !currentSubfolder && availableSubfolders.length > 0 ? (
         <>
           <div style={{ marginBottom: '40px', maxWidth: '1000px', margin: '0 auto 40px auto' }}>
             <button 
@@ -372,7 +434,7 @@ const Software = () => {
           <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '24px' }}>
               
-              {officeSubfolders.map((folderName) => (
+              {availableSubfolders.map((folderName) => (
                 <div 
                   key={folderName}
                   onClick={() => setCurrentSubfolder(folderName)}
@@ -408,11 +470,11 @@ const Software = () => {
                     justifyContent: 'center', border: '1px solid var(--surface-border)',
                     boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.1)'
                   }}>
-                    <ModernFolderIcon size={40} />
+                    <ModernFolderIcon size={40} folderName={folderName} />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     <span style={{ fontWeight: 700, fontSize: '1.15rem', color: 'var(--text-main)', letterSpacing: '0.3px' }}>
-                      Office {folderName}
+                      {currentFolder} {folderName}
                     </span>
                     <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                       Folder
@@ -420,6 +482,34 @@ const Software = () => {
                   </div>
                 </div>
               ))}
+
+              {/* Also show files that are directly in this folder without a subfolder */}
+              {softwareData
+                .filter(item => item.os === activeOS && item.folder === currentFolder && !item.subfolder)
+                .map((item) => (
+                  <div 
+                    key={item.id}
+                    onClick={() => navigate(`/software/${item.id}`)}
+                    style={{
+                      background: 'var(--surface)',
+                      border: '1px solid var(--surface-border)',
+                      borderRadius: '16px',
+                      padding: '24px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '12px',
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.borderColor = 'var(--primary)'}
+                    onMouseOut={(e) => e.currentTarget.style.borderColor = 'var(--surface-border)'}
+                  >
+                    <SoftwareIcon id={item.id} os={item.os} size={42} />
+                    <span style={{ fontWeight: 600, fontSize: '0.9rem', textAlign: 'center' }}>{item.title}</span>
+                  </div>
+                ))
+              }
 
             </div>
           </div>
