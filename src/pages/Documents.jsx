@@ -13,28 +13,28 @@ const ModernFolderIcon = ({ size = 48, color = "var(--primary)" }) => (
 
 const documentStructure = {
   Network: {
-    icon: <Network size={20} color="var(--primary)" />,
-    color: "var(--primary)",
+    icon: <Network size={20} color="#3b82f6" />,
+    color: "#3b82f6",
     subfolders: ['Cisco', 'Juniper', 'Mikrotik', 'Fortinet', 'Ubiquiti', 'TP-Link', 'D-Link', 'Netgear', 'Zyxel', 'Huawei']
   },
   Programming: {
-    icon: <Terminal size={20} color="var(--primary)" />,
-    color: "var(--primary)",
+    icon: <Terminal size={20} color="#10b981" />,
+    color: "#10b981",
     subfolders: ['Python', 'JavaScript', 'Java', 'C++', 'C#', 'PHP', 'Ruby', 'Go', 'Rust', 'Swift', 'Kotlin', 'TypeScript', 'HTML', 'CSS', 'SQL', 'Bash', 'PowerShell']
   },
   Database: {
-    icon: <Database size={20} color="var(--primary)" />,
-    color: "var(--primary)",
+    icon: <Database size={20} color="#f59e0b" />,
+    color: "#f59e0b",
     subfolders: ['Mysql', 'Postgresql', 'Mongodb', 'Sqlserver', 'Oracle']
   },
   Security: {
-    icon: <ShieldCheck size={20} color="var(--primary)" />,
-    color: "var(--primary)",
+    icon: <ShieldCheck size={20} color="#ef4444" />,
+    color: "#ef4444",
     subfolders: ['Firewall', 'Antivirus', 'IDS', 'IPS', 'VPN']
   },
   Cloud: {
-    icon: <Cloud size={20} color="var(--primary)" />,
-    color: "var(--primary)",
+    icon: <Cloud size={20} color="#8b5cf6" />,
+    color: "#8b5cf6",
     subfolders: ['AWS', 'Azure', 'GCP']
   }
 };
@@ -149,20 +149,24 @@ const Documents = () => {
   }, [currentFolder, currentSubfolder, searchQuery, activeLang, sortBy]);
 
   return (
-    <div className="container" style={{ paddingTop: '100px', paddingBottom: '80px', minHeight: '100vh', display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
+    <div className="container doc-layout" style={{ paddingTop: '100px', paddingBottom: '80px', minHeight: '100vh' }}>
       
       {/* SIDEBAR EXPLORER */}
-      <div className="glass-panel" style={{ width: '280px', flex: '1 1 280px', maxWidth: '100%', padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', height: 'fit-content', maxHeight: 'calc(100vh - 120px)', position: 'sticky', top: '100px', overflowY: 'auto' }}>
-        <h2 style={{ fontSize: '1.2rem', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-main)' }}>
-          <Folder size={20} color="var(--primary)" /> Explorer
+      <div className="doc-sidebar" style={{ background: 'var(--card-dark)', border: '1px solid var(--surface-border)', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '8px', overflowY: 'auto', maxHeight: 'calc(100vh - 140px)', position: 'sticky', top: '100px' }}>
+        <h2 style={{ fontSize: '1.1rem', marginBottom: '12px', padding: '0 8px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-main)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          <Folder size={18} color="var(--primary)" /> Explorer
         </h2>
         
         <div 
           onClick={() => { setCurrentFolder(null); setCurrentSubfolder(null); setSearchQuery(''); }}
-          style={{ padding: '10px 12px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', background: (!currentFolder && !searchQuery) ? 'var(--surface-badge)' : 'transparent', color: (!currentFolder && !searchQuery) ? 'var(--primary)' : 'var(--text-main)', transition: 'var(--transition)' }}
+          style={{ padding: '10px 12px', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', background: (!currentFolder && !searchQuery) ? 'var(--primary)' : 'transparent', color: (!currentFolder && !searchQuery) ? '#fff' : 'var(--text-main)', transition: 'all 0.2s ease', fontWeight: (!currentFolder && !searchQuery) ? 600 : 500 }}
+          onMouseOver={(e) => { if (currentFolder || searchQuery) e.currentTarget.style.background = 'var(--surface-border)'; }}
+          onMouseOut={(e) => { if (currentFolder || searchQuery) e.currentTarget.style.background = 'transparent'; }}
         >
-          <LayoutGrid size={18} /> <span style={{ fontWeight: 500 }}>All Documents</span>
+          <LayoutGrid size={18} /> <span>All Documents</span>
         </div>
+
+        <div style={{ height: '1px', background: 'var(--surface-border)', margin: '8px 0', flexShrink: 0 }}></div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           {Object.entries(documentStructure).map(([folderName, folderData]) => {
@@ -173,28 +177,30 @@ const Documents = () => {
               <div key={folderName} style={{ display: 'flex', flexDirection: 'column' }}>
                 <div 
                   onClick={() => { toggleFolder(folderName); setCurrentFolder(folderName); setCurrentSubfolder(null); setSearchQuery(''); }}
-                  style={{ padding: '10px 12px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', background: isActiveFolder ? 'var(--surface-badge)' : 'transparent', color: isActiveFolder ? folderData.color : 'var(--text-main)', transition: 'var(--transition)' }}
+                  style={{ padding: '10px 12px', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', background: isActiveFolder ? 'rgba(99, 102, 241, 0.1)' : 'transparent', color: isActiveFolder ? 'var(--primary)' : 'var(--text-main)', transition: 'all 0.2s ease', fontWeight: isActiveFolder ? 600 : 500 }}
                   onMouseOver={(e) => { if (!isActiveFolder) e.currentTarget.style.background = 'var(--surface-border)'; }}
                   onMouseOut={(e) => { if (!isActiveFolder) e.currentTarget.style.background = 'transparent'; }}
                 >
-                  <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '20px' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '16px', color: 'var(--text-muted)' }}>
                     {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                   </span>
-                  {folderData.icon} 
-                  <span style={{ fontWeight: 500 }}>{folderName}</span>
+                  <span style={{ display: 'flex', alignItems: 'center', color: isActiveFolder ? 'var(--primary)' : folderData.color }}>
+                     {folderData.icon} 
+                  </span>
+                  <span>{folderName}</span>
                 </div>
 
                 {isExpanded && (
-                  <div style={{ display: 'flex', flexDirection: 'column', marginLeft: '32px', marginTop: '4px', gap: '2px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', marginLeft: '34px', marginTop: '4px', gap: '2px', borderLeft: '1px solid var(--surface-border)', paddingLeft: '8px' }}>
                     {folderData.subfolders.map(sub => {
                       const isActiveSub = currentFolder === folderName && currentSubfolder === sub;
                       return (
                         <div 
                           key={sub}
                           onClick={() => { setCurrentFolder(folderName); setCurrentSubfolder(sub); setSearchQuery(''); }}
-                          style={{ padding: '8px 12px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', background: isActiveSub ? 'var(--surface-badge)' : 'transparent', color: isActiveSub ? 'var(--primary)' : 'var(--text-muted)', transition: 'var(--transition)' }}
-                          onMouseOver={(e) => { if (!isActiveSub) e.currentTarget.style.background = 'var(--surface-border)'; }}
-                          onMouseOut={(e) => { if (!isActiveSub) e.currentTarget.style.background = 'transparent'; }}
+                          style={{ padding: '8px 12px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.9rem', background: isActiveSub ? 'rgba(99, 102, 241, 0.1)' : 'transparent', color: isActiveSub ? 'var(--primary)' : 'var(--text-muted)', transition: 'all 0.2s ease', fontWeight: isActiveSub ? 600 : 400 }}
+                          onMouseOver={(e) => { if (!isActiveSub) { e.currentTarget.style.color = 'var(--text-main)'; e.currentTarget.style.background = 'var(--surface-badge)'; } }}
+                          onMouseOut={(e) => { if (!isActiveSub) { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.background = 'transparent'; } }}
                         >
                           <Folder size={14} /> {sub}
                         </div>
@@ -209,10 +215,10 @@ const Documents = () => {
       </div>
 
       {/* MAIN CONTENT AREA */}
-      <div style={{ flex: '2 1 600px', display: 'flex', flexDirection: 'column', gap: '24px', minWidth: 0 }}>
+      <div className="doc-main">
         
         {/* TOP TOOLBAR */}
-        <div className="glass-panel" style={{ padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ background: 'var(--card-dark)', border: '1px solid var(--surface-border)', borderRadius: '12px', padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
             
             {/* Breadcrumbs */}
@@ -301,10 +307,10 @@ const Documents = () => {
                     <div 
                       key={subName}
                       onClick={() => setCurrentSubfolder(subName)}
-                      className="glass-panel"
-                      style={{ padding: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', transition: 'var(--transition)' }}
-                      onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = 'var(--shadow-glass)'; e.currentTarget.style.borderColor = documentStructure[currentFolder].color; }}
-                      onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.borderColor = 'var(--surface-border)'; }}
+                      className=""
+                      style={{ background: 'var(--card-dark)', border: '1px solid var(--surface-border)', borderRadius: '12px', padding: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', transition: 'var(--transition)' }}
+                      onMouseOver={(e) => { e.currentTarget.style.background = 'var(--surface)'; e.currentTarget.style.borderColor = documentStructure[currentFolder].color; }}
+                      onMouseOut={(e) => { e.currentTarget.style.background = 'var(--card-dark)'; e.currentTarget.style.borderColor = 'var(--surface-border)'; }}
                     >
                       <Folder color={documentStructure[currentFolder].color} size={32} fill={`${documentStructure[currentFolder].color}22`} />
                       <div>
@@ -327,10 +333,10 @@ const Documents = () => {
                     <div 
                       key={folderName}
                       onClick={() => { setCurrentFolder(folderName); if(!expandedFolders[folderName]) toggleFolder(folderName); }}
-                      className="glass-panel"
-                      style={{ padding: '20px', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', textAlign: 'center', transition: 'var(--transition)' }}
-                      onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = `0 10px 30px ${folderData.color}22`; e.currentTarget.style.borderColor = folderData.color; }}
-                      onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'var(--shadow-glass)'; e.currentTarget.style.borderColor = 'var(--surface-border)'; }}
+                      className=""
+                      style={{ background: 'var(--card-dark)', border: '1px solid var(--surface-border)', borderRadius: '12px', padding: '20px', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', textAlign: 'center', transition: 'var(--transition)' }}
+                      onMouseOver={(e) => { e.currentTarget.style.background = 'var(--surface)'; e.currentTarget.style.borderColor = folderData.color; }}
+                      onMouseOut={(e) => { e.currentTarget.style.background = 'var(--card-dark)'; e.currentTarget.style.borderColor = 'var(--surface-border)'; }}
                     >
                       <ModernFolderIcon size={64} color={folderData.color} />
                       <div>
@@ -356,12 +362,12 @@ const Documents = () => {
               ) : viewMode === 'grid' ? (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
                   {processedData.map((doc) => (
-                    <div key={doc.id} className="glass-panel" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px', transition: 'var(--transition)', cursor: 'default' }}
-                      onMouseOver={(e) => { e.currentTarget.style.borderColor = doc.color || 'var(--primary)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-                      onMouseOut={(e) => { e.currentTarget.style.borderColor = 'var(--surface-border)'; e.currentTarget.style.transform = 'translateY(0)'; }}
+                    <div key={doc.id} style={{ background: 'var(--card-dark)', border: '1px solid var(--surface-border)', borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px', transition: 'var(--transition)', cursor: 'default' }}
+                      onMouseOver={(e) => { e.currentTarget.style.background = 'var(--surface)'; e.currentTarget.style.borderColor = documentStructure[doc.category]?.color || '#64748b'; }}
+                      onMouseOut={(e) => { e.currentTarget.style.background = 'var(--card-dark)'; e.currentTarget.style.borderColor = 'var(--surface-border)'; }}
                     >
                       <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-                        <div style={{ background: `${doc.color || 'var(--primary)'}15`, padding: '12px', borderRadius: '12px', color: doc.color || 'var(--primary)' }}>
+                        <div style={{ background: `${documentStructure[doc.category]?.color || '#64748b'}15`, padding: '12px', borderRadius: '12px', color: documentStructure[doc.category]?.color || '#64748b' }}>
                           <FileText size={24} />
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
@@ -398,7 +404,7 @@ const Documents = () => {
                   ))}
                 </div>
               ) : (
-                <div className="glass-panel" style={{ overflowX: 'auto' }}>
+                <div style={{ background: 'var(--card-dark)', border: '1px solid var(--surface-border)', borderRadius: '12px', overflowX: 'auto' }}>
                   <table style={{ width: '100%', minWidth: '600px', borderCollapse: 'collapse', textAlign: 'left' }}>
                     <thead>
                       <tr style={{ borderBottom: '1px solid var(--surface-border)', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
@@ -414,7 +420,7 @@ const Documents = () => {
                       {processedData.map((doc, idx) => (
                         <tr key={doc.id} style={{ borderBottom: idx === processedData.length - 1 ? 'none' : '1px solid var(--surface-border)', transition: 'background 0.2s' }} onMouseOver={(e) => e.currentTarget.style.background = 'var(--surface-badge)'} onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}>
                           <td style={{ padding: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                            <FileText size={18} color={doc.color || 'var(--primary)'} />
+                            <FileText size={18} color={documentStructure[doc.category]?.color || '#64748b'} />
                             <div>
                               <div style={{ fontWeight: 500, color: 'var(--text-main)' }}>{doc.title}</div>
                               <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{doc.type}</div>

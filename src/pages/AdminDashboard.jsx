@@ -4,7 +4,7 @@ import { Activity, Users, FileText, Database, PackagePlus, AlertCircle } from 'l
 const AdminDashboard = () => {
   return (
     <div className="container" style={{ paddingTop: '80px', minHeight: '80vh' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '40px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '16px', marginBottom: '40px' }}>
         <div>
           <h1 className="text-gradient">Admin Dashboard</h1>
           <p style={{ color: 'var(--text-muted)' }}>Manage site resources, users, and content dynamically.</p>
@@ -49,7 +49,8 @@ const AdminDashboard = () => {
         <h3 style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '8px' }} className="text-gradient">
           <Activity size={20} /> Recent Site Activity
         </h3>
-        <table style={{ width: '100%', borderCollapse: 'collapse', color: 'var(--text-main)' }}>
+        <div className="admin-table-wrap">
+          <table style={{ width: '100%', borderCollapse: 'collapse', color: 'var(--text-main)' }}>
           <thead>
             <tr style={{ borderBottom: '1px solid var(--surface-border)', textAlign: 'left', color: 'var(--text-muted)' }}>
               <th style={{ padding: '12px' }}>Action</th>
@@ -74,7 +75,8 @@ const AdminDashboard = () => {
               <td style={{ padding: '12px' }}>3 hours ago</td>
             </tr>
           </tbody>
-        </table>
+          </table>
+        </div>
       </div>
     </div>
   );

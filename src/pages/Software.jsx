@@ -18,12 +18,7 @@ const ModernScriptIcon = () => (
 );
 
 const ModernFolderIcon = ({ size = 48, className = '' }) => (
-  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
-    <path d="M6 14C6 11.7909 7.79086 10 10 10H19.1716C20.2325 10 21.25 10.4214 22 11.1716L24.8284 14H38C40.2091 14 42 15.7909 42 18V36C42 38.2091 40.2091 40 38 40H10C7.79086 40 6 38.2091 6 36V14Z" fill="#F59E0B"/>
-    <path d="M6 19C6 17.8954 6.89543 17 8 17H40C41.1046 17 42 17.8954 42 19V36C42 38.2091 40.2091 40 38 40H10C7.79086 40 6 38.2091 6 36V19Z" fill="#FCD34D"/>
-    <path d="M6 21H42V36C42 38.2091 40.2091 40 38 40H10C7.79086 40 6 38.2091 6 36V21Z" fill="#FEF08A"/>
-    <path d="M6 19C6 17.8954 6.89543 17 8 17H40C41.1046 17 42 17.8954 42 19V21H6V19Z" fill="#FDE047"/>
-  </svg>
+  <Folder size={size} className={className} color="var(--primary)" fill="rgba(99, 102, 241, 0.15)" strokeWidth={1.5} />
 );
 
 const SoftwareIcon = ({ id, os, size = 32 }) => {
@@ -145,11 +140,11 @@ export const softwareData = [
   // === SOFTWARE (General) ===
   { id: 'macos-sonoma', title: 'macOS Sonoma', desc: 'The latest major release of macOS.', os: 'mac', folder: 'Mac OS', size: '12 GB', version: '14.0' },
   { id: 'macos-ventura', title: 'macOS Ventura', desc: 'The previous major release of macOS.', os: 'mac', folder: 'Mac OS', size: '12 GB', version: '13.5' },
-  { id: 'docker-desktop-win', title: 'Docker Desktop', desc: 'The fastest way to containerize applications on Windows.', os: 'windows', folder: 'Software', size: '620 MB', version: 'v4.22' },
+  { id: 'docker-desktop-win', title: 'Docker Desktop', desc: 'The fastest way to containerize applications on Windows.', os: 'windows', folder: 'Software', size: '620 MB', version: 'v4.22', url: 'https://desktop.docker.com/win/main/amd64/Docker%20Desktop%20Installer.exe' },
   { id: 'docker-desktop-mac', title: 'Docker Desktop (Mac)', desc: 'Optimized for M-series chips.', os: 'mac', folder: 'Software', size: '590 MB', version: 'v4.22' },
-  { id: 'postman', title: 'Postman IDE', desc: 'An API platform for building and using APIs.', os: 'windows', folder: 'Software', size: '150 MB', version: 'v10.15' },
+  { id: 'postman', title: 'Postman IDE', desc: 'An API platform for building and using APIs.', os: 'windows', folder: 'Software', size: '150 MB', version: 'v10.15', url: 'https://dl.pstmn.io/download/latest/win64' },
   { id: 'vlc-mac', title: 'VLC Media Player', desc: 'Free and open source multimedia player.', os: 'mac', folder: 'Software', size: '55 MB', version: 'v3.0.18' },
-  { id: 'chrome-win', title: 'Google Chrome', desc: 'Fast, secure, and free web browser built for the modern web.', os: 'windows', folder: 'Software', size: '90 MB', version: 'Latest' },
+  { id: 'chrome-win', title: 'Google Chrome', desc: 'Fast, secure, and free web browser built for the modern web.', os: 'windows', folder: 'Software', size: '90 MB', version: 'Latest', url: 'https://dl.google.com/tag/s/appguid%3D%7B8A69D345-D564-463C-AFF1-A69D9E530F96%7D%26iid%3D%7B135FF71F-176A-1B63-3CE5-129016ABBA58%7D%26lang%3Den%26browser%3D4%26usagestats%3D1%26appname%3DGoogle%2520Chrome%26needsadmin%3Dprefers%26ap%3D-arch_x64-statsdef_1%26installdataindex%3Dempty/update2/installers/ChromeSetup.exe' },
   { id: 'chrome-mac', title: 'Google Chrome (Mac)', desc: 'Fast, secure, and free web browser built for the modern web.', os: 'mac', folder: 'Software', size: '180 MB', version: 'Latest' },
   { id: 'firefox-win', title: 'Mozilla Firefox', desc: 'Open-source web browser, prioritizing privacy and speed.', os: 'windows', folder: 'Software', size: '55 MB', version: 'Latest' },
   { id: 'firefox-mac', title: 'Mozilla Firefox (Mac)', desc: 'Open-source web browser, prioritizing privacy and speed.', os: 'mac', folder: 'Software', size: '130 MB', version: 'Latest' },
@@ -163,10 +158,10 @@ export const softwareData = [
   { id: 'teams-mac', title: 'Microsoft Teams (Mac)', desc: 'Workspace for real-time collaboration and communication.', os: 'mac', folder: 'Software', size: '250 MB', version: 'Latest' },
 
   // === TOOLS ===
-  { id: 'git-win', title: 'Git for Windows', desc: 'Brings the Git terminal and GUI to Windows.', os: 'windows', folder: 'Tools', size: '50 MB', version: 'v2.42' },
+  { id: 'git-win', title: 'Git for Windows', desc: 'Brings the Git terminal and GUI to Windows.', os: 'windows', folder: 'Tools', size: '50 MB', version: 'v2.53.0.2', url: 'https://github.com/git-for-windows/git/releases/download/v2.53.0.windows.2/Git-2.53.0.2-64-bit.exe' },
   { id: 'epson-win', title: 'Epson L3110 Driver', desc: 'Printer and scanner drivers for Epson L3110.', os: 'windows', folder: 'Tools', size: '30 MB', version: 'v2.60' },
   { id: 'hp-universal-win', title: 'HP Universal Print Driver', desc: 'A single driver for a range of HP print devices.', os: 'windows', folder: 'Tools', size: '20 MB', version: 'v7.1' },
-  { id: 'rufus', title: 'Rufus', desc: 'Create bootable USB drives the easy way.', os: 'windows', folder: 'Tools', size: '1.4 MB', version: 'v4.2' },
+  { id: 'rufus', title: 'Rufus', desc: 'Create bootable USB drives the easy way.', os: 'windows', folder: 'Tools', size: '1.4 MB', version: 'v4.13', url: 'https://github.com/pbatard/rufus/releases/download/v4.13/rufus-4.13.exe' },
   { id: '7zip', title: '7-Zip', desc: 'A file archiver with a high compression ratio.', os: 'windows', folder: 'Tools', size: '1.5 MB', version: 'v23.01' },
   { id: 'iterm2', title: 'iTerm2', desc: 'A terminal emulator for macOS.', os: 'mac', folder: 'Tools', size: '22 MB', version: 'v3.4.19' },
   { id: 'homebrew', title: 'Homebrew', desc: 'The Missing Package Manager for macOS.', os: 'mac', folder: 'Tools', size: '10 KB', version: 'Latest' },
@@ -176,12 +171,12 @@ export const softwareData = [
   { id: 'nodejs-mac', title: 'Node.js (Mac)', desc: 'JavaScript runtime built on Chrome\'s V8 JavaScript engine.', os: 'mac', folder: 'Tools', size: '45 MB', version: 'v20.17' },
   { id: 'python-win', title: 'Python', desc: 'Powerful and fast programming language.', os: 'windows', folder: 'Tools', size: '25 MB', version: 'v3.12' },
   { id: 'python-mac', title: 'Python (Mac)', desc: 'Powerful and fast programming language.', os: 'mac', folder: 'Tools', size: '40 MB', version: 'v3.12' },
-  { id: 'anydesk-win', title: 'AnyDesk', desc: 'Fast and secure remote desktop application.', os: 'windows', folder: 'Tools', size: '4 MB', version: 'Latest' },
+  { id: 'anydesk-win', title: 'AnyDesk', desc: 'Fast and secure remote desktop application.', os: 'windows', folder: 'Tools', size: '4 MB', version: 'Latest', url: 'https://anydesk.com/en/downloads/thank-you?dv=win_exe' },
   { id: 'anydesk-mac', title: 'AnyDesk (Mac)', desc: 'Fast and secure remote desktop application.', os: 'mac', folder: 'Tools', size: '15 MB', version: 'Latest' },
   { id: 'teamviewer-win', title: 'TeamViewer', desc: 'Remote control, desktop sharing, and file transfer.', os: 'windows', folder: 'Tools', size: '45 MB', version: 'Latest' },
   { id: 'teamviewer-mac', title: 'TeamViewer (Mac)', desc: 'Remote control, desktop sharing, and file transfer.', os: 'mac', folder: 'Tools', size: '80 MB', version: 'Latest' },
   { id: 'winrar', title: 'WinRAR', desc: 'Powerful archive manager and data compression tool.', os: 'windows', folder: 'Tools', size: '3 MB', version: 'v6.24' },
-  { id: 'notepadpp', title: 'Notepad++', desc: 'Free source code editor and Notepad replacement.', os: 'windows', folder: 'Tools', size: '4 MB', version: 'v8.5.8' },
+  { id: 'notepadpp', title: 'Notepad++', desc: 'Free source code editor and Notepad replacement.', os: 'windows', folder: 'Tools', size: '4 MB', version: 'v8.9.3', url: 'https://github.com/notepad-plus-plus/notepad-plus-plus/releases/download/v8.9.3/npp.8.9.3.Installer.x64.exe' },
   { id: 'keka', title: 'Keka', desc: 'The macOS file archiver.', os: 'mac', folder: 'Tools', size: '25 MB', version: 'v1.3.4' },
   { id: 'raycast', title: 'Raycast', desc: 'Blazingly fast, totally extendable launcher for macOS.', os: 'mac', folder: 'Tools', size: '35 MB', version: 'Latest' },
   { id: 'filezilla-win', title: 'FileZilla Client', desc: 'Fast and reliable cross-platform FTP, FTPS and SFTP client.', os: 'windows', folder: 'Tools', size: '12 MB', version: 'Latest' },
@@ -297,28 +292,54 @@ const Software = () => {
             </div>
           </header>
 
-          <div style={{ maxWidth: '900px', margin: '0 auto' }}>
-            <div className="glass-panel" style={{ padding: '0', overflow: 'hidden', background: 'var(--surface)' }}>
+          <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '24px' }}>
               
-              {currentFoldersList.map((folderName, idx) => (
+              {currentFoldersList.map((folderName) => (
                 <div 
                   key={folderName} 
                   onClick={() => setCurrentFolder(folderName)}
-                  className="folder-item"
                   style={{
-                    borderBottom: idx !== currentFoldersList.length - 1 ? '1px solid var(--surface-border)' : 'none',
+                    background: 'var(--surface)',
+                    border: '1px solid var(--surface-border)',
+                    borderRadius: '16px',
+                    padding: '32px 24px',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '16px',
+                    boxShadow: 'var(--shadow-sm)',
+                    textAlign: 'center'
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-6px)';
+                    e.currentTarget.style.boxShadow = 'var(--shadow-lg)';
+                    e.currentTarget.style.borderColor = 'var(--primary)';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
+                    e.currentTarget.style.borderColor = 'var(--surface-border)';
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                    <ModernFolderIcon size={44} className="folder-icon" />
-                    <span className="folder-name-text" style={{ fontWeight: 600, fontSize: '1.2rem' }}>
+                  <div style={{ 
+                    width: '64px', height: '64px', borderRadius: '16px', 
+                    background: 'var(--card-dark)', display: 'flex', alignItems: 'center', 
+                    justifyContent: 'center', border: '1px solid var(--surface-border)',
+                    boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.1)'
+                  }}>
+                    <ModernFolderIcon size={40} />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <span style={{ fontWeight: 700, fontSize: '1.15rem', color: 'var(--text-main)', letterSpacing: '0.3px' }}>
                       {folderName}
                     </span>
-                  </div>
-
-                  <div className="folder-badge">
-                    <Folder fill={folderColor} color={folderColor} size={14} />
-                    Folder
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                      Folder
+                    </span>
                   </div>
                 </div>
               ))}
@@ -348,44 +369,54 @@ const Software = () => {
             </div>
           </div>
 
-          <div style={{ maxWidth: '900px', margin: '0 auto' }}>
-            <div className="glass-panel" style={{ padding: '0', overflow: 'hidden', background: 'var(--surface)' }}>
+          <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '24px' }}>
               
-              {officeSubfolders.map((folderName, idx) => (
+              {officeSubfolders.map((folderName) => (
                 <div 
                   key={folderName}
-                  className="file-item" 
+                  onClick={() => setCurrentSubfolder(folderName)}
                   style={{
+                    background: 'var(--surface)',
+                    border: '1px solid var(--surface-border)',
+                    borderRadius: '16px',
+                    padding: '32px 24px',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                     display: 'flex',
+                    flexDirection: 'column',
                     alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '16px 24px',
-                    borderBottom: idx !== officeSubfolders.length - 1 ? '1px solid var(--surface-border)' : 'none',
-                    transition: 'var(--transition)'
+                    justifyContent: 'center',
+                    gap: '16px',
+                    boxShadow: 'var(--shadow-sm)',
+                    textAlign: 'center'
                   }}
-                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.03)'}
-                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-6px)';
+                    e.currentTarget.style.boxShadow = 'var(--shadow-lg)';
+                    e.currentTarget.style.borderColor = 'var(--primary)';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
+                    e.currentTarget.style.borderColor = 'var(--surface-border)';
+                  }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                    <div className="file-icon folder" style={{ width: '32px', height: '32px' }}>
-                      <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAF4SURBVFhH7ZZNSsNQFEYjVYSCNeAyugahIv6kE12AYEmtrc5EnLsTcReKduJAB9I2Tkxa3YDiMJkk6Of36FUbEExt+5pBLpxRyDsn4TWvRjbZpGZwaeRwYeQTMCe3jG+4aI4BN8RPwBs54T0zcvvowwXzJCBIyAc5JeMZLjRsANCxgG4dcHeH53GnhfvlWdEz4Go+TwKCP2kuAM4W0DsEPPt/uJUQrZVF0TPgYdvE01GI52MkQj25tzcCdoj26kBAe82EVw3RrXFxDSgXnaJnQGfd5AUG8Mm0QBedolcBmwzYZ0CDF3VAF52iZ4CjAuohegfcXBpQLjpFr96AxYAGA7izdaBcdIo+FQHlKQSU0xTgqADdmzAWoPaA5p8hnaL/CqhF/Y+EDuiKB2wwoMqAXz6bE4EuOkUvAZ7NAB4UOlCuWIA6C9xK9H1cThrlGjwLottSwW9agX9tvWuBruiuVBB9f17Pi+bLWXFJB3T9/BfIJpvpjmF8AnAtKFYMFUb0AAAAAElFTkSuQmCC" alt="Icon" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-                    </div>
-                    <div className="file-info" style={{ display: 'flex', flexDirection: 'column' }}>
-                      <button onClick={() => setCurrentSubfolder(folderName)} className="file-name" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-main)', fontWeight: 600, fontSize: '1.2rem', textDecoration: 'none', padding: 0 }}>
-                        Office {folderName}
-                      </button>
-                      <span className="file-meta"></span>
-                    </div>
+                  <div style={{ 
+                    width: '64px', height: '64px', borderRadius: '16px', 
+                    background: 'var(--card-dark)', display: 'flex', alignItems: 'center', 
+                    justifyContent: 'center', border: '1px solid var(--surface-border)',
+                    boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.1)'
+                  }}>
+                    <ModernFolderIcon size={40} />
                   </div>
-
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                    <span className="file-size folder-badge" style={{ fontSize: '0.9rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--surface-badge)', padding: '4px 12px', borderRadius: '12px' }}>
-                      <Folder size={14} /> Folder
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <span style={{ fontWeight: 700, fontSize: '1.15rem', color: 'var(--text-main)', letterSpacing: '0.3px' }}>
+                      Office {folderName}
                     </span>
-                    
-                    <button onClick={() => setCurrentSubfolder(folderName)} className="file-arrow" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)', opacity: 0.8, display: 'flex', alignItems: 'center', textDecoration: 'none', padding: 0 }}>
-                      <ChevronRight size={20} />
-                    </button>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                      Folder
+                    </span>
                   </div>
                 </div>
               ))}
@@ -415,43 +446,54 @@ const Software = () => {
             </div>
           </div>
 
-          <div style={{ maxWidth: '900px', margin: '0 auto' }}>
-            <div className="glass-panel" style={{ padding: '0', overflow: 'hidden', background: 'var(--surface)' }}>
+          <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '24px' }}>
               
-              {availableTypes.map((folderName, idx) => (
+              {availableTypes.map((folderName) => (
                 <div 
                   key={folderName}
-                  className="file-item" 
+                  onClick={() => setCurrentTypeFolder(folderName)}
                   style={{
+                    background: 'var(--surface)',
+                    border: '1px solid var(--surface-border)',
+                    borderRadius: '16px',
+                    padding: '32px 24px',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                     display: 'flex',
+                    flexDirection: 'column',
                     alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '16px 24px',
-                    borderBottom: idx !== availableTypes.length - 1 ? '1px solid var(--surface-border)' : 'none',
-                    transition: 'var(--transition)'
+                    justifyContent: 'center',
+                    gap: '16px',
+                    boxShadow: 'var(--shadow-sm)',
+                    textAlign: 'center'
                   }}
-                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.03)'}
-                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-6px)';
+                    e.currentTarget.style.boxShadow = 'var(--shadow-lg)';
+                    e.currentTarget.style.borderColor = 'var(--primary)';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
+                    e.currentTarget.style.borderColor = 'var(--surface-border)';
+                  }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                    <div className="file-icon folder" style={{ width: '32px', height: '32px' }}>
-                      <ModernFolderIcon size={32} />
-                    </div>
-                    <div className="file-info" style={{ display: 'flex', flexDirection: 'column' }}>
-                      <button onClick={() => setCurrentTypeFolder(folderName)} className="file-name" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-main)', fontWeight: 600, fontSize: '1.2rem', textDecoration: 'none', padding: 0 }}>
-                        {folderName}
-                      </button>
-                    </div>
+                  <div style={{ 
+                    width: '64px', height: '64px', borderRadius: '16px', 
+                    background: 'var(--card-dark)', display: 'flex', alignItems: 'center', 
+                    justifyContent: 'center', border: '1px solid var(--surface-border)',
+                    boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.1)'
+                  }}>
+                    <ModernFolderIcon size={40} />
                   </div>
-
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                    <span className="file-size folder-badge" style={{ fontSize: '0.9rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--surface-badge)', padding: '4px 12px', borderRadius: '12px' }}>
-                      <Folder size={14} /> Folder
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <span style={{ fontWeight: 700, fontSize: '1.15rem', color: 'var(--text-main)', letterSpacing: '0.3px' }}>
+                      {folderName}
                     </span>
-                    
-                    <button onClick={() => setCurrentTypeFolder(folderName)} className="file-arrow" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)', opacity: 0.8, display: 'flex', alignItems: 'center', textDecoration: 'none', padding: 0 }}>
-                      <ChevronRight size={20} />
-                    </button>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                      Folder
+                    </span>
                   </div>
                 </div>
               ))}
