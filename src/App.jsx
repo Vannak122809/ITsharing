@@ -3,7 +3,7 @@ import { Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom'
 import { Terminal, Video, FileText, BookOpen, Layers, User, LogOut, DownloadCloud, Sun, Moon, Users, HelpCircle, Menu, X } from 'lucide-react';
 
 import { auth } from './firebase';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { onAuthStateChanged, signOut, sendEmailVerification } from 'firebase/auth';
 import { syncUserToFirestore } from './userService';
 
 import Home from './pages/Home';
@@ -199,6 +199,45 @@ function App() {
           </div>
         </div>
       </nav>
+
+      {/* ─── VERIFICATION OVERLAY ─── */}
+      {user && !user.emailVerified && location.pathname !== '/login' && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+          background: 'var(--bg-main)', zIndex: 9999, display: 'flex',
+          alignItems: 'center', justifyContent: 'center', padding: '20px'
+        }}>
+          <div className="glass-panel" style={{ maxWidth: '450px', width: '100%', padding: '40px', textAlign: 'center' }}>
+            <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'rgba(232, 143, 21, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px auto' }}>
+              <HelpCircle size={40} color="#e88f15" />
+            </div>
+            <h1 className="text-gradient" style={{ fontSize: '1.8rem', marginBottom: '16px' }}>Verify Your Email</h1>
+            <p style={{ color: 'var(--text-muted)', lineHeight: '1.6', marginBottom: '32px' }}>
+              Your account is almost ready! We've sent a verification link to <strong>{user.email}</strong>. 
+              Please verify your email to unlock all features.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <button 
+                onClick={async () => {
+                  try {
+                    await sendEmailVerification(user);
+                    alert("Verification link resent! Check your inbox.");
+                  } catch (e) { alert("Error resending email. Please try again later."); }
+                }}
+                className="btn btn-primary" style={{ width: '100%' }}
+              >
+                Resend Verification Email
+              </button>
+              <button onClick={handleSignOut} className="btn btn-outline" style={{ width: '100%' }}>
+                <LogOut size={16} /> Sign Out & Try Again
+              </button>
+            </div>
+            <p style={{ marginTop: '24px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+              Already verified? <button onClick={() => window.location.reload()} style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}>Refresh page</button>
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* ─── MOBILE DRAWER ─── */}
       <div className={`nav-drawer ${drawerOpen ? 'open' : ''}`}>

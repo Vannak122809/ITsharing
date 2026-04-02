@@ -9,11 +9,13 @@ import {
   setPersistence,
   browserLocalPersistence,
   browserSessionPersistence,
+  updateProfile,
+  sendEmailVerification,
 } from 'firebase/auth';
 import { auth } from '../firebase';
 import {
   LogIn, UserPlus, AlertCircle, Eye, EyeOff,
-  Mail, Lock, ArrowLeft, CheckCircle, Ghost,
+  Mail, Lock, ArrowLeft, CheckCircle, Ghost, User,
 } from 'lucide-react';
 
 const googleProvider = new GoogleAuthProvider();
@@ -79,14 +81,18 @@ const Login = () => {
   // view: 'login' | 'signup' | 'forgot'
   const [view, setView]                   = useState('login');
   const [email, setEmail]                 = useState('');
+  const [fullName, setFullName]           = useState('');
   const [password, setPassword]           = useState('');
   const [confirmPassword, setConfirm]     = useState('');
+  const [agreeTerms, setAgreeTerms]       = useState(false);
   const [rememberMe, setRememberMe]       = useState(false);
   const [showPwd, setShowPwd]             = useState(false);
   const [showConfirm, setShowConfirm]     = useState(false);
   const [error, setError]                 = useState('');
   const [success, setSuccess]             = useState('');
   const [loading, setLoading]             = useState(false);
+  const [attempts, setAttempts]           = useState(0); // Rate limiting
+  const [botField, setBotField]           = useState(''); // Honeypot
 
   // Pre-fill remembered email
   useEffect(() => {
@@ -102,8 +108,8 @@ const Login = () => {
 
   const friendlyError = (code) => ({
     'auth/invalid-email':       'Invalid email format.',
-    'auth/user-not-found':      'No account found with this email.',
-    'auth/wrong-password':      'Incorrect password.',
+    'auth/user-not-found':      'Incorrect email or password.', // Unified for security
+    'auth/wrong-password':      'Incorrect email or password.', // Unified for security
     'auth/invalid-credential':  'Incorrect email or password.',
     'auth/email-already-in-use':'This email is already registered.',
     'auth/weak-password':       'Password must be at least 6 characters.',
@@ -113,24 +119,60 @@ const Login = () => {
 
   // ── Handlers ──────────────────────────────────────────────────────
   const handleLogin = async (e) => {
-    e.preventDefault(); setError(''); setLoading(true);
+    e.preventDefault(); setError(''); 
+    
+    // 1. Honeypot check
+    if (botField) return; 
+
+    // 2. Local Rate Limiting
+    if (attempts > 5) {
+      setError('Too many login attempts from this session. Please wait or refresh.');
+      return;
+    }
+
+    setLoading(true);
     try {
       await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence);
-      await signInWithEmailAndPassword(auth, email, password);
-      if (rememberMe) localStorage.setItem('itshare_remembered_email', email);
+      const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password);
+      
+      // Enforce email verification
+      if (!userCredential.user.emailVerified) {
+        setError('Your email is not verified. Please check your inbox to verify your account.');
+        await auth.signOut();
+        return;
+      }
+
+      if (rememberMe) localStorage.setItem('itshare_remembered_email', email.trim());
       else localStorage.removeItem('itshare_remembered_email');
       navigate('/');
-    } catch (err) { setError(friendlyError(err.code)); }
+    } catch (err) { 
+      setAttempts(prev => prev + 1);
+      setError(friendlyError(err.code)); 
+    }
     finally { setLoading(false); }
   };
 
   const handleSignup = async (e) => {
     e.preventDefault();
     if (password !== confirmPassword) { setError('Passwords do not match.'); return; }
+    if (!agreeTerms) { setError('Please agree to the Terms of Service.'); return; }
+    if (!fullName.trim()) { setError('Full Name is required.'); return; }
+
     setError(''); setLoading(true);
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      navigate('/');
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      // Update profile with full name
+      await updateProfile(userCredential.user, {
+        displayName: fullName
+      });
+      // Send verification email
+      await sendEmailVerification(userCredential.user);
+      
+      setSuccess('Account created! Please check your email inbox to verify your account before signing in.');
+      setView('login'); // Redirect to login to show the success message
+      setFullName('');
+      setPassword('');
+      setConfirm('');
     } catch (err) { setError(friendlyError(err.code)); }
     finally { setLoading(false); }
   };
@@ -145,6 +187,7 @@ const Login = () => {
   };
 
   const handleGoogle = async () => {
+    if (botField) return;
     setError(''); setLoading(true);
     try { await signInWithPopup(auth, googleProvider); navigate('/'); }
     catch (err) { setError(friendlyError(err.code)); }
@@ -225,6 +268,16 @@ const Login = () => {
         {/* ════ LOGIN ════ */}
         {view === 'login' && (
           <form onSubmit={handleLogin} style={{ display:'flex', flexDirection:'column', gap:'16px' }}>
+            
+            {/* Honeypot Field (Hidden from humans) */}
+            <input 
+              type="text" 
+              value={botField} 
+              onChange={(e) => setBotField(e.target.value)} 
+              style={{ display: 'none' }} 
+              tabIndex="-1" 
+              autoComplete="off" 
+            />
 
             <div>
               <label htmlFor="l-email" style={labelStyle}>Email Address</label>
@@ -293,6 +346,23 @@ const Login = () => {
           <form onSubmit={handleSignup} style={{ display:'flex', flexDirection:'column', gap:'16px' }}>
 
             <div>
+              <label htmlFor="s-name" style={labelStyle}>Full Name</label>
+              <div style={iconWrapStyle}>
+                <User size={16} style={leftIconStyle} />
+                <input
+                  id="s-name"
+                  type="text"
+                  className="input-field"
+                  placeholder="Your Name"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  required
+                  style={iconInputNoEyeStyle}
+                />
+              </div>
+            </div>
+
+            <div>
               <label htmlFor="s-email" style={labelStyle}>Email Address</label>
               <div style={iconWrapStyle}>
                 <Mail size={16} style={leftIconStyle} />
@@ -352,7 +422,17 @@ const Login = () => {
               </div>
             </div>
 
-            <button type="submit" className="btn btn-primary" style={{ width:'100%' }} disabled={loading}>
+            <label style={{ display:'flex', alignItems:'flex-start', gap:'10px', cursor:'pointer', fontSize:'0.85rem', color:'var(--text-muted)', lineHeight:'1.4', marginTop:'8px' }}>
+              <input 
+                type="checkbox" 
+                checked={agreeTerms} 
+                onChange={(e) => setAgreeTerms(e.target.checked)}
+                style={{ accentColor:'var(--primary)', marginTop:'3px', width:'15px', height:'15px', cursor:'pointer' }} 
+              />
+              <span>I agree to the ITsharing <span style={{ color:'var(--primary)', fontWeight:600 }}>Terms of Service</span> and <span style={{ color:'var(--primary)', fontWeight:600 }}>Privacy Policy</span>.</span>
+            </label>
+
+            <button type="submit" className="btn btn-primary" style={{ width:'100%', marginTop:'8px' }} disabled={loading}>
               {loading ? 'Creating account…' : <><UserPlus size={16} /> Create Account</>}
             </button>
 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Monitor, Apple, ChevronRight, Folder, File, ArrowLeft, Eye, Download as DownloadIcon, PlayCircle, Cpu, Settings } from 'lucide-react';
+import { Monitor, Apple, ChevronRight, Folder, File, ArrowLeft, Eye, Download as DownloadIcon, PlayCircle, Cpu, Settings, Search, X } from 'lucide-react';
 import { auth } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 
@@ -8,8 +8,8 @@ const ModernIsoIcon = ({ size = 42 }) => (
   <img src="/iso.png" alt="ISO" style={{ width: size, height: size, objectFit: 'contain' }} />
 );
 
-const ModernScriptIcon = () => (
-  <svg width="42" height="42" viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg">
+const ModernScriptIcon = ({ size = 42 }) => (
+  <svg width={size} height={size} viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M8 4C6.89543 4 6 4.89543 6 6V36C6 37.1046 6.89543 38 8 38H34C35.1046 38 36 37.1046 36 36V14L26 4H8Z" fill="#1E293B" stroke="#475569" strokeWidth="1.5"/>
     <path d="M26 4V12C26 13.1046 26.8954 14 28 14H36" fill="#334155" stroke="#475569" strokeWidth="1.5"/>
     <path d="M14 20L18 24L14 28" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -83,6 +83,7 @@ const SoftwareIcon = ({ id, os, size = 32 }) => {
     'macos-sonoma': 'apple.com',
     'macos-ventura': 'apple.com',
     'idm': 'internetdownloadmanager.com',
+    'idm-reset': 'internetdownloadmanager.com',
     'utorrent': 'utorrent.com',
     'qbittorrent': 'qbittorrent.org',
     'freetube': 'freetubeapp.io',
@@ -109,6 +110,11 @@ const SoftwareIcon = ({ id, os, size = 32 }) => {
         style={{ width: size, height: size, objectFit: 'contain' }}
       />
     );
+  }
+
+  // Fallback for scripts if not in iconMap
+  if (id.toLowerCase().includes('script') || id.toLowerCase().includes('reset')) {
+    return <ModernScriptIcon size={size} />;
   }
 
   return os === 'windows' ? <Monitor size={size} /> : <Apple size={size} />;
@@ -215,6 +221,7 @@ export const softwareData = [
 
   // === DOWNLOAD ===
   { id: 'idm', title: 'Internet Download Manager', desc: 'Accelerate downloads by up to 5 times, schedule, and resume broken downloads.', os: 'windows', folder: 'Download', size: '12 MB', version: 'v6.42.6.3', url: 'https://pub-5961bc36cb774286a50691aa994b2653.r2.dev/Internet.Download.Manager.6.42.63.0.zip' },
+  { id: 'idm-reset', title: 'IDM Trial Reset & Activation', desc: 'A safe and efficient script to reset the Internet Download Manager trial or activate it permanently.', os: 'windows', folder: 'Download', size: '1 KB', version: 'v1.0', url: 'https://pub-5961bc36cb774286a50691aa994b2653.r2.dev/IDM_Activation.cmd', isNew: true },
   { id: 'utorrent', title: 'uTorrent Pro', desc: 'A very popular BitTorrent client for Windows.', os: 'windows', folder: 'Download', size: '5 MB', version: 'v3.6', url: 'https://www.utorrent.com/web/downloads/complete/track/stable/os/win/' },
   { id: 'qbittorrent', title: 'qBittorrent', desc: 'Free and open-source BitTorrent client.', os: 'windows', folder: 'Download', size: '30 MB', version: 'v4.6', url: 'https://www.qbittorrent.org/download' },
   { id: 'freetube', title: 'FreeTube', desc: 'Private YouTube client for Windows and Mac.', os: 'windows', folder: 'Download', size: '80 MB', version: 'v1.10' },
@@ -270,6 +277,7 @@ const Software = () => {
   const [currentFolder, setCurrentFolder] = useState(null);
   const [currentSubfolder, setCurrentSubfolder] = useState(null);
   const [currentTypeFolder, setCurrentTypeFolder] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const navigate = useNavigate();
@@ -289,7 +297,15 @@ const Software = () => {
   const folderBg = '#fdf4e7'; // light orange for the background of the icon
 
   const currentFoldersList = activeOS === 'windows' ? windowsFolders : macFolders;
+  
   const filteredSoftware = softwareData.filter(item => {
+    // If searching, ignore folders and show all matches by OS
+    if (searchTerm.trim()) {
+      if (item.os !== activeOS) return false;
+      const term = searchTerm.toLowerCase();
+      return item.title.toLowerCase().includes(term) || item.desc.toLowerCase().includes(term);
+    }
+
     if (item.os !== activeOS) return false;
     if (item.folder !== currentFolder) return false;
     if (currentSubfolder && item.subfolder !== currentSubfolder) return false;
@@ -325,39 +341,135 @@ const Software = () => {
               Browse through our structured repository to find the necessary installers, applications, and tools.
             </p>
 
-            {/* OS Filter Toggle */}
-            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '40px', marginBottom: '16px' }}>
-              <div style={{ background: 'var(--card-dark)', padding: '6px', borderRadius: '30px', display: 'flex', gap: '8px', border: '1px solid var(--surface-border)' }}>
-                <button 
-                  onClick={() => { setActiveOS('windows'); setCurrentFolder(null); setCurrentSubfolder(null); setCurrentTypeFolder(null); }}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 24px', borderRadius: '24px', border: 'none', cursor: 'pointer', fontWeight: 'bold', fontFamily: 'inherit',
-                    background: activeOS === 'windows' ? 'linear-gradient(135deg, var(--primary), var(--secondary))' : 'transparent',
-                    color: activeOS === 'windows' ? '#fff' : 'var(--text-muted)',
-                    transition: 'var(--transition)'
-                  }}
-                >
-                  <Monitor size={18} /> Windows
-                </button>
-                <button 
-                  onClick={() => { setActiveOS('mac'); setCurrentFolder(null); setCurrentSubfolder(null); setCurrentTypeFolder(null); }}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 24px', borderRadius: '24px', border: 'none', cursor: 'pointer', fontWeight: 'bold', fontFamily: 'inherit',
-                    background: activeOS === 'mac' ? 'linear-gradient(135deg, var(--primary), var(--secondary))' : 'transparent',
-                    color: activeOS === 'mac' ? '#fff' : 'var(--text-muted)',
-                    transition: 'var(--transition)'
-                  }}
-                >
-                  <Apple size={18} /> Mac OS
-                </button>
+            {/* OS Filter & Search Toggle */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', marginTop: '40px', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '16px', width: '100%' }}>
+                <div style={{ background: 'var(--card-dark)', padding: '6px', borderRadius: '30px', display: 'flex', gap: '8px', border: '1px solid var(--surface-border)' }}>
+                  <button 
+                    onClick={() => { setActiveOS('windows'); setCurrentFolder(null); setCurrentSubfolder(null); setCurrentTypeFolder(null); setSearchTerm(''); }}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 24px', borderRadius: '24px', border: 'none', cursor: 'pointer', fontWeight: 'bold', fontFamily: 'inherit',
+                      background: activeOS === 'windows' ? 'linear-gradient(135deg, var(--primary), var(--secondary))' : 'transparent',
+                      color: activeOS === 'windows' ? '#fff' : 'var(--text-muted)',
+                      transition: 'var(--transition)'
+                    }}
+                  >
+                    <Monitor size={18} /> Windows
+                  </button>
+                  <button 
+                    onClick={() => { setActiveOS('mac'); setCurrentFolder(null); setCurrentSubfolder(null); setCurrentTypeFolder(null); setSearchTerm(''); }}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 24px', borderRadius: '24px', border: 'none', cursor: 'pointer', fontWeight: 'bold', fontFamily: 'inherit',
+                      background: activeOS === 'mac' ? 'linear-gradient(135deg, var(--primary), var(--secondary))' : 'transparent',
+                      color: activeOS === 'mac' ? '#fff' : 'var(--text-muted)',
+                      transition: 'var(--transition)'
+                    }}
+                  >
+                    <Apple size={18} /> Mac OS
+                  </button>
+                </div>
+
+                <div style={{ position: 'relative', width: '100%', maxWidth: '400px' }}>
+                  <div style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}>
+                    <Search size={18} />
+                  </div>
+                  <input 
+                    type="text"
+                    placeholder="Search software, tools..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px 12px 48px',
+                      borderRadius: '30px',
+                      background: 'var(--card-dark)',
+                      border: '1px solid var(--surface-border)',
+                      color: 'var(--text-main)',
+                      fontSize: '0.95rem',
+                      outline: 'none',
+                      transition: 'var(--transition)',
+                      boxShadow: 'var(--shadow-sm)'
+                    }}
+                    onFocus={(e) => { e.target.style.borderColor = 'var(--primary)'; e.target.style.boxShadow = '0 0 15px rgba(99, 102, 241, 0.2)'; }}
+                    onBlur={(e) => { e.target.style.borderColor = 'var(--surface-border)'; e.target.style.boxShadow = 'var(--shadow-sm)'; }}
+                  />
+                  {searchTerm && (
+                    <button 
+                      onClick={() => setSearchTerm('')}
+                      style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+                    >
+                      <X size={16} />
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </header>
 
-          <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '24px' }}>
-              
-              {currentFoldersList.map((folderName) => (
+          <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+            {searchTerm.trim() ? (
+              <div className="card-grid">
+                {filteredSoftware.map(software => (
+                  <div key={software.id} className="card glass-panel flex flex-col" style={{ padding: '24px', position: 'relative', overflow: 'hidden' }}>
+                    {software.isNew && <div style={{ position: 'absolute', top: '12px', right: '-30px', background: 'var(--secondary)', color: 'white', padding: '4px 35px', transform: 'rotate(45deg)', fontSize: '0.7rem', fontWeight: 'bold', zIndex: 1, boxShadow: '0 2px 5px rgba(0,0,0,0.2)' }}>NEW</div>}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+                      <div style={{ background: 'var(--surface-badge)', padding: '12px', borderRadius: '16px', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {(software.title.toLowerCase().includes('iso') || (software.url && software.url.toLowerCase().includes('.iso'))) ? (
+                          <ModernIsoIcon size={32} />
+                        ) : (
+                          <SoftwareIcon id={software.id} os={software.os} size={36} />
+                        )}
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'flex-end' }}>
+                        <span style={{ fontSize: '0.8rem', background: 'var(--surface-badge)', padding: '4px 12px', borderRadius: '12px', color: 'var(--text-muted)' }}>
+                          {software.version}
+                        </span>
+                        <span style={{ fontSize: '0.75rem', border: '1px solid var(--primary)', padding: '2px 10px', borderRadius: '12px', color: 'var(--primary)', opacity: 0.8 }}>
+                          {software.folder}
+                        </span>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', width: '100%' }}>
+                      <a 
+                        href={software.downloadUrl || software.url || `https://files.kichhoat24h.com/download/${encodeURIComponent(software.folder)}/${encodeURIComponent(software.title)}`}
+                        target="_blank" 
+                        rel="noreferrer"
+                        onClick={(e) => { 
+                          e.stopPropagation();
+                          if (authLoading) { e.preventDefault(); return; }
+                          if (isGuest) { e.preventDefault(); navigate('/login'); } 
+                        }}
+                        style={{ textDecoration: 'none', color: 'inherit' }}
+                      >
+                        <h3 
+                          style={{ fontSize: '1.25rem', marginBottom: '6px', cursor: 'pointer', transition: 'color 0.2s', textAlign: 'left' }}
+                          onMouseOver={(e) => e.target.style.color = 'var(--primary)'}
+                          onMouseOut={(e) => e.target.style.color = 'inherit'}
+                        >
+                          {software.title}
+                        </h3>
+                      </a>
+                    </div>
+                    <p style={{ color: 'var(--text-muted)', flexGrow: 1, fontSize: '0.9rem', lineHeight: 1.5 }}>{software.desc}</p>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--surface-border)' }}>
+                      <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{software.size}</span>
+                      <Link to={`/software/${software.id}`} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 'bold', color: 'var(--primary)', textDecoration: 'none', fontSize: '0.9rem' }}>
+                        <Eye size={16} /> Details
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+                {filteredSoftware.length === 0 && (
+                  <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '100px 40px', background: 'var(--surface)', borderRadius: '24px', border: '1px solid var(--surface-border)' }}>
+                    <Search size={48} style={{ margin: '0 auto 20px auto', opacity: 0.3 }} />
+                    <h2 style={{ fontSize: '1.5rem', marginBottom: '10px' }}>No matches found</h2>
+                    <p style={{ color: 'var(--text-muted)' }}>We couldn't find any software matching "{searchTerm}"</p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '24px' }}>
+                {currentFoldersList.map((folderName) => (
                 <div 
                   key={folderName} 
                   onClick={() => setCurrentFolder(folderName)}
@@ -405,112 +517,134 @@ const Software = () => {
                   </div>
                 </div>
               ))}
-
-            </div>
+              </div>
+            )}
           </div>
         </>
       ) : currentFolder && !currentSubfolder && availableSubfolders.length > 0 ? (
         <>
-          <div style={{ marginBottom: '40px', maxWidth: '1000px', margin: '0 auto 40px auto' }}>
-            <button 
-              onClick={() => setCurrentFolder(null)}
-              className="btn btn-outline"
-              style={{ padding: '8px 16px', marginBottom: '24px' }}
-            >
-              <ArrowLeft size={16} /> Back to Folders
-            </button>
+          <div style={{ marginBottom: '40px', maxWidth: '1100px', margin: '0 auto 40px auto' }}>
+            <nav style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px', fontSize: '0.9rem' }}>
+              <button 
+                onClick={() => { setCurrentFolder(null); setCurrentSubfolder(null); setCurrentTypeFolder(null); }}
+                style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', padding: 0 }}
+              >
+                Repository
+              </button>
+              <ChevronRight size={14} color="var(--text-muted)" />
+              <span style={{ color: 'var(--text-main)', fontWeight: 600 }}>{currentFolder}</span>
+            </nav>
             
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <ModernFolderIcon size={36} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+              <div style={{ padding: '12px', borderRadius: '16px', background: 'var(--surface-badge)', color: 'var(--primary)' }}>
+                <ModernFolderIcon size={42} folderName={currentFolder} />
+              </div>
               <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <h1 className="text-animated-cyber" style={{ margin: 0, lineHeight: 1 }}>{currentFolder}</h1>
-                <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '4px' }}>
-                  {activeOS === 'windows' ? 'Windows OS' : 'macOS'} Apps
+                <h1 className="text-animated-cyber" style={{ margin: 0, fontSize: '2rem' }}>{currentFolder}</h1>
+                <span style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginTop: '2px' }}>
+                  {activeOS === 'windows' ? 'Windows OS' : 'macOS'} structured repository
                 </span>
               </div>
             </div>
           </div>
 
-          <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '24px' }}>
+          <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '24px' }}>
               
               {availableSubfolders.map((folderName) => (
                 <div 
                   key={folderName}
                   onClick={() => setCurrentSubfolder(folderName)}
+                  className="glass-panel"
                   style={{
-                    background: 'var(--surface)',
-                    border: '1px solid var(--surface-border)',
-                    borderRadius: '16px',
-                    padding: '32px 24px',
+                    padding: '24px',
                     cursor: 'pointer',
-                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                     display: 'flex',
-                    flexDirection: 'column',
                     alignItems: 'center',
-                    justifyContent: 'center',
                     gap: '16px',
-                    boxShadow: 'var(--shadow-sm)',
-                    textAlign: 'center'
+                    position: 'relative',
+                    overflow: 'hidden'
                   }}
                   onMouseOver={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-6px)';
-                    e.currentTarget.style.boxShadow = 'var(--shadow-lg)';
+                    e.currentTarget.style.transform = 'translateY(-5px)';
                     e.currentTarget.style.borderColor = 'var(--primary)';
+                    e.currentTarget.style.boxShadow = 'var(--shadow-lg)';
                   }}
                   onMouseOut={(e) => {
                     e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
                     e.currentTarget.style.borderColor = 'var(--surface-border)';
+                    e.currentTarget.style.boxShadow = 'var(--shadow-glass)';
                   }}
                 >
-                  <div style={{ 
-                    width: '64px', height: '64px', borderRadius: '16px', 
-                    background: 'var(--card-dark)', display: 'flex', alignItems: 'center', 
-                    justifyContent: 'center', border: '1px solid var(--surface-border)',
-                    boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.1)'
-                  }}>
-                    <ModernFolderIcon size={40} folderName={folderName} />
+                  <div style={{ width: '52px', height: '52px', borderRadius: '12px', background: 'var(--card-dark)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.05)' }}>
+                    <Folder size={32} color="var(--primary)" fill="rgba(99, 102, 241, 0.15)" strokeWidth={1.5} />
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <span style={{ fontWeight: 700, fontSize: '1.15rem', color: 'var(--text-main)', letterSpacing: '0.3px' }}>
-                      {currentFolder} {folderName}
-                    </span>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                      Folder
-                    </span>
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text-main)' }}>{folderName}</span>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Folder</span>
                   </div>
+                  <ChevronRight size={16} color="var(--text-muted)" style={{ marginLeft: 'auto' }} />
                 </div>
               ))}
 
-              {/* Also show files that are directly in this folder without a subfolder */}
               {softwareData
                 .filter(item => item.os === activeOS && item.folder === currentFolder && !item.subfolder)
                 .map((item) => (
                   <div 
                     key={item.id}
                     onClick={() => navigate(`/software/${item.id}`)}
+                    className="glass-panel"
                     style={{
-                      background: 'var(--surface)',
-                      border: '1px solid var(--surface-border)',
-                      borderRadius: '16px',
                       padding: '24px',
                       cursor: 'pointer',
-                      transition: 'all 0.2s',
                       display: 'flex',
                       flexDirection: 'column',
+                      gap: '16px',
                       alignItems: 'center',
-                      gap: '12px',
+                      textAlign: 'center'
                     }}
-                    onMouseOver={(e) => e.currentTarget.style.borderColor = 'var(--primary)'}
-                    onMouseOut={(e) => e.currentTarget.style.borderColor = 'var(--surface-border)'}
+                    onMouseOver={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-5px)';
+                      e.currentTarget.style.borderColor = 'var(--primary)';
+                    }}
+                    onMouseOut={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.borderColor = 'var(--surface-border)';
+                    }}
                   >
-                    <SoftwareIcon id={item.id} os={item.os} size={42} />
-                    <span style={{ fontWeight: 600, fontSize: '0.9rem', textAlign: 'center' }}>{item.title}</span>
+                    <div style={{ background: 'var(--card-dark)', padding: '16px', borderRadius: '20px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+                      <SoftwareIcon id={item.id} os={item.os} size={48} />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      <a 
+                        href={item.downloadUrl || item.url || `https://files.kichhoat24h.com/download/${encodeURIComponent(item.folder)}/${encodeURIComponent(item.title)}`}
+                        target="_blank" 
+                        rel="noreferrer"
+                        onClick={(e) => { 
+                          e.stopPropagation();
+                          if (authLoading) { e.preventDefault(); return; }
+                          if (isGuest) { e.preventDefault(); navigate('/login'); } 
+                        }}
+                        style={{ textDecoration: 'none', color: 'inherit' }}
+                      >
+                        <span 
+                          style={{ fontWeight: 700, fontSize: '1.05rem', color: 'var(--text-main)', transition: 'color 0.2s' }}
+                          onMouseOver={(e) => e.target.style.color = 'var(--primary)'}
+                          onMouseOut={(e) => e.target.style.color = 'inherit'}
+                        >
+                          {item.title}
+                        </span>
+                      </a>
+                      <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', alignItems: 'center', marginTop: '2px' }}>
+                        <span style={{ fontSize: '0.75rem', background: 'var(--surface-badge)', padding: '2px 8px', borderRadius: '6px', color: 'var(--primary)', fontWeight: 600 }}>
+                          {item.version || 'Latest'}
+                        </span>
+                        {item.size && <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>• {item.size}</span>}
+                      </div>
+                    </div>
                   </div>
                 ))
               }
-
             </div>
           </div>
         </>
@@ -715,6 +849,7 @@ const Software = () => {
                     </div>
                     
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'flex-end' }}>
+                      {software.isNew && <span style={{ background: 'var(--secondary)', color: 'white', padding: '2px 8px', borderRadius: '6px', fontSize: '0.65rem', fontWeight: 'bold', textTransform: 'uppercase' }}>NEW</span>}
                       <span style={{ fontSize: '0.8rem', background: 'var(--surface-badge)', padding: '4px 12px', borderRadius: '12px', color: 'var(--text-muted)' }}>
                         {software.version}
                       </span>

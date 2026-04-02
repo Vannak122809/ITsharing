@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MessageSquare, ThumbsUp, User, Send, Ghost, Trash2, MoreVertical, CornerDownRight, RefreshCcw } from 'lucide-react';
+import { MessageSquare, ThumbsUp, Heart, User, Send, Ghost, Trash2, MoreVertical, CornerDownRight, RefreshCcw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { auth, db } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -93,6 +93,8 @@ const Community = () => {
       authorUid: user.uid,
       likes: 0,
       likedBy: [],
+      hearts: 0,
+      heartedBy: [],
       replies: 0,
       repliesList: [],
       createdAt: serverTimestamp(),
@@ -113,27 +115,29 @@ const Community = () => {
     }
   };
 
-  // ── Like a post ────────────────────────────────────────────────────
-  const handleLike = async (postId) => {
-    if (!user) { alert("Please sign in to react."); return; }
+  // ── Like / Heart reactions ──────────────────────────────────────
+  const handleReaction = async (postId, type) => {
+    if (!user) { alert(`Please sign in to ${type}.`); return; }
     
     const postIndex = posts.findIndex(p => p.id === postId);
     if (postIndex === -1) return;
     const post = posts[postIndex];
     
-    // Safely get list of users who liked this
-    const likedBy = post.likedBy || [];
-    const hasLiked = likedBy.includes(user.uid);
+    const field = type === 'like' ? 'likes' : 'hearts';
+    const listField = type === 'like' ? 'likedBy' : 'heartedBy';
     
-    const newLikes = hasLiked ? Math.max(0, (post.likes || 0) - 1) : (post.likes || 0) + 1;
-    const newLikedBy = hasLiked ? likedBy.filter(id => id !== user.uid) : [...likedBy, user.uid];
+    const list = post[listField] || [];
+    const hasReacted = list.includes(user.uid);
+    
+    const newVal = hasReacted ? Math.max(0, (post[field] || 0) - 1) : (post[field] || 0) + 1;
+    const newList = hasReacted ? list.filter(id => id !== user.uid) : [...list, user.uid];
 
-    setPosts(prev => prev.map(p => p.id === postId ? { ...p, likes: newLikes, likedBy: newLikedBy } : p));
+    setPosts(prev => prev.map(p => p.id === postId ? { ...p, [field]: newVal, [listField]: newList } : p));
     
     try {
       await updateDoc(doc(db, 'communityPosts', postId), {
-        likes: hasLiked ? increment(-1) : increment(1),
-        likedBy: hasLiked ? arrayRemove(user.uid) : arrayUnion(user.uid)
+        [field]: hasReacted ? increment(-1) : increment(1),
+        [listField]: hasReacted ? arrayRemove(user.uid) : arrayUnion(user.uid)
       });
     } catch { /* offline */ }
   };
@@ -282,12 +286,33 @@ const Community = () => {
                   <span style={{ fontSize: '0.88rem', color: 'var(--text-muted)', fontWeight: 500 }}>{post.author}</span>
                 </div>
                 {/* Actions */}
-                <div style={{ display: 'flex', gap: '10px' }}>
-                  <button onClick={() => handleLike(post.id)} className="btn btn-outline" style={{ padding: '4px 12px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', background: (user && (post.likedBy || []).includes(user.uid)) ? 'var(--primary)' : 'transparent', color: (user && (post.likedBy || []).includes(user.uid)) ? '#fff' : 'inherit', borderColor: (user && (post.likedBy || []).includes(user.uid)) ? 'var(--primary)' : 'var(--surface-border)' }}>
-                    <ThumbsUp size={13} /> {post.likes || 0}
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button 
+                    onClick={() => handleReaction(post.id, 'like')} 
+                    className="btn btn-outline" 
+                    style={{ 
+                      padding: '4px 10px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', 
+                      background: (user && (post.likedBy || []).includes(user.uid)) ? 'rgba(99, 102, 241, 0.15)' : 'transparent', 
+                      color: (user && (post.likedBy || []).includes(user.uid)) ? 'var(--primary)' : 'inherit', 
+                      borderColor: (user && (post.likedBy || []).includes(user.uid)) ? 'var(--primary)' : 'var(--surface-border)' 
+                    }}
+                  >
+                    <ThumbsUp size={14} fill={(user && (post.likedBy || []).includes(user.uid)) ? 'var(--primary)' : 'none'} /> {post.likes || 0}
                   </button>
-                  <button onClick={() => setOpenRepliesId(openRepliesId === post.id ? null : post.id)} className="btn btn-outline" style={{ padding: '4px 12px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', background: openRepliesId === post.id ? 'var(--surface-border)' : 'transparent' }}>
-                    <MessageSquare size={13} /> {post.replies || 0} Replies
+                  <button 
+                    onClick={() => handleReaction(post.id, 'heart')} 
+                    className="btn btn-outline" 
+                    style={{ 
+                      padding: '4px 10px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', 
+                      background: (user && (post.heartedBy || []).includes(user.uid)) ? 'rgba(236, 72, 153, 0.15)' : 'transparent', 
+                      color: (user && (post.heartedBy || []).includes(user.uid)) ? 'var(--secondary)' : 'inherit', 
+                      borderColor: (user && (post.heartedBy || []).includes(user.uid)) ? 'var(--secondary)' : 'var(--surface-border)' 
+                    }}
+                  >
+                    <Heart size={14} fill={(user && (post.heartedBy || []).includes(user.uid)) ? 'var(--secondary)' : 'none'} /> {post.hearts || 0}
+                  </button>
+                  <button onClick={() => setOpenRepliesId(openRepliesId === post.id ? null : post.id)} className="btn btn-outline" style={{ padding: '4px 10px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', background: openRepliesId === post.id ? 'var(--surface-border)' : 'transparent' }}>
+                    <MessageSquare size={14} /> {post.replies || 0} Replies
                   </button>
                 </div>
               </div>
