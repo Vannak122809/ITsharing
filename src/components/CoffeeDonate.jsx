@@ -132,36 +132,41 @@ const CoffeeDonate = () => {
 
             <div className="donate-grid">
               {/* Bakong KHQR Column */}
-              <div style={{ background: 'var(--surface)', border: '1px solid var(--surface-border)', borderRadius: '20px', padding: '16px', textAlign: 'center' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginBottom: '10px' }}>
-                  <img src="https://play-lh.googleusercontent.com/O6LreDyl_q7-uN7_zS5zF_S-d880m-xP6w68B7G-uY_gI6_99-U9V4Y3M7q6Yy1-lQ" alt="B" style={{ width: '24px', borderRadius: '4px' }} />
-                  <span style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>Bakong KHQR</span>
+              <div style={{ display: 'flex', flexDirection: 'column', background: 'var(--surface)', border: '1px solid var(--surface-border)', borderRadius: '20px', padding: '16px', textAlign: 'center', minWidth: '0' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '12px' }}>
+                  <QrCode size={18} color="var(--primary)" />
+                  <span style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>Bakong</span>
                 </div>
 
-                <div style={{ background: '#fff', padding: '8px', borderRadius: '10px', marginBottom: '10px' }}>
+                <div style={{ background: '#fff', padding: '12px', borderRadius: '16px', display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', aspectRatio: '1/1', overflow: 'hidden', boxShadow: 'inset 0 0 10px rgba(0,0,0,0.05)' }}>
                   {qrData ? (
-                    <img src={`https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(qrData)}&size=180x180&color=000&bgcolor=fff`}
-                      alt="KHQR" style={{ width: '100%', height: 'auto', display: 'block' }} />
+                    <img src={`https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(qrData)}&size=250x250&color=000&bgcolor=fff`}
+                      alt="KHQR" style={{ width: '100%', height: '100%', display: 'block', objectFit: 'contain' }} />
                   ) : (
                     <div style={{ padding: '40px 0' }}><QrCode size={40} color="#ccc" /></div>
                   )}
                 </div>
-                <p style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 'bold' }}>{formatAmount(amount)}</p>
+                <div style={{ marginTop: '12px' }}>
+                   <p style={{ fontSize: '0.9rem', color: 'var(--primary)', fontWeight: 'bold' }}>{formatAmount(amount)}</p>
+                </div>
               </div>
 
               {/* ABA KHQR Column */}
-              <div style={{ display: 'flex', flexDirection: 'column', background: 'var(--surface)', border: '1px solid var(--surface-border)', borderRadius: '20px', padding: '16px', textAlign: 'center' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginBottom: '10px' }}>
-                  <img src="https://seeklogo.com/images/A/aba-bank-logo-8A194FC44F-seeklogo.com.png" alt="ABA" style={{ width: '24px', borderRadius: '4px' }} />
-                  <span style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>ABA KHQR</span>
+              <div style={{ display: 'flex', flexDirection: 'column', background: 'var(--surface)', border: '1px solid var(--surface-border)', borderRadius: '20px', padding: '16px', textAlign: 'center', minWidth: '0' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '12px' }}>
+                  <CreditCard size={18} color="var(--primary)" />
+                  <span style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>ABA Bank</span>
                 </div>
                 
-                <div style={{ background: '#fff', padding: '8px', borderRadius: '10px', display: 'flex', justifyContent: 'center', alignItems: 'center', flexGrow: 1, overflow: 'hidden' }}>
-                  <img src="/ABAKHQR.png" alt="ABA QR Code" style={{ width: '100%', height: 'auto', display: 'block', objectFit: 'contain' }} />
+                <div style={{ background: '#fff', padding: '12px', borderRadius: '16px', display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', aspectRatio: '1/1', overflow: 'hidden', boxShadow: 'inset 0 0 10px rgba(0,0,0,0.05)', margin: '0 auto' }}>
+                  <img src="/ABAKHQR.png" alt="ABA QR Code" style={{ width: '100%', height: '100%', display: 'block', objectFit: 'contain' }} />
                 </div>
                 
-                <div style={{ marginTop: '16px', padding: '12px', background: 'rgba(99, 102, 241, 0.05)', borderRadius: '12px', fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center', border: '1px dashed var(--surface-border)' }}>
-                  សុំ ១លានដុល្លាមកបង ខ្ញុំសុំមិនច្រើនទេ
+                <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                   <p style={{ fontSize: '0.9rem', color: 'var(--primary)', fontWeight: 'bold' }}>{formatAmount(amount)}</p>
+                   <div style={{ padding: '8px', background: 'rgba(99, 102, 241, 0.05)', borderRadius: '10px', fontSize: '0.7rem', color: 'var(--text-muted)', textAlign: 'center', border: '1px dashed var(--surface-border)', opacity: 0.8 }}>
+                    សុំ ១លានដុល្លាមកបង
+                  </div>
                 </div>
               </div>
             </div>
@@ -213,7 +218,7 @@ const CoffeeDonate = () => {
         .modal-overlay { position: fixed; inset: 0; background: rgba(11,15,25,0.85); backdrop-filter: blur(8px); display: flex; justify-content: center; align-items: center; z-index: 2000; }
         .donate-modal { width: 95%; max-width: 480px; padding: 32px; position: relative; border-radius: 24px !important; }
         .modal-close { position: absolute; top: 16px; right: 16px; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: none; background: var(--surface-badge); color: var(--text-muted); cursor: pointer; }
-        .donate-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 16px; }
+        .donate-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         @media (max-width: 600px) { .donate-grid { grid-template-columns: 1fr; } }
       `}</style>
     </>
