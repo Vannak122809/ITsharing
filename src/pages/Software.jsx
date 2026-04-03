@@ -98,6 +98,8 @@ const SoftwareIcon = ({ id, os, size = 32 }) => {
     'klite-win': 'codecguide.com',
     'zktime-5': 'zkteco.com',
     'zktimenet-4': 'zkteco.com',
+    'bandicam': 'bandicam.com',
+    'zdsoft': 'zdsoft.com',
   };
 
   const domain = iconMap[id];
@@ -137,10 +139,6 @@ export const softwareData = [
   { id: 'ws9', title: 'win-install-ovh.sh', timestamp: '20:10:28 03/02/2025', os: 'windows', folder: 'Windows Server', size: '1 KB' },
 
   // === OFFICE ===
-  { id: 'office-win', title: 'Microsoft Office 2021', desc: 'Word, Excel, PowerPoint, and more for Windows.', os: 'windows', folder: 'Office', size: '4.5 GB', version: 'Pro Plus' },
-  { id: 'libreoffice-win', title: 'LibreOffice', desc: 'Powerful and free open-source office suite.', os: 'windows', folder: 'Office', size: '340 MB', version: 'v7.6' },
-  { id: 'office-mac', title: 'Microsoft Office 2021 (Mac)', desc: 'Word, Excel, PowerPoint, and more for Mac.', os: 'mac', folder: 'Office', size: '2.8 GB', version: 'Home & Business' },
-  { id: 'libreoffice-mac', title: 'LibreOffice (Mac)', desc: 'Powerful open-source office suite for macOS.', os: 'mac', folder: 'Office', size: '310 MB', version: 'v7.6' },
 
   // === OFFICE SUBFOLDERS ===
   { id: 'off2007', title: 'Office Professional Plus 2007 (US x86)', os: 'windows', folder: 'Office', subfolder: '2007', url: 'https://files.kichhoat24h.com/download/Office/2007/en_office_professional_plus_2007_united_states_x86_cd_481425.iso' },
@@ -196,14 +194,33 @@ export const softwareData = [
 
   // === TOOLS ===
   { id: 'git-win', title: 'Git for Windows', desc: 'Brings the Git terminal and GUI to Windows.', os: 'windows', folder: 'Tools', size: '50 MB', version: 'v2.53.0.2', url: 'https://github.com/git-for-windows/git/releases/download/v2.53.0.windows.2/Git-2.53.0.2-64-bit.exe' },
-  { id: 'epson-win', title: 'Epson L3110 Driver', desc: 'Printer and scanner drivers for Epson L3110.', os: 'windows', folder: 'Driver', size: '30 MB', version: 'v2.60' },
-  { id: 'hp-universal-win', title: 'HP Universal Print Driver', desc: 'A single driver for a range of HP print devices.', os: 'windows', folder: 'Driver', size: '20 MB', version: 'v7.1' },
+  { id: 'epson-win', title: 'Epson L3110 Driver', desc: 'Printer and scanner drivers for Epson L3110.', os: 'windows', folder: 'Driver', subfolder: 'Printer Driver', brand: 'Epson', size: '30 MB', version: 'v2.60' },
+  { id: 'hp-universal-win', title: 'HP Universal Print Driver', desc: 'A single driver for a range of HP print devices.', os: 'windows', folder: 'Driver', subfolder: 'Printer Driver', brand: 'HP', size: '20 MB', version: 'v7.1' },
   { id: 'rufus', title: 'Rufus', desc: 'Create bootable USB drives the easy way.', os: 'windows', folder: 'Tools', size: '1.4 MB', version: 'v4.13', url: 'https://github.com/pbatard/rufus/releases/download/v4.13/rufus-4.13.exe' },
   { id: '7zip', title: '7-Zip', desc: 'A file archiver with a high compression ratio.', os: 'windows', folder: 'Tools', size: '1.5 MB', version: 'v23.01' },
   { id: 'iterm2', title: 'iTerm2', desc: 'A terminal emulator for macOS.', os: 'mac', folder: 'Tools', size: '22 MB', version: 'v3.4.19' },
   { id: 'homebrew', title: 'Homebrew', desc: 'The Missing Package Manager for macOS.', os: 'mac', folder: 'Tools', size: '10 KB', version: 'Latest' },
-  { id: 'canon-mac', title: 'Canon PIXMA G3010 Driver', desc: 'Official driver suite for Mac users.', os: 'mac', folder: 'Driver', size: '45 MB', version: 'v1.3.0' },
+  { id: 'canon-mac', title: 'Canon PIXMA G3010 Driver', desc: 'Official driver suite for Mac users.', os: 'mac', folder: 'Driver', subfolder: 'Printer Driver', brand: 'Canon', size: '45 MB', version: 'v1.3.0' },
   { id: 'unarchiver', title: 'The Unarchiver', desc: 'Small and easy program to unarchive files.', os: 'mac', folder: 'Tools', size: '15 MB', version: 'v4.3.6' },
+  
+  // === ADDITIONAL DRIVERS ===
+  { id: 'epson-l3210-win', title: 'Epson L3210 Driver', desc: 'Complete drivers and software for Epson L3210.', os: 'windows', folder: 'Driver', subfolder: 'Printer Driver', brand: 'Epson', size: '25 MB', version: 'v3.01' },
+  { id: 'hp-laserjet-win', title: 'HP LaserJet Pro M227fdw Driver', desc: 'Full software solution for HP LaserJet Pro.', os: 'windows', folder: 'Driver', subfolder: 'Printer Driver', brand: 'HP', size: '140 MB', version: 'v44.1' },
+  { id: 'canon-ir2520-win', title: 'Canon imageRUNNER 2520 Driver', desc: 'UFRII LT Printer Driver for Canon iR2520.', os: 'windows', folder: 'Driver', subfolder: 'Printer Driver', brand: 'Canon', size: '30 MB', version: 'v30.00' },
+  { id: 'brother-hl2320-win', title: 'Brother HL-L2320D Driver', desc: 'Full driver and software package for Brother printer.', os: 'windows', folder: 'Driver', subfolder: 'Printer Driver', brand: 'Brother', size: '42 MB', version: 'v1.0.2' },
+  { id: 'ricoh-mp201-win', title: 'Ricoh Aficio MP 201 Driver', desc: 'PCL6 Driver for Ricoh MP 201.', os: 'windows', folder: 'Driver', subfolder: 'Printer Driver', brand: 'Ricoh', size: '18 MB', version: 'v1.12' },
+  { id: 'kyocera-ta2020-win', title: 'Kyocera TASKalfa 2020 Driver', desc: 'GX Driver for Kyocera TASKalfa 2020.', os: 'windows', folder: 'Driver', subfolder: 'Printer Driver', brand: 'Kyocera', size: '35 MB', version: 'v7.5' },
+  
+  { id: 'nvidia-win', title: 'NVIDIA GeForce Game Ready Driver', desc: 'Official drivers for NVIDIA GeForce Graphic Cards.', os: 'windows', folder: 'Driver', subfolder: 'Graphic Card', size: '600 MB', version: 'v537.13' },
+  { id: 'amd-radeon-win', title: 'AMD Radeon Software Adrenalin', desc: 'Driver software for AMD Radeon graphics.', os: 'windows', folder: 'Driver', subfolder: 'Graphic Card', size: '580 MB', version: 'v23.9.1' },
+  { id: 'intel-graphics-win', title: 'Intel Arc & Iris Xe Graphics Driver', desc: 'Official Intel graphics drivers.', os: 'windows', folder: 'Driver', subfolder: 'Graphic Card', size: '550 MB', version: 'v31.0' },
+
+  { id: 'realtek-win', title: 'Realtek High Definition Audio Driver', desc: 'High Definition Audio Codecs for Windows.', os: 'windows', folder: 'Driver', subfolder: 'Audio', size: '250 MB', version: 'v2.82' },
+  { id: 'via-hd-audio-win', title: 'VIA HD Audio Driver', desc: 'Audio driver for VIA chips.', os: 'windows', folder: 'Driver', subfolder: 'Audio', size: '140 MB', version: 'v11.11' },
+
+  { id: 'intel-network-win', title: 'Intel Network Adapter Driver', desc: 'Ethernet drivers for Intel network adapters.', os: 'windows', folder: 'Driver', subfolder: 'Network', size: '45 MB', version: 'v28.2' },
+  { id: 'realtek-pcie-win', title: 'Realtek PCIe GBE Family Controller Driver', desc: 'Network drivers for Realtek Gigabit Ethernet.', os: 'windows', folder: 'Driver', subfolder: 'Network', size: '10 MB', version: 'v10.63' },
+  { id: 'tplink-wifi-win', title: 'TP-Link Wireless Adapter Driver', desc: 'Wi-Fi extension drivers for TP-Link hardware.', os: 'windows', folder: 'Driver', subfolder: 'Network', size: '45 MB', version: 'v1.0' },
   { id: 'nodejs-win', title: 'Node.js', desc: 'JavaScript runtime built on Chrome\'s V8 JavaScript engine.', os: 'windows', folder: 'Tools', size: '30 MB', version: 'v20.17' },
   { id: 'nodejs-mac', title: 'Node.js (Mac)', desc: 'JavaScript runtime built on Chrome\'s V8 JavaScript engine.', os: 'mac', folder: 'Tools', size: '45 MB', version: 'v20.17' },
   { id: 'python-win', title: 'Python', desc: 'Powerful and fast programming language.', os: 'windows', folder: 'Tools', size: '25 MB', version: 'v3.12' },
@@ -212,7 +229,7 @@ export const softwareData = [
   { id: 'anydesk-mac', title: 'AnyDesk (Mac)', desc: 'Fast and secure remote desktop application.', os: 'mac', folder: 'Tools', size: '15 MB', version: 'Latest' },
   { id: 'teamviewer-win', title: 'TeamViewer', desc: 'Remote control, desktop sharing, and file transfer.', os: 'windows', folder: 'Tools', size: '45 MB', version: 'Latest' },
   { id: 'teamviewer-mac', title: 'TeamViewer (Mac)', desc: 'Remote control, desktop sharing, and file transfer.', os: 'mac', folder: 'Tools', size: '80 MB', version: 'Latest' },
-  { id: 'winrar', title: 'WinRAR', desc: 'Powerful archive manager and data compression tool.', os: 'windows', folder: 'Tools', size: '3 MB', version: 'v6.24' },
+  { id: 'winrar', title: 'WinRAR', desc: 'Powerful archive manager and data compression tool.', os: 'windows', folder: 'Tools', size: '3 MB', version: 'v6.21', url: 'https://pub-5961bc36cb774286a50691aa994b2653.r2.dev/WinRAR.6.21.rar' },
   { id: 'notepadpp', title: 'Notepad++', desc: 'Free source code editor and Notepad replacement.', os: 'windows', folder: 'Tools', size: '4 MB', version: 'v8.9.3', url: 'https://github.com/notepad-plus-plus/notepad-plus-plus/releases/download/v8.9.3/npp.8.9.3.Installer.x64.exe' },
   { id: 'keka', title: 'Keka', desc: 'The macOS file archiver.', os: 'mac', folder: 'Tools', size: '25 MB', version: 'v1.3.4' },
   { id: 'raycast', title: 'Raycast', desc: 'Blazingly fast, totally extendable launcher for macOS.', os: 'mac', folder: 'Tools', size: '35 MB', version: 'Latest' },
@@ -233,6 +250,8 @@ export const softwareData = [
   { id: 'klite-win', title: 'K-Lite Codec Pack Full', desc: 'A collection of audio and video codecs for Microsoft Windows that enables the operating system and its software to play various audio and video formats.', os: 'windows', folder: 'Media', subfolder: 'Video Player', size: '60 MB', version: 'v19.6.0', url: 'https://pub-5961bc36cb774286a50691aa994b2653.r2.dev/K-Lite_Codec_Pack_1960_Full.exe' },
   { id: 'obs-win', title: 'OBS Studio', desc: 'Free and open source software for video recording and live streaming.', os: 'windows', folder: 'Media', subfolder: 'Video Editor', size: '120 MB', version: 'v32.1.0', url: 'https://cdn-fastly.obsproject.com/downloads/OBS-Studio-32.1.0-Windows-x64-Installer.exe' },
   { id: 'streamlabs-win', title: 'Streamlabs Desktop', desc: 'Live streaming software that simplifies the process of going live on Twitch, YouTube, or Facebook.', os: 'windows', folder: 'Media', subfolder: 'Video Editor', size: '250 MB', version: 'Latest', url: 'https://streamlabs.com/streamlabs-desktop/download?sdb=0' },
+  { id: 'bandicam', title: 'Bandicam', desc: 'Lightweight screen recording software for Windows.', os: 'windows', folder: 'Media', subfolder: 'Video Editor', size: '30 MB', version: 'v6.1.0', url: 'https://pub-5961bc36cb774286a50691aa994b2653.r2.dev/Bandicam.6.1.0.2044.x64.Repack.rar' },
+  { id: 'zdsoft', title: 'ZD Soft Screen Recorder', desc: 'High-performance screen recording software.', os: 'windows', folder: 'Media', subfolder: 'Video Editor', size: '15 MB', version: 'v11.6.0', url: 'https://pub-5961bc36cb774286a50691aa994b2653.r2.dev/ZD.Soft.Screen.Recorder.11.6.0.rar' },
   { id: 'handbrake-win', title: 'Handbrake', desc: 'Open-source video transcoder.', os: 'windows', folder: 'Media', subfolder: 'Video Editor', size: '25 MB', version: 'v1.7' },
   { id: 'vlc-mac-media', title: 'VLC Media Player (Mac)', desc: 'Optimized for macOS.', os: 'mac', folder: 'Media', subfolder: 'Video Player', size: '55 MB', version: 'v3.0.18' },
   { id: 'obs-mac', title: 'OBS Studio (Mac)', desc: 'Pro video recording for Mac.', os: 'mac', folder: 'Media', subfolder: 'Video Editor', size: '130 MB', version: 'v30.0' },
@@ -303,13 +322,17 @@ const Software = () => {
     if (searchTerm.trim()) {
       if (item.os !== activeOS) return false;
       const term = searchTerm.toLowerCase();
-      return item.title.toLowerCase().includes(term) || item.desc.toLowerCase().includes(term);
+      return (item.title && item.title.toLowerCase().includes(term)) || 
+             (item.desc && item.desc.toLowerCase().includes(term));
     }
 
     if (item.os !== activeOS) return false;
     if (item.folder !== currentFolder) return false;
     if (currentSubfolder && item.subfolder !== currentSubfolder) return false;
-    if (currentTypeFolder && item.version !== currentTypeFolder) return false;
+    if (currentTypeFolder) {
+      if (currentFolder === 'Office' && item.version !== currentTypeFolder) return false;
+      if (currentFolder === 'Driver' && item.brand !== currentTypeFolder) return false;
+    }
     if (!currentSubfolder && item.folder === 'Office' && item.subfolder) return false;
     return true;
   });
@@ -327,6 +350,12 @@ const Software = () => {
         softwareData
           .filter(item => item.os === activeOS && item.folder === 'Office' && item.subfolder === currentSubfolder && item.version && ['Retail', 'VL'].includes(item.version))
           .map(item => item.version)
+      ))
+    : currentFolder === 'Driver' && currentSubfolder === 'Printer Driver'
+    ? Array.from(new Set(
+        softwareData
+          .filter(item => item.os === activeOS && item.folder === 'Driver' && item.subfolder === 'Printer Driver' && item.brand)
+          .map(item => item.brand)
       ))
     : [];
 
@@ -648,7 +677,7 @@ const Software = () => {
             </div>
           </div>
         </>
-      ) : currentFolder === 'Office' && currentSubfolder && !currentTypeFolder && availableTypes.length > 0 ? (
+      ) : (currentFolder === 'Office' || currentFolder === 'Driver') && currentSubfolder && !currentTypeFolder && availableTypes.length > 0 ? (
         <>
           <div style={{ marginBottom: '40px', maxWidth: '1000px', margin: '0 auto 40px auto' }}>
             <button 
@@ -662,7 +691,7 @@ const Software = () => {
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
               <ModernFolderIcon size={36} />
               <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <h1 className="text-animated-cyber" style={{ margin: 0, lineHeight: 1 }}>Office {currentSubfolder}</h1>
+                <h1 className="text-animated-cyber" style={{ margin: 0, lineHeight: 1 }}>{currentFolder === 'Office' ? 'Office ' : ''}{currentSubfolder}</h1>
                 <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '4px' }}>
                   {activeOS === 'windows' ? 'Windows OS' : 'macOS'} Apps in {currentFolder}
                 </span>
@@ -748,7 +777,7 @@ const Software = () => {
               <ModernFolderIcon size={36} />
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <h1 className="text-animated-cyber" style={{ margin: 0, lineHeight: 1 }}>
-                  {currentTypeFolder ? `${currentTypeFolder} (${currentSubfolder})` : (currentSubfolder ? `Office ${currentSubfolder}` : currentFolder)}
+                  {currentTypeFolder ? `${currentTypeFolder} (${currentSubfolder})` : (currentSubfolder ? (currentFolder === 'Office' ? `Office ${currentSubfolder}` : currentSubfolder) : currentFolder)}
                 </h1>
                 <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '4px' }}>
                   {activeOS === 'windows' ? 'Windows OS' : 'macOS'} Apps {currentSubfolder && `in ${currentFolder}`}
