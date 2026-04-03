@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
-import { Terminal, Video, FileText, BookOpen, Layers, User, LogOut, DownloadCloud, Sun, Moon, Users, HelpCircle, Menu, X } from 'lucide-react';
+import { Terminal, Video, FileText, BookOpen, Layers, User, LogOut, DownloadCloud, Sun, Moon, Users, HelpCircle, Menu, X, Globe } from 'lucide-react';
 
 import { auth } from './firebase';
 import { onAuthStateChanged, signOut, sendEmailVerification } from 'firebase/auth';
@@ -20,10 +20,12 @@ import AdminDashboard from './pages/AdminDashboard';
 import GlobalSearch from './components/GlobalSearch';
 import ProtectedRoute from './components/ProtectedRoute';
 import CoffeeDonate from './components/CoffeeDonate';
+import { useLanguage } from './LanguageContext';
 
 function App() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { lang, setLang, t } = useLanguage();
   const [user, setUser] = useState(null);
   const [userProfile, setUserProfile] = useState(null); // Firestore profile data
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
@@ -113,21 +115,21 @@ function App() {
   };
 
   const mainNavItems = isLoggedIn ? [
-    { name: 'Software', path: '/software', icon: <DownloadCloud size={18} /> },
-    { name: 'Documents', path: '/documents', icon: <FileText size={18} /> },
-    { name: 'Courses', path: '/courses', icon: <Video size={18} /> },
-    { name: 'Forum', path: '/community', icon: <Users size={18} /> },
+    { name: t('software'), path: '/software', icon: <DownloadCloud size={18} /> },
+    { name: t('documents'), path: '/documents', icon: <FileText size={18} /> },
+    { name: t('courses'), path: '/courses', icon: <Video size={18} /> },
+    { name: t('forum'), path: '/community', icon: <Users size={18} /> },
   ] : [
-    { name: 'Software', path: '/software', icon: <DownloadCloud size={18} /> },
-    { name: 'Documents', path: '/documents', icon: <FileText size={18} /> },
-    { name: 'Courses', path: '/courses', icon: <Video size={18} /> },
+    { name: t('software'), path: '/software', icon: <DownloadCloud size={18} /> },
+    { name: t('documents'), path: '/documents', icon: <FileText size={18} /> },
+    { name: t('courses'), path: '/courses', icon: <Video size={18} /> },
   ];
 
   const moreNavItems = isLoggedIn ? [
-    { name: 'Experiences', path: '/experiences', icon: <BookOpen size={18} /> },
-    { name: 'Request', path: '/request', icon: <HelpCircle size={18} /> },
+    { name: t('experiences'), path: '/experiences', icon: <BookOpen size={18} /> },
+    { name: t('request'), path: '/request', icon: <HelpCircle size={18} /> },
   ] : [
-    { name: 'Experiences', path: '/experiences', icon: <BookOpen size={18} /> },
+    { name: t('experiences'), path: '/experiences', icon: <BookOpen size={18} /> },
   ];
 
   const allNavItems = [...mainNavItems, ...moreNavItems];
@@ -165,7 +167,7 @@ function App() {
               onMouseEnter={() => setShowMore(true)}
               onMouseLeave={() => setShowMore(false)}
             >
-              <Layers size={16} /> More ▾
+              <Layers size={16} /> {t('more')}
 
               {showMore && (
                 <div className="glass-panel" style={{ position: 'absolute', top: '100%', left: '0', minWidth: '180px', display: 'flex', flexDirection: 'column', padding: '8px', zIndex: 1000, marginTop: '-8px' }}>
@@ -190,6 +192,14 @@ function App() {
           <div className="nav-actions" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <GlobalSearch />
             <button
+              onClick={() => setLang(lang === 'km' ? 'en' : 'km')}
+              className="btn btn-outline"
+              style={{ padding: '6px 12px', border: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}
+              title={t('language')}
+            >
+              <Globe size={18} /> <span style={{ fontSize: '0.8rem', fontWeight: 'bold' }}>{lang === 'km' ? 'EN' : 'KM'}</span>
+            </button>
+            <button
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
               className="btn btn-outline"
               style={{ padding: '6px 12px', border: 'none' }}
@@ -210,13 +220,13 @@ function App() {
                     {userProfile?.nickname || user.email}
                   </span>
                 </Link>
-                <button onClick={handleSignOut} className="btn btn-outline" style={{ padding: '6px 12px', fontSize: '0.85rem' }} title="Sign Out">
+                <button onClick={handleSignOut} className="btn btn-outline" style={{ padding: '6px 12px', fontSize: '0.85rem' }} title={t('signout')}>
                   <LogOut size={16} />
                 </button>
               </>
             ) : (
               <Link to="/login" className="btn btn-outline" style={{ padding: '8px 16px', fontSize: '0.9rem' }}>
-                Sign In
+                {t('signin')}
               </Link>
             )}
 
@@ -245,10 +255,10 @@ function App() {
             <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'rgba(232, 143, 21, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px auto' }}>
               <HelpCircle size={40} color="#e88f15" />
             </div>
-            <h1 className="text-gradient" style={{ fontSize: '1.8rem', marginBottom: '16px' }}>Verify Your Email</h1>
+            <h1 className="text-gradient" style={{ fontSize: '1.8rem', marginBottom: '16px' }}>{t('verify_email')}</h1>
             <p style={{ color: 'var(--text-muted)', lineHeight: '1.6', marginBottom: '32px' }}>
-              Your account is almost ready! We've sent a verification link to <strong>{user.email}</strong>. 
-              Please verify your email to unlock all features.
+              {t('verify_desc')} <strong>{user.email}</strong>. 
+              {t('verify_desc2')}
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <button 
@@ -260,14 +270,14 @@ function App() {
                 }}
                 className="btn btn-primary" style={{ width: '100%' }}
               >
-                Resend Verification Email
+                {t('resend')}
               </button>
               <button onClick={handleSignOut} className="btn btn-outline" style={{ width: '100%' }}>
-                <LogOut size={16} /> Sign Out & Try Again
+                <LogOut size={16} /> {t('signout_try')}
               </button>
             </div>
             <p style={{ marginTop: '24px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-              Already verified? <button onClick={() => window.location.reload()} style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}>Refresh page</button>
+              {t('already_verified')} <button onClick={() => window.location.reload()} style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}>{t('refresh')}</button>
             </p>
           </div>
         </div>
@@ -298,11 +308,18 @@ function App() {
 
           <div className="drawer-actions">
             <button
+              onClick={() => setLang(lang === 'km' ? 'en' : 'km')}
+              className="btn btn-outline"
+              style={{ justifyContent: 'center', gap: '8px' }}
+            >
+              <Globe size={16} /> {lang === 'km' ? 'English' : 'Khmer'}
+            </button>
+            <button
               onClick={() => { setTheme(theme === 'dark' ? 'light' : 'dark'); }}
               className="btn btn-outline"
               style={{ justifyContent: 'center', gap: '8px' }}
             >
-              {theme === 'dark' ? <><Sun size={16} /> Light Mode</> : <><Moon size={16} /> Dark Mode</>}
+              {theme === 'dark' ? <><Sun size={16} /> {t('light_mode')}</> : <><Moon size={16} /> {t('dark_mode')}</>}
             </button>
 
             {user ? (
@@ -314,12 +331,12 @@ function App() {
                   </span>
                 </div>
                 <button onClick={handleSignOut} className="btn btn-outline" style={{ justifyContent: 'center', gap: '8px' }}>
-                  <LogOut size={16} /> Sign Out
+                  <LogOut size={16} /> {t('signout')}
                 </button>
               </>
             ) : (
               <Link to="/login" className="btn btn-primary" style={{ justifyContent: 'center' }}>
-                Sign In
+                {t('signin')}
               </Link>
             )}
           </div>
@@ -351,7 +368,7 @@ function App() {
       </main>
 
       <footer style={{ marginTop: '100px', padding: '40px 0', borderTop: '1px solid var(--surface-border)', textAlign: 'center', background: 'var(--nav-bg)' }}>
-        <p style={{ color: 'var(--text-muted)' }}>&copy; {new Date().getFullYear()} ITShare. Built for the tech community.</p>
+        <p style={{ color: 'var(--text-muted)' }}>&copy; {new Date().getFullYear()} ITShare. {t('built_for')}</p>
       </footer>
 
       {/* Coffee Donate Floating Icon */}
