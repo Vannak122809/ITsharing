@@ -3,8 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { PlayCircle, Award, Search, Filter } from 'lucide-react';
 import { auth } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
+import { useLanguage } from '../LanguageContext';
 
 const Courses = () => {
+  const { t } = useLanguage();
   const [activeCategory, setActiveCategory] = useState('All');
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -96,9 +98,9 @@ const Courses = () => {
   return (
     <div className="container" style={{ paddingTop: '80px', minHeight: '80vh' }}>
       <header style={{ marginBottom: '60px', textAlign: 'center' }}>
-        <h1 className="text-gradient">Short Video Courses</h1>
+        <h1 className="text-gradient">{t('short_video_courses')}</h1>
         <p style={{ color: 'var(--text-muted)', maxWidth: '600px', margin: '0 auto', fontSize: '1.2rem', marginTop: '16px' }}>
-          Up-skill yourself with bite-sized crash courses from industry leads, hosted lightning-fast on Cloudflare R2.
+          {t('courses_subtitle')}
         </p>
 
         <div style={{ marginTop: '32px', maxWidth: '600px', margin: '32px auto 0', display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center' }}>
@@ -109,7 +111,7 @@ const Courses = () => {
               className={`btn ${activeCategory === category ? 'btn-primary' : 'btn-outline'}`}
               style={{ padding: '8px 16px', fontSize: '0.9rem' }}
             >
-              {category}
+              {t(category.toLowerCase())}
             </button>
           ))}
         </div>
@@ -121,7 +123,7 @@ const Courses = () => {
             <div style={{ height: '180px', background: 'var(--card-dark)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
               <PlayCircle size={64} color={course.color} />
               <span style={{ position: 'absolute', top: '12px', right: '12px', background: 'var(--card-dark)', padding: '4px 12px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 'bold', color: course.color }}>
-                {course.category}
+                {t(course.category.toLowerCase())}
               </span>
             </div>
             <div style={{ display: 'flex', gap: '8px', color: course.color, fontWeight: 'bold', alignItems: 'center', marginTop: '16px' }}>
@@ -134,12 +136,12 @@ const Courses = () => {
                 onClick={() => { 
                   if (authLoading) return;
                   if (isGuest) navigate('/login'); 
-                  else alert('Course playback feature coming soon!'); 
+                  else alert(t('coming_soon')); 
                 }} 
                 className="btn btn-primary" 
                 style={{ padding: '8px 16px', fontSize: '0.9rem' }}
               >
-                Start Course
+                {t('start_course')}
               </button>
             </div>
           </div>
@@ -147,7 +149,7 @@ const Courses = () => {
         {filteredCourses.length === 0 && (
           <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
             <Filter size={48} style={{ margin: '0 auto', marginBottom: '16px', opacity: 0.5 }} />
-            <h3>No courses found for {activeCategory}</h3>
+            <h3>{t('no_content_found')} {t(activeCategory.toLowerCase())}</h3>
             <p>We are still working on getting content for this category!</p>
           </div>
         )}

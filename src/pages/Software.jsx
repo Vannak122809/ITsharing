@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Monitor, Apple, ChevronRight, Folder, File, ArrowLeft, Eye, Download as DownloadIcon, PlayCircle, Cpu, Settings, Search, X } from 'lucide-react';
 import { auth } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
+import { useLanguage } from '../LanguageContext';
 
 const ModernIsoIcon = ({ size = 42 }) => (
   <img src="/iso.png" alt="ISO" style={{ width: size, height: size, objectFit: 'contain' }} />
@@ -292,6 +293,7 @@ const officeSubfolders = [
 ];
 
 const Software = () => {
+  const { t } = useLanguage();
   const [activeOS, setActiveOS] = useState('windows');
   const [currentFolder, setCurrentFolder] = useState(null);
   const [currentSubfolder, setCurrentSubfolder] = useState(null);
@@ -365,9 +367,9 @@ const Software = () => {
       {!currentFolder ? (
         <>
           <header style={{ marginBottom: '40px', textAlign: 'center' }}>
-            <h1 className="text-animated-cyber">Software Repository</h1>
+            <h1 className="text-animated-cyber">{t('software_repository_title')}</h1>
             <p style={{ color: 'var(--text-muted)', maxWidth: '600px', margin: '0 auto', fontSize: '1.1rem', marginTop: '16px' }}>
-              Browse through our structured repository to find the necessary installers, applications, and tools.
+              {t('software_repository_desc')}
             </p>
 
             {/* OS Filter & Search Toggle */}
@@ -383,7 +385,7 @@ const Software = () => {
                       transition: 'var(--transition)'
                     }}
                   >
-                    <Monitor size={18} /> Windows
+                    <Monitor size={18} /> {t('windows')}
                   </button>
                   <button 
                     onClick={() => { setActiveOS('mac'); setCurrentFolder(null); setCurrentSubfolder(null); setCurrentTypeFolder(null); setSearchTerm(''); }}
@@ -394,7 +396,7 @@ const Software = () => {
                       transition: 'var(--transition)'
                     }}
                   >
-                    <Apple size={18} /> Mac OS
+                    <Apple size={18} /> {t('macos')}
                   </button>
                 </div>
 
@@ -404,7 +406,7 @@ const Software = () => {
                   </div>
                   <input 
                     type="text"
-                    placeholder="Search software, tools..."
+                    placeholder={t('search_software')}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     style={{
@@ -440,7 +442,7 @@ const Software = () => {
               <div className="card-grid">
                 {filteredSoftware.map(software => (
                   <div key={software.id} className="card glass-panel flex flex-col" style={{ padding: '24px', position: 'relative', overflow: 'hidden' }}>
-                    {software.isNew && <div style={{ position: 'absolute', top: '12px', right: '-30px', background: 'var(--secondary)', color: 'white', padding: '4px 35px', transform: 'rotate(45deg)', fontSize: '0.7rem', fontWeight: 'bold', zIndex: 1, boxShadow: '0 2px 5px rgba(0,0,0,0.2)' }}>NEW</div>}
+                    {software.isNew && <div style={{ position: 'absolute', top: '12px', right: '-30px', background: 'var(--secondary)', color: 'white', padding: '4px 35px', transform: 'rotate(45deg)', fontSize: '0.7rem', fontWeight: 'bold', zIndex: 1, boxShadow: '0 2px 5px rgba(0,0,0,0.2)' }}>{t('new')}</div>}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
                       <div style={{ background: 'var(--surface-badge)', padding: '12px', borderRadius: '16px', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         {(software.title.toLowerCase().includes('iso') || (software.url && software.url.toLowerCase().includes('.iso'))) ? (
@@ -483,7 +485,7 @@ const Software = () => {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--surface-border)' }}>
                       <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{software.size}</span>
                       <Link to={`/software/${software.id}`} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 'bold', color: 'var(--primary)', textDecoration: 'none', fontSize: '0.9rem' }}>
-                        <Eye size={16} /> Details
+                        <Eye size={16} /> {t('details')}
                       </Link>
                     </div>
                   </div>
@@ -491,8 +493,8 @@ const Software = () => {
                 {filteredSoftware.length === 0 && (
                   <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '100px 40px', background: 'var(--surface)', borderRadius: '24px', border: '1px solid var(--surface-border)' }}>
                     <Search size={48} style={{ margin: '0 auto 20px auto', opacity: 0.3 }} />
-                    <h2 style={{ fontSize: '1.5rem', marginBottom: '10px' }}>No matches found</h2>
-                    <p style={{ color: 'var(--text-muted)' }}>We couldn't find any software matching "{searchTerm}"</p>
+                    <h2 style={{ fontSize: '1.5rem', marginBottom: '10px' }}>{t('no_matches_found')}</h2>
+                    <p style={{ color: 'var(--text-muted)' }}>{t('search_no_match')} "{searchTerm}"</p>
                   </div>
                 )}
               </div>
@@ -538,10 +540,10 @@ const Software = () => {
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     <span style={{ fontWeight: 700, fontSize: '1.15rem', color: 'var(--text-main)', letterSpacing: '0.3px' }}>
-                      {folderName}
+                      {t(folderName.toLowerCase().replace(' ', '_'))}
                     </span>
                     <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                      Folder
+                      {t('folder')}
                     </span>
                   </div>
                 </div>
@@ -558,10 +560,10 @@ const Software = () => {
                 onClick={() => { setCurrentFolder(null); setCurrentSubfolder(null); setCurrentTypeFolder(null); }}
                 style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', padding: 0 }}
               >
-                Repository
+                {t('repository')}
               </button>
               <ChevronRight size={14} color="var(--text-muted)" />
-              <span style={{ color: 'var(--text-main)', fontWeight: 600 }}>{currentFolder}</span>
+              <span style={{ color: 'var(--text-main)', fontWeight: 600 }}>{t(currentFolder.toLowerCase().replace(' ', '_'))}</span>
             </nav>
             
             <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
@@ -571,7 +573,7 @@ const Software = () => {
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <h1 className="text-animated-cyber" style={{ margin: 0, fontSize: '2rem' }}>{currentFolder}</h1>
                 <span style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginTop: '2px' }}>
-                  {activeOS === 'windows' ? 'Windows OS' : 'macOS'} structured repository
+                  {activeOS === 'windows' ? t('win_repo_desc') : t('mac_repo_desc')}
                 </span>
               </div>
             </div>
@@ -609,8 +611,8 @@ const Software = () => {
                     <Folder size={32} color="var(--primary)" fill="rgba(99, 102, 241, 0.15)" strokeWidth={1.5} />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <span style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text-main)' }}>{folderName}</span>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Folder</span>
+                    <span style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text-main)' }}>{currentFolder === 'Office' || currentFolder === 'Driver' ? currentSubfolder : t(folderName.toLowerCase().replace(' ', '_'))}</span>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{t('folder')}</span>
                   </div>
                   <ChevronRight size={16} color="var(--text-muted)" style={{ marginLeft: 'auto' }} />
                 </div>
@@ -685,7 +687,7 @@ const Software = () => {
               className="btn btn-outline"
               style={{ padding: '8px 16px', marginBottom: '24px' }}
             >
-              <ArrowLeft size={16} /> Back to {currentFolder}
+              <ArrowLeft size={16} /> {t('back_to')} {t(currentFolder.toLowerCase().replace(' ', '_'))}
             </button>
             
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -745,7 +747,7 @@ const Software = () => {
                       {folderName}
                     </span>
                     <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                      Folder
+                      {t('folder')}
                     </span>
                   </div>
                 </div>
@@ -770,7 +772,7 @@ const Software = () => {
               className="btn btn-outline"
               style={{ padding: '8px 16px', marginBottom: '24px' }}
             >
-              <ArrowLeft size={16} /> {currentTypeFolder ? `Back to ${currentSubfolder}` : (currentSubfolder ? `Back to ${currentFolder}` : 'Back to Folders')}
+              <ArrowLeft size={16} /> {currentTypeFolder ? `${t('back_to')} ${currentSubfolder}` : (currentSubfolder ? `${t('back_to')} ${t(currentFolder.toLowerCase().replace(' ', '_'))}` : t('back_to_folders'))}
             </button>
             
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -780,7 +782,7 @@ const Software = () => {
                   {currentTypeFolder ? `${currentTypeFolder} (${currentSubfolder})` : (currentSubfolder ? (currentFolder === 'Office' ? `Office ${currentSubfolder}` : currentSubfolder) : currentFolder)}
                 </h1>
                 <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '4px' }}>
-                  {activeOS === 'windows' ? 'Windows OS' : 'macOS'} Apps {currentSubfolder && `in ${currentFolder}`}
+                  {activeOS === 'windows' ? t('win_repo_desc') : t('mac_repo_desc')}
                 </span>
               </div>
             </div>

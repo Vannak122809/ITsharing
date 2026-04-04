@@ -668,8 +668,7 @@ body.guest-mode main {
 
 .doc-sidebar {
   width: 280px;
-  flex: 1 1 280px;
-  max-width: 100%;
+  flex: 0 0 280px;
   height: fit-content;
   max-height: calc(100vh - 120px);
   position: sticky;
@@ -677,7 +676,7 @@ body.guest-mode main {
 }
 
 .doc-main {
-  flex: 2 1 600px;
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 24px;

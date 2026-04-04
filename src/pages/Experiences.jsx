@@ -3,8 +3,10 @@ import { User, Calendar } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { auth } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
+import { useLanguage } from '../LanguageContext';
 
 const Experiences = () => {
+  const { t } = useLanguage();
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const navigate = useNavigate();
@@ -25,14 +27,15 @@ const Experiences = () => {
     if (isGuest) {
       navigate('/login');
     } else {
-      alert('Full story reading feature coming soon!');
+      alert(t('coming_soon'));
     }
   };
+
 
   return (
     <div className="container" style={{ paddingTop: '80px', minHeight: '80vh' }}>
       <header style={{ marginBottom: '60px', textAlign: 'center' }}>
-        <h1 className="text-gradient">Community Experiences</h1>
+        <h1 className="text-gradient">{t('experiences')}</h1>
         <p style={{ color: 'var(--text-muted)', maxWidth: '600px', margin: '0 auto', fontSize: '1.2rem', marginTop: '16px' }}>
           Read career stories, technical breakdowns, and interview failures shared by fellow developers.
         </p>
@@ -50,7 +53,7 @@ const Experiences = () => {
             When our user base crossed the 1M mark, our Postgres database was screaming. We were looking at 5-second load times on the main dashboard. The culprit? An ORM query that was silently causing an N+1 problem on a very nested relationship. By implementing lateral joins and replacing the ORM...
           </p>
           <a href="#" onClick={handleReadStory} style={{ display: 'inline-block', marginTop: '24px', fontWeight: 'bold', color: 'var(--primary)', textDecoration: 'none' }}>
-            Read Full Story &rarr;
+            {t('read_story')} &rarr;
           </a>
         </article>
 
@@ -64,7 +67,7 @@ const Experiences = () => {
             I spent 3 months grinding LeetCode, going through "Grokking the System Design Interview", and mocking. Despite all this, I bombed the behavioral rounds. I treated it like a technical test instead of a conversation. Let me share my study notes and what I'm doing differently next time...
           </p>
           <a href="#" onClick={handleReadStory} style={{ display: 'inline-block', marginTop: '24px', fontWeight: 'bold', color: '#ff2a7a', textDecoration: 'none' }}>
-            Read Full Story &rarr;
+            {t('read_story')} &rarr;
           </a>
         </article>
 

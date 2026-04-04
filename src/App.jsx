@@ -17,7 +17,7 @@ import Community from './pages/Community';
 import RequestResource from './pages/RequestResource';
 import Profile from './pages/Profile';
 import AdminDashboard from './pages/AdminDashboard';
-import GlobalSearch from './components/GlobalSearch';
+
 import ProtectedRoute from './components/ProtectedRoute';
 import CoffeeDonate from './components/CoffeeDonate';
 import { useLanguage } from './LanguageContext';
@@ -190,7 +190,7 @@ function App() {
 
           {/* Desktop actions */}
           <div className="nav-actions" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <GlobalSearch />
+
             <button
               onClick={() => setLang(lang === 'km' ? 'en' : 'km')}
               className="btn btn-outline"

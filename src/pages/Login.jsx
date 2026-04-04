@@ -17,6 +17,7 @@ import {
   LogIn, UserPlus, AlertCircle, Eye, EyeOff,
   Mail, Lock, ArrowLeft, CheckCircle, Ghost, User,
 } from 'lucide-react';
+import { useLanguage } from '../LanguageContext';
 
 const googleProvider = new GoogleAuthProvider();
 
@@ -76,6 +77,7 @@ const labelStyle = {
 };
 
 const Login = () => {
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   // view: 'login' | 'signup' | 'forgot'
@@ -205,7 +207,7 @@ const Login = () => {
   const Divider = () => (
     <div style={{ display:'flex', alignItems:'center', gap:'12px' }}>
       <div style={{ flex:1, height:'1px', background:'var(--surface-border)' }} />
-      <span style={{ color:'var(--text-muted)', fontSize:'0.8rem', fontWeight:500 }}>OR</span>
+      <span style={{ color:'var(--text-muted)', fontSize:'0.8rem', fontWeight:500 }}>{t('or')}</span>
       <div style={{ flex:1, height:'1px', background:'var(--surface-border)' }} />
     </div>
   );
@@ -238,18 +240,18 @@ const Login = () => {
           {view !== 'login' && (
             <button onClick={() => switchView('login')}
               style={{ background:'none', border:'none', color:'var(--text-muted)', cursor:'pointer', display:'flex', alignItems:'center', gap:'6px', fontSize:'0.85rem', marginBottom:'16px' }}>
-              <ArrowLeft size={14} /> Back to Sign In
+              <ArrowLeft size={14} /> {t('back_to')} {t('signin')}
             </button>
           )}
           <h1 className="text-gradient" style={{ fontSize:'2rem', marginBottom:'6px' }}>
-            {view === 'login'  && 'Welcome Back'}
-            {view === 'signup' && 'Create Account'}
-            {view === 'forgot' && 'Reset Password'}
+            {view === 'login'  && t('welcome_back')}
+            {view === 'signup' && t('create_account')}
+            {view === 'forgot' && t('reset_password')}
           </h1>
           <p style={{ color:'var(--text-muted)', fontSize:'0.9rem' }}>
-            {view === 'login'  && 'Sign in to access resources'}
-            {view === 'signup' && 'Join the IT community today'}
-            {view === 'forgot' && 'Enter your email to receive a reset link'}
+            {view === 'login'  && t('sign_in_desc')}
+            {view === 'signup' && t('sign_up_desc')}
+            {view === 'forgot' && t('forgot_desc')}
           </p>
         </div>
 
@@ -280,7 +282,7 @@ const Login = () => {
             />
 
             <div>
-              <label htmlFor="l-email" style={labelStyle}>Email Address</label>
+              <label htmlFor="l-email" style={labelStyle}>{t('email_address')}</label>
               <div style={iconWrapStyle}>
                 <Mail size={16} style={leftIconStyle} />
                 <input
@@ -297,7 +299,7 @@ const Login = () => {
             </div>
 
             <div>
-              <label htmlFor="l-password" style={labelStyle}>Password</label>
+              <label htmlFor="l-password" style={labelStyle}>{t('password')}</label>
               <div style={iconWrapStyle}>
                 <Lock size={16} style={leftIconStyle} />
                 <input
@@ -321,23 +323,23 @@ const Login = () => {
               <label style={{ display:'flex', alignItems:'center', gap:'8px', cursor:'pointer', fontSize:'0.88rem', color:'var(--text-muted)' }}>
                 <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)}
                   style={{ accentColor:'var(--primary)', width:'15px', height:'15px', cursor:'pointer' }} />
-                Remember me
+                {t('remember_me')}
               </label>
               <button type="button" onClick={() => switchView('forgot')}
                 style={{ background:'none', border:'none', color:'var(--primary)', cursor:'pointer', fontSize:'0.88rem', fontWeight:500, fontFamily:'inherit' }}>
-                Forgot password?
+                {t('forgot_password_q')}
               </button>
             </div>
 
             <button type="submit" className="btn btn-primary" style={{ width:'100%' }} disabled={loading}>
-              {loading ? 'Signing in…' : <><LogIn size={16} /> Sign In</>}
+              {loading ? t('signing_in') : <><LogIn size={16} /> {t('signin')}</>}
             </button>
 
             <Divider />
-            <GoogleBtn label="Continue with Google" />
+            <GoogleBtn label={t('continue_with_google')} />
 
 
-            <SwitchRow text="Don't have an account?" action="signup" label="Sign Up" />
+            <SwitchRow text={t('no_account')} action="signup" label={t('create_account')} />
           </form>
         )}
 
@@ -346,7 +348,7 @@ const Login = () => {
           <form onSubmit={handleSignup} style={{ display:'flex', flexDirection:'column', gap:'16px' }}>
 
             <div>
-              <label htmlFor="s-name" style={labelStyle}>Full Name</label>
+              <label htmlFor="s-name" style={labelStyle}>{t('full_name')}</label>
               <div style={iconWrapStyle}>
                 <User size={16} style={leftIconStyle} />
                 <input
@@ -363,7 +365,7 @@ const Login = () => {
             </div>
 
             <div>
-              <label htmlFor="s-email" style={labelStyle}>Email Address</label>
+              <label htmlFor="s-email" style={labelStyle}>{t('email_address')}</label>
               <div style={iconWrapStyle}>
                 <Mail size={16} style={leftIconStyle} />
                 <input
@@ -380,7 +382,7 @@ const Login = () => {
             </div>
 
             <div>
-              <label htmlFor="s-password" style={labelStyle}>Password</label>
+              <label htmlFor="s-password" style={labelStyle}>{t('password')}</label>
               <div style={iconWrapStyle}>
                 <Lock size={16} style={leftIconStyle} />
                 <input
@@ -403,7 +405,7 @@ const Login = () => {
             </div>
 
             <div>
-              <label htmlFor="s-confirm" style={labelStyle}>Confirm Password</label>
+              <label htmlFor="s-confirm" style={labelStyle}>{t('confirm_password')}</label>
               <div style={iconWrapStyle}>
                 <Lock size={16} style={leftIconStyle} />
                 <input
@@ -429,16 +431,16 @@ const Login = () => {
                 onChange={(e) => setAgreeTerms(e.target.checked)}
                 style={{ accentColor:'var(--primary)', marginTop:'3px', width:'15px', height:'15px', cursor:'pointer' }} 
               />
-              <span>I agree to the ITsharing <span style={{ color:'var(--primary)', fontWeight:600 }}>Terms of Service</span> and <span style={{ color:'var(--primary)', fontWeight:600 }}>Privacy Policy</span>.</span>
+              <span>{t('agree_terms')}</span>
             </label>
 
             <button type="submit" className="btn btn-primary" style={{ width:'100%', marginTop:'8px' }} disabled={loading}>
-              {loading ? 'Creating account…' : <><UserPlus size={16} /> Create Account</>}
+              {loading ? t('creating_account') : <><UserPlus size={16} /> {t('create_account')}</>}
             </button>
 
             <Divider />
-            <GoogleBtn label="Sign up with Google" />
-            <SwitchRow text="Already have an account?" action="login" label="Sign In" />
+            <GoogleBtn label={t('continue_with_google')} />
+            <SwitchRow text={t('have_account')} action="login" label={t('signin')} />
           </form>
         )}
 
@@ -447,7 +449,7 @@ const Login = () => {
           <form onSubmit={handleForgot} style={{ display:'flex', flexDirection:'column', gap:'16px' }}>
 
             <div>
-              <label htmlFor="f-email" style={labelStyle}>Email Address</label>
+              <label htmlFor="f-email" style={labelStyle}>{t('email_address')}</label>
               <div style={iconWrapStyle}>
                 <Mail size={16} style={leftIconStyle} />
                 <input
@@ -464,10 +466,10 @@ const Login = () => {
             </div>
 
             <button type="submit" className="btn btn-primary" style={{ width:'100%' }} disabled={loading || !!success}>
-              {loading ? 'Sending…' : <><Mail size={16} /> Send Reset Link</>}
+              {loading ? t('sending') : <><Mail size={16} /> {t('send_reset_link')}</>}
             </button>
 
-            <SwitchRow text="Remembered your password?" action="login" label="Sign In" />
+            <SwitchRow text={t('remembered_password')} action="login" label={t('signin')} />
           </form>
         )}
 

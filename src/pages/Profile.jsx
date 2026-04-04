@@ -5,6 +5,7 @@ import {
   Calendar, BookOpen, DownloadCloud, Heart, MessageSquare,
   Loader, Grid, List, Settings, ImageOff
 } from 'lucide-react';
+import { useLanguage } from '../LanguageContext';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { r2Client, BUCKET_NAME } from '../r2';
 
@@ -102,6 +103,7 @@ const EditableField = ({ value, onSave, placeholder, multiline = false }) => {
 // PROFILE PAGE
 // ────────────────────────────────────────────────────────────────────────────
 const Profile = ({ user }) => {
+  const { t } = useLanguage();
   const avatarInput = useRef(null);
 
   // Profile state
@@ -209,18 +211,16 @@ const Profile = ({ user }) => {
     }
   };
 
-  // ── Avatar letter fallback ─────────────────────────────────────────────
-  const displayName  = nickname || user?.email?.split('@')[0] || 'User';
-  const avatarLetter = displayName[0]?.toUpperCase() ?? '?';
-  const joinedDate   = user?.metadata?.creationTime
+  const joinsStr = user?.metadata?.creationTime
     ? new Date(user.metadata.creationTime).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
-    : 'Recently joined';
+    : 'Recently';
+  const joinedText = `${t('joined')} ${joinsStr}`;
 
   const TABS = [
-    { id: 'posts',    label: 'Posts',    icon: <Grid size={16} /> },
-    { id: 'activity', label: 'Activity', icon: <List size={16} /> },
-    { id: 'saved',    label: 'Saved',    icon: <Heart size={16} /> },
-    { id: 'settings', label: 'Settings', icon: <Settings size={16} /> },
+    { id: 'posts',    label: t('posts'),    icon: <Grid size={16} /> },
+    { id: 'activity', label: t('activity'), icon: <List size={16} /> },
+    { id: 'saved',    label: t('saved'),    icon: <Heart size={16} /> },
+    { id: 'settings', label: t('settings'), icon: <Settings size={16} /> },
   ];
 
   if (loading) return (
@@ -276,7 +276,7 @@ const Profile = ({ user }) => {
                   }}
                 />
               ) : (
-                avatarLetter
+                nickname ? nickname[0].toUpperCase() : '?'
               )}
             </div>
 
@@ -315,7 +315,7 @@ const Profile = ({ user }) => {
             <h1 style={{ fontSize: '1.7rem', fontWeight: 800, color: 'var(--text-main)', margin: '0 0 2px' }}>
               <EditableField
                 value={nickname}
-                placeholder="Set your nickname"
+                placeholder={t('set_nickname')}
                 onSave={v => { setNickname(v); save('nickname', v); }}
               />
             </h1>
@@ -341,7 +341,7 @@ const Profile = ({ user }) => {
 
         {/* Stats row */}
         <div style={{ display: 'flex', gap: 32, marginBottom: 20, flexWrap: 'wrap' }}>
-          {[{ label: 'Posts', value: '12' }, { label: 'Downloads', value: '45' }, { label: 'Saved', value: '28' }].map(s => (
+          {[{ label: t('posts'), value: '12' }, { label: t('downloads'), value: '45' }, { label: t('saved'), value: '28' }].map(s => (
             <div key={s.label} style={{ textAlign: 'center' }}>
               <p style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-main)', margin: 0 }}>{s.value}</p>
               <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: 0 }}>{s.label}</p>
@@ -352,23 +352,23 @@ const Profile = ({ user }) => {
         {/* Bio + Meta */}
         <div style={{ marginBottom: 28 }}>
           <p style={{ fontSize: '0.97rem', color: 'var(--text-main)', marginBottom: 12, lineHeight: 1.6 }}>
-            <EditableField value={bio} placeholder="Write a short bio…" multiline
+            <EditableField value={bio} placeholder={t('write_bio')} multiline
               onSave={v => { setBio(v); save('bio', v); }} />
           </p>
           <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', fontSize: '0.88rem', color: 'var(--text-muted)', alignItems: 'center' }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <MapPin size={14} color="var(--primary)" />
-              <EditableField value={location} placeholder="Add location"
+              <EditableField value={location} placeholder={t('add_location')}
                 onSave={v => { setLocation(v); save('location', v); }} />
             </span>
             <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <LinkIcon size={14} color="var(--primary)" />
-              <EditableField value={website} placeholder="Add website"
+              <EditableField value={website} placeholder={t('add_website')}
                 onSave={v => { setWebsite(v); save('website', v); }} />
             </span>
             <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <Calendar size={14} color="var(--primary)" />
-              Joined {joinedDate}
+              {joinedText}
             </span>
           </div>
         </div>
@@ -452,9 +452,9 @@ const Profile = ({ user }) => {
 
         {activeTab === 'settings' && (
           <div className="glass-panel" style={{ padding: 28, borderRadius: 16, border: '1px solid var(--surface-border)' }}>
-            <h2 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: 20, color: 'var(--text-main)' }}>Account Settings</h2>
+            <h2 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: 20, color: 'var(--text-main)' }}>{t('account_settings')}</h2>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: 8 }}>
-              Email: <strong style={{ color: 'var(--text-main)' }}>{user?.email}</strong>
+              {t('email')}: <strong style={{ color: 'var(--text-main)' }}>{user?.email}</strong>
             </p>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: 8 }}>
               UID: <code style={{ fontSize: '0.8rem', background: 'var(--surface-badge)', padding: '2px 8px', borderRadius: 6 }}>{user?.uid}</code>

@@ -8,8 +8,10 @@ import {
   orderBy, query, serverTimestamp, updateDoc, increment, arrayUnion, arrayRemove,
 } from 'firebase/firestore';
 import { getUserNickname } from '../userService';
+import { useLanguage } from '../LanguageContext';
 
 const Community = () => {
+  const { t } = useLanguage();
   const [user, setUser]           = useState(null);
   const [nickname, setNickname]   = useState('');
   const [posts, setPosts]         = useState([]);
@@ -216,8 +218,8 @@ const Community = () => {
   return (
     <div className="container" style={{ paddingTop: '80px', minHeight: '80vh', paddingBottom: '60px' }}>
       <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-        <h1 className="text-gradient">Community Q&amp;A Forum</h1>
-        <p style={{ color: 'var(--text-muted)' }}>Ask questions, get help, and discuss IT topics with the community.</p>
+        <h1 className="text-gradient">{t('community_forum_title')}</h1>
+        <p style={{ color: 'var(--text-muted)' }}>{t('community_forum_desc')}</p>
       </div>
 
       <div className="community-layout">
@@ -225,11 +227,11 @@ const Community = () => {
         {/* ── Posts list ── */}
         <div>
           {loadingPosts ? (
-            <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '40px' }}>Loading posts…</p>
+            <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '40px' }}>{t('loading_posts')}</p>
           ) : posts.length === 0 ? (
             <div className="glass-panel" style={{ padding: '40px', textAlign: 'center', borderRadius: '16px' }}>
               <MessageSquare size={40} color="var(--text-muted)" style={{ margin: '0 auto 16px' }} />
-              <p style={{ color: 'var(--text-muted)' }}>No posts yet. Be the first to ask a question!</p>
+              <p style={{ color: 'var(--text-muted)' }}>{t('no_posts_yet')}</p>
             </div>
           ) : posts.map(post => {
             const postTime = post.createdAt?.toMillis ? post.createdAt.toMillis() : Date.now();
@@ -246,7 +248,7 @@ const Community = () => {
                   <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#ef4444', padding: '12px 16px', borderRadius: '8px', marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
                     <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>⏱️ This post expired after 24 hours and is hidden. Repost it to make it visible!</span>
                     <button onClick={() => handleRepost(post.id)} className="btn btn-primary" style={{ padding: '6px 16px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px', background: '#ef4444', border: 'none' }}>
-                      <RefreshCcw size={14} /> Repost Now
+                      <RefreshCcw size={14} /> {t('repost_now')}
                     </button>
                   </div>
                 )}
@@ -268,7 +270,7 @@ const Community = () => {
                       {optionsOpenId === post.id && (
                         <div style={{ position: 'absolute', right: 0, top: '100%', background: 'var(--surface)', border: '1px solid var(--surface-border)', borderRadius: '8px', padding: '4px', zIndex: 10, minWidth: '120px', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
                           <button onClick={() => handleDelete(post.id)} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '8px', background: 'transparent', border: 'none', color: '#ef4444', padding: '8px 12px', cursor: 'pointer', borderRadius: '4px', fontSize: '0.85rem' }} onMouseOver={e=>e.currentTarget.style.background='rgba(239, 68, 68, 0.1)'} onMouseOut={e=>e.currentTarget.style.background='transparent'}>
-                            <Trash2 size={14} /> Delete Post
+                            <Trash2 size={14} /> {t('delete_post')}
                           </button>
                         </div>
                       )}
@@ -312,7 +314,7 @@ const Community = () => {
                     <Heart size={14} fill={(user && (post.heartedBy || []).includes(user.uid)) ? 'var(--secondary)' : 'none'} /> {post.hearts || 0}
                   </button>
                   <button onClick={() => setOpenRepliesId(openRepliesId === post.id ? null : post.id)} className="btn btn-outline" style={{ padding: '4px 10px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', background: openRepliesId === post.id ? 'var(--surface-border)' : 'transparent' }}>
-                    <MessageSquare size={14} /> {post.replies || 0} Replies
+                    <MessageSquare size={14} /> {post.replies || 0} {t('replies')}
                   </button>
                 </div>
               </div>
@@ -338,7 +340,7 @@ const Community = () => {
                   {/* Reply Input */}
                   {user && (post.repliesList || []).some(r => r.authorUid === user.uid) ? (
                     <div style={{ padding: '12px', textAlign: 'center', background: 'var(--card-dark)', borderRadius: '12px', border: '1px dashed var(--surface-border)', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                      You have already replied to this post.
+                      {t('already_replied')}
                     </div>
                   ) : (
                     <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', paddingLeft: '8px' }}>
@@ -347,7 +349,7 @@ const Community = () => {
                       </div>
                       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         <textarea
-                          placeholder="Write a reply..."
+                          placeholder={t('write_reply')}
                           value={replyContent}
                           onChange={(e) => setReplyContent(e.target.value)}
                           style={{ width: '100%', minHeight: '60px', padding: '10px 14px', borderRadius: '12px', border: '1px solid var(--surface-border)', background: 'var(--card-dark)', color: 'var(--text-main)', fontSize: '0.85rem', resize: 'vertical', outline: 'none' }}
@@ -356,7 +358,7 @@ const Community = () => {
                         />
                         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                           <button onClick={() => submitReply(post.id)} className="btn btn-primary" style={{ padding: '6px 16px', fontSize: '0.8rem', display: 'flex', gap: '6px', alignItems: 'center' }} disabled={!replyContent.trim()}>
-                            <Send size={12} /> Reply
+                            <Send size={12} /> {t('reply')}
                           </button>
                         </div>
                       </div>
@@ -374,8 +376,7 @@ const Community = () => {
           {/* Nickname warning */}
           {needsNickname && (
             <div style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.4)', borderRadius: '12px', padding: '16px', fontSize: '0.88rem', color: '#f59e0b' }}>
-              ⚠️ You need a <strong>nickname</strong> to post. Go to{' '}
-              <a href="/profile" style={{ color: '#f59e0b', fontWeight: 700 }}>Profile → Set Nickname</a>{' '}first.
+              ⚠️ {t('need_nickname')}
             </div>
           )}
 
@@ -383,19 +384,19 @@ const Community = () => {
           {user && (
             <div className="glass-panel" style={{ padding: '14px 18px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.88rem', color: 'var(--text-muted)', border: '1px solid var(--surface-border)' }}>
               <User size={16} color="var(--primary)" />
-              Posting as <strong style={{ color: 'var(--primary)', marginLeft: '4px' }}>{authorName()}</strong>
+              {t('posting_as')} <strong style={{ color: 'var(--primary)', marginLeft: '4px' }}>{authorName()}</strong>
             </div>
           )}
 
           {/* Form */}
           <div className="glass-panel" style={{ padding: '24px', borderRadius: '14px', border: '1px solid var(--surface-border)' }}>
             <h3 style={{ marginBottom: '16px', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <MessageSquare size={18} /> Ask a Question
+              <MessageSquare size={18} /> {t('ask_question')}
             </h3>
             <form onSubmit={handlePost} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <input
                 type="text"
-                placeholder="Question title…"
+                placeholder={t('question_title')}
                 value={newTitle}
                 onChange={(e) => setNewTitle(e.target.value)}
                 className="input-field"
@@ -403,7 +404,7 @@ const Community = () => {
                 disabled={needsNickname}
               />
               <textarea
-                placeholder="Describe your issue or question in detail…"
+                placeholder={t('question_desc')}
                 value={newContent}
                 onChange={(e) => setNewContent(e.target.value)}
                 className="input-field"
@@ -413,7 +414,7 @@ const Community = () => {
               />
               <button type="submit" className="btn btn-primary" style={{ width: '100%', gap: '8px' }}
                 disabled={posting || needsNickname || !user}>
-                {posting ? 'Posting…' : <><Send size={15} /> Post Question</>}
+                {posting ? t('posting') : <><Send size={15} /> {t('post_question')}</>}
               </button>
               {!user && (
                 <p style={{ textAlign: 'center', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
