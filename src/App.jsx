@@ -32,39 +32,7 @@ function App() {
   const [showMore, setShowMore] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  // ─── ANTI-INSPECT PROTECTION ───
-  useEffect(() => {
-    // 1. Disable Right Click
-    const handleContextMenu = (e) => e.preventDefault();
-    document.addEventListener('contextmenu', handleContextMenu);
 
-    // 2. Disable Common Shortcuts (F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U)
-    const handleKeyDown = (e) => {
-      if (
-        e.keyCode === 123 || // F12
-        (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74)) || // Ctrl+Shift+I/J
-        (e.ctrlKey && e.keyCode === 85) || // Ctrl+U
-        (e.metaKey && e.altKey && (e.keyCode === 73 || e.keyCode === 74)) // Cmd+Opt+I/J (Mac)
-      ) {
-        e.preventDefault();
-      }
-    };
-    document.addEventListener('keydown', handleKeyDown);
-
-    // 3. Debugger Loop (Disrupt DevTools)
-    const interceptor = setInterval(() => {
-      (function() {
-        // eslint-disable-next-line no-debugger
-        debugger;
-      }());
-    }, 1000);
-
-    return () => {
-      document.removeEventListener('contextmenu', handleContextMenu);
-      document.removeEventListener('keydown', handleKeyDown);
-      clearInterval(interceptor);
-    };
-  }, []);
 
   // Check if user is logged in
   const isLoggedIn = !!user;
