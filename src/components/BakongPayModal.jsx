@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { BakongKHQR, khqrData, IndividualInfo } from 'bakong-khqr';
-import { X, Copy, CheckCircle2, Download, QrCode } from 'lucide-react';
+import { X, Copy, CheckCircle2, Download, QrCode, ShieldCheck, Share2, CornerUpRight } from 'lucide-react';
 
 /**
  * BakongPayModal
@@ -58,9 +58,7 @@ const BakongPayModal = ({
         return res.json();
       })
       .then(data => {
-        console.log('Bakong Relay API response:', data);
         if (data.status === 1 && data.data?.base64) {
-          // The API returns the base64 with "data:image/png;base64," prefix already included
           setImgSrc(data.data.base64);
         } else {
           throw new Error('No base64 in response');
@@ -69,11 +67,9 @@ const BakongPayModal = ({
       })
       .catch(err => {
         console.warn('Relay API failed, using fallback:', err.message);
-        // Fallback: use qrserver.com to render the QR
         setImgSrc(
           `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(qrString)}&size=400x400&format=svg`
         );
-        setError(false);
         setLoading(false);
       });
   }, [isOpen, qrString]);
@@ -99,122 +95,87 @@ const BakongPayModal = ({
       : `${new Intl.NumberFormat('km-KH').format(amount)} ៛`;
 
   return (
-    <div className="bk-overlay" onClick={onClose}>
-      <div className="bk-modal" onClick={e => e.stopPropagation()}>
-
-        {/* Close Button */}
-        <button className="bk-close" onClick={onClose}>
-          <X size={22} />
-        </button>
-
-        {/* QR Image Card */}
-        <div className="bk-card">
-          {loading && (
-            <div className="bk-loader">
-              <div className="bk-spinner" />
-              <p>Generating KHQR...</p>
-            </div>
-          )}
-
-          {!loading && imgSrc && (
-            <img src={imgSrc} alt="Bakong KHQR" className="bk-img" />
-          )}
-
-          {!loading && !imgSrc && (
-            <div className="bk-error">
-              <QrCode size={40} color="#ccc" />
-              <p>Failed to generate QR</p>
-            </div>
-          )}
+    <div className="bk-minimal-overlay" onClick={onClose}>
+      <div className="bk-minimal-content" onClick={e => e.stopPropagation()}>
+        
+        {/* QR Core Display */}
+        <div className={`bk-qr-frame ${loading ? 'loading' : ''}`} onClick={() => !loading && imgSrc && handleDownload()}>
+           {loading ? (
+              <div className="bk-minimal-loader">
+                 <div className="bk-spinner-ring" />
+                 <span>Generating...</span>
+              </div>
+           ) : (
+              <div className="bk-qr-box">
+                 <img src={imgSrc} alt="KHQR" className="bk-qr-main" />
+                 <div className="bk-qr-overlay-info">
+                    <span className="bk-qr-amt">{formatAmount()}</span>
+                    <button className="bk-hover-download" onClick={(e) => { e.stopPropagation(); handleDownload(); }}>
+                       <Download size={18} />
+                    </button>
+                 </div>
+              </div>
+           )}
+           
+           <button className="bk-close-minimal" onClick={onClose}><X size={20} /></button>
         </div>
 
-        {/* Amount label */}
-        {!loading && imgSrc && (
-          <div className="bk-amount">
-            <span className="bk-amount-label">Amount</span>
-            <span className="bk-amount-val">{formatAmount()}</span>
-          </div>
-        )}
-
-        {/* Actions */}
-        <div className="bk-actions">
-          <button className="bk-btn primary" onClick={handleDownload} disabled={!imgSrc}>
-            <Download size={18} /> Save Image
-          </button>
-          <button className="bk-btn secondary" onClick={handleCopy}>
-            {copied ? <CheckCircle2 size={18} color="#4ade80" /> : <Copy size={18} />}
-            {copied ? 'Copied!' : 'Copy ID'}
-          </button>
-        </div>
-
-        {/* Bakong ID label */}
-        <p className="bk-id-label" onClick={handleCopy}>{accountID}</p>
+        <p className="bk-minimal-hint">Scan to Pay or Tap to Download</p>
 
         <style>{`
-          .bk-overlay {
+          .bk-minimal-overlay {
             position: fixed; inset: 0; z-index: 9999;
-            background: rgba(11, 15, 25, 0.88);
-            backdrop-filter: blur(14px);
-            display: flex; align-items: center; justify-content: center;
-            padding: 24px;
+            background: rgba(2, 6, 23, 0.9); backdrop-filter: blur(25px) saturate(200%);
+            display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px;
           }
-          .bk-modal {
-            width: 100%; max-width: 380px;
-            display: flex; flex-direction: column; gap: 16px;
-            position: relative;
-            animation: bkEntry 0.4s cubic-bezier(0.16,1,0.3,1);
+          .bk-minimal-content {
+            width: 100%; max-width: 420px; display: flex; flex-direction: column; align-items: center; gap: 24px;
+            animation: bkFadeScale 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
           }
-          @keyframes bkEntry { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+          @keyframes bkFadeScale { from { transform: scale(0.9) translateY(20px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
 
-          .bk-close {
-            position: absolute; top: -48px; right: 0;
-            width: 40px; height: 40px; border-radius: 50%;
-            background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2);
-            color: white; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
+          .bk-qr-frame {
+            width: 100%; min-height: 200px; background: #fff; border-radius: 32px; position: relative;
+            display: flex; align-items: center; justify-content: center; overflow: hidden;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.6), 0 0 20px rgba(99, 102, 241, 0.2); 
+            cursor: pointer; transition: transform 0.3s cubic-bezier(0.17, 0.67, 0.83, 0.67);
           }
-
-          .bk-card {
-            background: white; border-radius: 24px; overflow: hidden;
-            box-shadow: 0 30px 70px rgba(0,0,0,0.5);
-            min-height: 400px; display: flex; align-items: center; justify-content: center;
-          }
-          .bk-img { width: 100%; height: auto; display: block; }
-
-          .bk-loader { text-align: center; color: #888; gap: 14px; display: flex; flex-direction: column; align-items: center; }
-          .bk-spinner {
-            width: 44px; height: 44px;
-            border: 4px solid #eee; border-top: 4px solid #E52E2A;
-            border-radius: 50%; animation: spin 0.8s linear infinite;
-          }
-          @keyframes spin { to { transform: rotate(360deg); } }
-
-          .bk-error { text-align: center; color: #aaa; display: flex; flex-direction: column; align-items: center; gap: 12px; }
-
-          .bk-amount {
-            background: white; border-radius: 16px; padding: 16px 20px;
+          .bk-qr-frame:hover { transform: translateY(-5px); }
+          .bk-qr-box { width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+          .bk-qr-main { width: 100%; height: auto; object-fit: contain; }
+          
+          .bk-qr-overlay-info {
+            position: absolute; bottom: 16px; left: 16px; right: 16px;
             display: flex; justify-content: space-between; align-items: center;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
           }
-          .bk-amount-label { font-size: 0.8rem; color: #999; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-          .bk-amount-val { font-size: 1.6rem; font-weight: 900; color: #E52E2A; }
+          .bk-qr-amt { 
+            background: #e52e2a; color: #fff; padding: 6px 16px; border-radius: 14px; 
+            font-weight: 900; font-size: 1rem; box-shadow: 0 8px 20px rgba(229, 46, 42, 0.4); 
+          }
+          .bk-hover-download { 
+            width: 44px; height: 44px; border-radius: 14px; border: none; 
+            background: #0f172a; color: #fff; display: flex; align-items: center; 
+            justify-content: center; cursor: pointer; box-shadow: 0 8px 20px rgba(0,0,0,0.3); 
+            transition: all 0.2s; 
+          }
+          .bk-hover-download:hover { transform: translateY(-3px) scale(1.1); background: #1e293b; }
 
-          .bk-actions { display: flex; gap: 12px; }
-          .bk-btn {
-            flex: 1; height: 50px; border-radius: 14px; border: none;
-            display: flex; align-items: center; justify-content: center; gap: 8px;
-            font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: all 0.2s;
+          .bk-close-minimal { 
+            position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.1); 
+            border: 1px solid rgba(255,255,255,0.1); color: #fff; width: 40px; height: 40px; 
+            border-radius: 50%; cursor: pointer; display: flex; align-items: center; 
+            justify-content: center; transition: all 0.3s; 
           }
-          .bk-btn.primary { background: white; color: #E52E2A; box-shadow: 0 6px 20px rgba(0,0,0,0.2); }
-          .bk-btn.secondary { background: rgba(255,255,255,0.12); color: white; border: 1px solid rgba(255,255,255,0.2); }
-          .bk-btn:hover { transform: translateY(-2px); }
-          .bk-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+          .bk-close-minimal:hover { transform: rotate(90deg); background: #e52e2a; border-color: #e52e2a; }
 
-          .bk-id-label {
-            text-align: center; color: rgba(255,255,255,0.5);
-            font-size: 0.8rem; cursor: pointer; transition: color 0.2s;
+          .bk-minimal-loader { display: flex; flex-direction: column; align-items: center; gap: 16px; color: #94a3b8; }
+          .bk-spinner-ring { width: 48px; height: 48px; border: 4px solid rgba(255,255,255,0.1); border-top-color: #6366f1; border-radius: 50%; animation: bkSpin 0.8s linear infinite; }
+          @keyframes bkSpin { to { transform: rotate(360deg); } }
+
+          .bk-minimal-hint { 
+            color: rgba(255,255,255,0.4); font-size: 0.9rem; font-weight: 600; 
+            letter-spacing: 0.5px; text-transform: uppercase; 
           }
-          .bk-id-label:hover { color: rgba(255,255,255,0.9); }
         `}</style>
       </div>
     </div>
@@ -222,3 +183,4 @@ const BakongPayModal = ({
 };
 
 export default BakongPayModal;
+

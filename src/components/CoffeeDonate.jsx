@@ -1,31 +1,37 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Coffee, X, Heart, QrCode } from 'lucide-react';
+import { Coffee, X, Heart, QrCode, Download, Clock, Info } from 'lucide-react';
+import { useLanguage } from '../LanguageContext';
 
 const RELAY_BASE = 'https://api.bakongrelay.com/v1';
-const EXPIRY_TIME = 10 * 60; // 10 minutes in seconds
+const EXPIRY_TIME = 10 * 60; // 10 minutes
 
 const CoffeeDonate = () => {
+  const { t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [amount, setAmount] = useState(1.0);
   const [currency, setCurrency] = useState('USD');
-  const [qrImage, setQrImage] = useState('');   // base64 image from API
-  const [qrString, setQrString] = useState(''); // raw QR string (fallback)
+  const [qrImage, setQrImage] = useState('');
+  const [qrString, setQrString] = useState('');
   const [loading, setLoading] = useState(false);
   const [selectedQr, setSelectedQr] = useState(null);
   const [timeLeft, setTimeLeft] = useState(EXPIRY_TIME);
+  const [isHovered, setIsHovered] = useState(false);
+  const [isCustom, setIsCustom] = useState(false);
+  const [showThankYou, setShowThankYou] = useState(false);
   
   const timerRef = useRef(null);
 
-  // ── Countdown Timer Logic ──
+  const amounts = {
+    USD: [1, 2, 5, 10, 20],
+    KHR: [4000, 8000, 20000, 40000, 80000]
+  };
+
   useEffect(() => {
     if (!isOpen) {
       if (timerRef.current) clearInterval(timerRef.current);
       return;
     }
-
     setTimeLeft(EXPIRY_TIME);
-    if (timerRef.current) clearInterval(timerRef.current);
-
     timerRef.current = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
@@ -35,19 +41,14 @@ const CoffeeDonate = () => {
         return prev - 1;
       });
     }, 1000);
-
     return () => clearInterval(timerRef.current);
   }, [isOpen, amount, currency]);
 
-  // ── Two-step API flow: generate_qr → generate_khqr_image ──
   useEffect(() => {
     if (!isOpen) return;
-
     setLoading(true);
     setQrImage('');
-    setQrString('');
-
-    // STEP 1: Generate QR string from Bakong Relay API
+    
     fetch(`${RELAY_BASE}/generate_qr`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -55,7 +56,7 @@ const CoffeeDonate = () => {
         merchant_name: 'Vannak Tech',
         bank_account: 'vannak_seun@bkrt',
         merchant_city: 'Phnom Penh',
-        amount: amount,
+        amount: Number(amount),
         currency: currency,
         store_label: 'ITsharing',
         static: false
@@ -64,31 +65,28 @@ const CoffeeDonate = () => {
     .then(r => r.json())
     .then(res => {
       if (res.responseCode === 0 && res.data?.qr) {
-        const qr = res.data.qr;
-        setQrString(qr);
-
-        // STEP 2: Convert QR string to official branded image
+        setQrString(res.data.qr);
         return fetch(`${RELAY_BASE}/generate_khqr_image`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ qr })
+          body: JSON.stringify({ qr: res.data.qr })
         });
       }
-      throw new Error('generate_qr failed: ' + res.responseMessage);
+      throw new Error('QR generation failed');
     })
     .then(r => r.json())
     .then(res => {
       if (res.responseCode === 0 && res.data?.image) {
-        setQrImage(res.data.image); // data:image/png;base64,...
+        setQrImage(res.data.image);
       } else {
-        throw new Error('generate_khqr_image failed: ' + res.responseMessage);
+        throw new Error('Image generation failed');
       }
       setLoading(false);
     })
     .catch(err => {
-      console.warn('Bakong Relay API error, using fallback:', err.message);
+      console.warn('Fallback due to:', err.message);
       if (qrString) {
-        setQrImage(`https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(qrString)}&size=300x300&margin=10`);
+        setQrImage(`https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(qrString)}&size=300x300`);
       }
       setLoading(false);
     });
@@ -105,244 +103,264 @@ const CoffeeDonate = () => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const handleDownload = (e) => {
+    e?.stopPropagation();
+    const link = document.createElement('a');
+    link.href = qrImage;
+    link.download = `KHQR_Donate.png`;
+    link.click();
+  };
+
   return (
     <>
-      {/* ─── FLOATING COFFEE ICON ─── */}
-      <div
-        onClick={() => setIsOpen(true)}
-        style={{
-          position: 'fixed',
-          left: '20px',
-          bottom: '50%',
-          transform: 'translateY(50%)',
-          zIndex: 1000,
-          cursor: 'pointer',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: '8px'
-        }}
-      >
-        <div className="coffee-container">
-          <div className="steam">
-            <span style={{ '--i': 1 }}></span>
-            <span style={{ '--i': 3 }}></span>
-            <span style={{ '--i': 16 }}></span>
-            <span style={{ '--i': 5 }}></span>
-            <span style={{ '--i': 13 }}></span>
-          </div>
-          <div className="coffee-cup-btn">
-            <Coffee size={24} color="#fff" />
-          </div>
+      <div className="donate-trigger-lux" onClick={() => setIsOpen(true)}>
+        <div className="trigger-base">
+           <div className="steam-wrapper">
+              <span className="steam-line"></span>
+              <span className="steam-line"></span>
+              <span className="steam-line"></span>
+           </div>
+           <Coffee size={28} color="#fff" />
         </div>
-        <span className="glass-panel" style={{ fontSize: '0.7rem', fontWeight: 'bold', padding: '4px 8px', borderRadius: '10px' }}>
-          Support
-        </span>
+        <div className="support-chip">{t('support_us')}</div>
       </div>
 
-      {/* ─── DONATE MODAL ─── */}
       {isOpen && (
-        <div className="modal-overlay" onClick={() => setIsOpen(false)}>
-          <div className="donate-modal" onClick={e => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setIsOpen(false)}><X size={18} /></button>
-
-            {/* Header Section */}
-            <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-              <div className="heart-circle-bg">
-                <Heart size={28} color="#fff" fill="#fff" />
-              </div>
-              <h3 className="modal-title">Buy us a Coffee</h3>
-            </div>
-
-            {/* Currency Selection */}
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginBottom: '20px' }}>
-              <button 
-                onClick={() => { setCurrency('USD'); setAmount(1.0); }} 
-                className={`tab-btn ${currency === 'USD' ? 'active' : ''}`}
-              >USD</button>
-              <button 
-                onClick={() => { setCurrency('KHR'); setAmount(4000); }} 
-                className={`tab-btn ${currency === 'KHR' ? 'active' : ''}`}
-              >KHR</button>
-            </div>
-
-            {/* Amount Selection */}
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '24px' }}>
-              {(currency === 'USD' ? [1, 2, 3, 4, 5] : [4000, 8000, 12000, 16000, 20000]).map((amt) => (
-                <button
-                  key={amt}
-                  onClick={() => setAmount(amt)}
-                  className={`amount-chip ${amount === amt ? 'active' : ''}`}
-                >
-                  {currency === 'KHR' ? amt / 1000 + "k" : "$" + amt}
-                </button>
-              ))}
-            </div>
-
-            {/* Bakong Branding Container */}
-            <div className="bakong-outer-box">
-              <div className="bakong-label">
-                <QrCode size={16} color="#E52E2A" />
-                <span>Bakong</span>
-              </div>
-
-              {/* KHQR Card View */}
-              <div 
-                className="khqr-card-container"
-                onClick={() => qrImage && setSelectedQr({ img: qrImage, title: 'Bakong KHQR' })}
-              >
-                {loading ? (
-                  <div className="loader-box">
-                    <div className="spinner" />
-                    <p>Generating Code...</p>
+        <div className="donate-overlay-lux" onClick={() => setIsOpen(false)}>
+          <div className="donate-modal-lux" onClick={e => e.stopPropagation()}>
+            <div className="modal-header-lux">
+              <div className="header-title-box">
+                <div className="heart-icon-box">
+                  <Coffee size={20} />
+                </div>
+                <div className="title-text-lux">
+                  <h2>{t('buy_us_coffee')}</h2>
+                  <div className="expiry-mini">
+                    <Clock size={12} />
+                    <span>{t('expires_in')} {formatTime(timeLeft)}</span>
                   </div>
-                ) : (
-                  <div className="khqr-main">
-                    <div className="khqr-header">
-                       <span style={{ fontWeight: '900', letterSpacing: '1.5px', fontSize: '0.9rem' }}>KHQR</span>
+                </div>
+              </div>
+              <button className="btn-close-lux" onClick={() => setIsOpen(false)}><X size={18} /></button>
+            </div>
+
+            <div className="modal-body-lux">
+              <div className="donation-controls-row">
+                 <div className="currency-selector-mini">
+                    <button className={`curr-btn ${currency === 'USD' ? 'active' : ''}`} onClick={() => {setCurrency('USD'); setAmount(1); setIsCustom(false);}}>USD</button>
+                    <button className={`curr-btn ${currency === 'KHR' ? 'active' : ''}`} onClick={() => {setCurrency('KHR'); setAmount(4000); setIsCustom(false);}}>KHR</button>
+                 </div>
+                 <div className="amount-grid-compact">
+                    {amounts[currency].map(amt => (
+                      <button key={amt} className={`amt-chip-mini ${amount === amt && !isCustom ? 'active' : ''}`} onClick={() => {setAmount(amt); setIsCustom(false);}}>
+                        {currency === 'USD' ? '$' + amt : (amt >= 1000 ? `${amt/1000}k` : amt)}
+                      </button>
+                    ))}
+                    <button className={`amt-chip-mini ${isCustom ? 'active' : ''}`} onClick={() => setIsCustom(true)}>{t('other')}</button>
+                 </div>
+              </div>
+
+              {isCustom && (
+                <div className="custom-amount-input-box">
+                   <div className="custom-input-wrapper">
+                      <span className="curr-indicator">{currency === 'USD' ? '$' : '៛'}</span>
+                      <input 
+                        type="number" 
+                        step={currency === 'USD' ? '0.01' : '100'}
+                        value={amount} 
+                        onChange={(e) => setAmount(e.target.value)}
+                        placeholder={currency === 'USD' ? '0.00' : '0'}
+                        className="custom-amt-input"
+                        autoFocus
+                      />
+                   </div>
+                </div>
+              )}
+
+              <div className="bakong-payment-card qr-only">
+                <div 
+                  className={`qr-display-box-minimal ${loading ? 'is-loading' : ''}`}
+                  onClick={() => qrImage && setSelectedQr({ img: qrImage, title: 'Bakong KHQR' })}
+                >
+                  {loading ? (
+                    <div className="qr-loader">
+                      <div className="loader-ring" />
                     </div>
-                    <div className="khqr-merchant-info">
-                       <p style={{ fontSize: '0.75rem', fontWeight: 'bold', margin: 0, color: '#1e293b' }}>Vannak Tech</p>
-                       <p style={{ fontSize: '1rem', fontWeight: '900', margin: '4px 0 0', color: '#000' }}>
-                          {currency === 'KHR' ? new Intl.NumberFormat('km-KH').format(amount) : Number(amount).toFixed(2).replace('.', ',')} 
-                          <span style={{ fontSize: '0.65rem', marginLeft: '4px', color: '#64748b' }}>{currency}</span>
-                       </p>
-                    </div>
-                    <div style={{ borderTop: '1px dashed #e2e8f0', margin: '0 20px' }}></div>
-                    <div className="khqr-body">
-                      {qrImage ? (
-                        <>
-                          <img src={qrImage} alt="KHQR" className="khqr-img" />
-                          <div className="qr-hint">Tap to zoom</div>
-                        </>
-                      ) : (
-                        <QrCode size={60} color="#ddd" />
+                  ) : (
+                    <div className="qr-wrapper-minimal">
+                      <div className="qr-img-frame-minimal">
+                        {qrImage ? (
+                          <img src={qrImage} alt="KHQR" className="qr-main-img" />
+                        ) : (
+                          <div className="qr-placeholder"><QrCode size={80} color="rgba(255,255,255,0.05)" /></div>
+                        )}
+                        {timeLeft === 0 && (
+                          <div className="expired-mask">
+                             <span>{t('expired')}</span>
+                             <button onClick={() => setAmount(amount)} className="refresh-btn">{t('retry')}</button>
+                          </div>
+                        )}
+                      </div>
+                      {qrImage && (
+                        <div className="qr-actions-minimal">
+                           <span className="qr-amount-overlay">{formatAmount(amount)}</span>
+                           <button className="qr-download-btn-minimal" onClick={handleDownload}>
+                              <Download size={14} />
+                           </button>
+                        </div>
                       )}
                     </div>
-                    {timeLeft === 0 && (
-                      <div className="expiry-overlay">
-                         <p>Code Expired</p>
-                         <button onClick={() => setIsOpen(false)} className="btn-retry">Refresh</button>
-                      </div>
-                    )}
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
-              
-              {/* Expiry Timer */}
-              <div style={{ marginTop: '12px', fontSize: '0.8rem', color: timeLeft < 60 ? '#f87171' : '#94a3b8', fontWeight: '500' }}>
-                Expires in: <span style={{ fontFamily: 'monospace' }}>{formatTime(timeLeft)}</span>
-              </div>
+
+              <button className="btn-action-lux donate-finish" onClick={() => { setIsOpen(false); setShowThankYou(true); setTimeout(() => setShowThankYou(false), 3500); }}>
+                 {t('i_have_paid')}
+              </button>
             </div>
-            
-            <p className="footer-price">{formatAmount(amount)}</p>
           </div>
         </div>
       )}
 
-      {/* ─── LIGHTBOX VIEW ─── */}
-      {selectedQr && (
-        <div className="modal-overlay" onClick={() => setSelectedQr(null)} style={{ zIndex: 3000, padding: '20px' }}>
-          <div className="lightbox-panel" onClick={e => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setSelectedQr(null)}><X size={20} /></button>
-            <h3 style={{ color: '#fff', marginBottom: '20px', fontWeight: '700' }}>{selectedQr.title}</h3>
-            <div className="lightbox-img-box">
-              <img src={selectedQr.img} alt="Full Size" />
-            </div>
-            <p style={{ marginTop: '20px', color: '#cbd5e1', fontSize: '0.9rem' }}>Scan to donate {formatAmount(amount)}</p>
-          </div>
+      {showThankYou && (
+        <div className="donate-overlay-lux ty-layer">
+           <div className="ty-card-lux">
+              <div className="ty-icon-box">
+                 <Heart size={40} fill="#ec4899" className="ty-heart-anim" />
+              </div>
+              <h3>{t('thank_you')}</h3>
+              <p>{t('thank_you_desc')}</p>
+              <div className="ty-confetti-mini">
+                 {[...Array(6)].map((_, i) => <span key={i} className={`p-${i}`} />)}
+              </div>
+           </div>
         </div>
+      )}
+
+      {selectedQr && (
+         <div className="donate-overlay-lux" onClick={() => setSelectedQr(null)} style={{ zIndex: 5000 }}>
+            <div className="lightbox-lux" onClick={e => e.stopPropagation()}>
+               <div className="lightbox-header">
+                  <span>{selectedQr.title}</span>
+                  <button onClick={() => setSelectedQr(null)} className="close-lightbox"><X size={20} /></button>
+               </div>
+               <div className="lightbox-img-box">
+                  <img src={selectedQr.img} alt="KHQR Full" />
+               </div>
+               <div className="lightbox-footer-mini" style={{ textAlign: 'center', marginTop: '16px' }}>
+                  <p style={{ color: '#64748b', fontSize: '0.85rem', marginBottom: '12px' }}>{t('scan_bakong')}</p>
+                  <button className="btn-action-lux download-full" onClick={handleDownload} style={{ background: '#e52e2a', color: '#fff', width: '100%' }}>
+                     <Download size={18} /> {t('download_code')}
+                  </button>
+               </div>
+            </div>
+         </div>
       )}
 
       <style>{`
-        .donate-modal {
-          width: 95%;
-          max-width: 380px;
-          background: #0b0f19;
-          border: 1px solid rgba(255,255,255,0.08);
-          border-radius: 32px;
-          padding: 32px;
-          position: relative;
-          color: #fff;
-          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-          text-align: center;
+        .donate-trigger-lux {
+          position: fixed; bottom: 30px; right: 30px; z-index: 900;
+          display: flex; flex-direction: column; align-items: center; gap: 8px;
+          cursor: pointer; transition: all 0.4s cubic-bezier(0.17, 0.67, 0.83, 0.67);
         }
-        .modal-title { font-size: 1.4rem; font-weight: 700; color: #6366f1; margin: 0; }
-        .heart-circle-bg {
-          width: 64px; height: 64px; border-radius: 50%;
-          background: linear-gradient(135deg, #6366f1, #ec4899);
+        .donate-trigger-lux:hover { transform: translateY(-8px); }
+        .trigger-base {
+          width: 64px; height: 64px; border-radius: 20px;
+          background: linear-gradient(135deg, #6366f1, #a855f7);
           display: flex; align-items: center; justify-content: center;
-          margin: 0 auto 16px;
-          box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+          box-shadow: 0 15px 30px rgba(99, 102, 241, 0.4);
+          position: relative;
         }
-        .tab-btn {
-          flex: 1; padding: 10px; border-radius: 20px; border: 1px solid transparent;
-          background: #1e293b; color: #94a3b8; font-weight: 700;
-          cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-          font-size: 0.85rem;
+        .trigger-base::after { content: ""; position: absolute; inset: -4px; border-radius: 24px; background: inherit; z-index: -1; opacity: 0.3; filter: blur(10px); }
+        .steam-wrapper { position: absolute; top: -14px; display: flex; gap: 4px; }
+        .steam-line { width: 3px; height: 12px; background: rgba(255,255,255,0.7); border-radius: 3px; animation: steamRising 1.8s infinite ease-in-out; }
+        .steam-line:nth-child(2) { animation-delay: 0.4s; height: 16px; }
+        .steam-line:nth-child(3) { animation-delay: 0.8s; }
+        @keyframes steamRising { 0% { transform: translateY(0); opacity: 0; } 50% { transform: translateY(-10px); opacity: 1; } 100% { transform: translateY(-20px); opacity: 0; } }
+        .support-chip { background: #0f172a; padding: 4px 12px; border-radius: 12px; color: #fff; font-size: 0.7rem; font-weight: 800; border: 1px solid rgba(255,255,255,0.1); }
+
+        .donate-overlay-lux { position: fixed; inset: 0; z-index: 1000; background: rgba(2, 6, 23, 0.9); backdrop-filter: blur(16px); display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .donate-modal-lux {
+          width: 100%; max-width: 380px; background: #0f172a; border-radius: 32px;
+          border: 1px solid rgba(255,255,255,0.08); overflow: hidden;
+          box-shadow: 0 50px 100px rgba(0,0,0,0.6);
+          animation: modalPopUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
-        .tab-btn.active { background: #3b82f6; color: #fff; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }
-        .tab-btn:hover:not(.active) { background: #2d3748; color: #cbd5e1; }
+        @keyframes modalPopUp { from { transform: scale(0.9) translateY(20px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+
+        .modal-header-lux { padding: 20px 24px 16px; display: flex; justify-content: space-between; align-items: center; }
+        .header-title-box { display: flex; align-items: center; gap: 12px; }
+        .heart-icon-box { width: 40px; height: 40px; border-radius: 12px; background: rgba(99, 102, 241, 0.1); display: flex; align-items: center; justify-content: center; color: #6366f1; }
+        .title-text-lux h2 { font-size: 1.25rem; color: #fff; font-weight: 900; margin: 0; }
+        .expiry-mini { display: flex; align-items: center; gap: 4px; color: #64748b; font-size: 0.75rem; font-weight: 600; margin-top: 2px; }
+        .btn-close-lux { background: transparent; border: none; color: #64748b; cursor: pointer; }
+
+        .modal-body-lux { padding: 0 24px 24px; display: flex; flex-direction: column; gap: 16px; }
+        .donation-controls-row { display: flex; flex-direction: column; gap: 12px; background: rgba(255,255,255,0.02); padding: 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.04); }
+        .currency-selector-mini { display: flex; background: rgba(255,255,255,0.03); padding: 4px; border-radius: 12px; }
+        .curr-btn { flex: 1; padding: 8px; border: none; background: transparent; color: #64748b; font-weight: 800; font-size: 0.8rem; cursor: pointer; border-radius: 8px; transition: 0.3s; }
+        .curr-btn.active { background: #fff; color: #000; }
+        .amount-grid-compact { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+        .amt-chip-mini { padding: 10px 4px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); background: transparent; color: #94a3b8; font-weight: 700; font-size: 0.8rem; cursor: pointer; transition: 0.2s; }
+        .amt-chip-mini.active { background: #6366f1; color: #fff; border-color: #6366f1; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); }
+
+        .custom-amount-input-box { margin-bottom: 4px; }
+        .custom-input-wrapper { position: relative; display: flex; align-items: center; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 0 16px; transition: 0.3s; }
+        .custom-input-wrapper:focus-within { border-color: #6366f1; background: rgba(99, 102, 241, 0.05); box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); }
+        .curr-indicator { font-size: 0.8rem; font-weight: 900; color: #6366f1; border-right: 1px solid rgba(255,255,255,0.1); padding-right: 12px; margin-right: 12px; }
+        .custom-amt-input { flex: 1; height: 50px; background: transparent; border: none; color: #fff; font-size: 1.1rem; font-weight: 800; outline: none; width: 100%; }
+        .custom-amt-input::placeholder { color: #64748b; font-weight: 500; font-size: 0.95rem; }
         
-        .amount-chip {
-          width: 58px; height: 42px; border-radius: 14px; border: 1px solid #1e293b;
-          background: #0f172a; color: #f8fafc; font-weight: 600;
-          cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center;
-          font-size: 0.9rem;
-        }
-        .amount-chip.active { background: #3b82f6; border-color: #3b82f6; box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); transform: translateY(-2px); }
-        .amount-chip:hover:not(.active) { border-color: #3b82f6; transform: translateY(-1px); }
+        @media (min-width: 400px) { .amount-grid-compact { grid-template-columns: repeat(6, 1fr); } }
 
-        .bakong-outer-box {
-          background: #0f172a; border: 1px solid #1e293b; border-radius: 24px;
-          padding: 24px 20px; margin-bottom: 16px;
-        }
-        .bakong-label {
-          display: flex; align-items: center; justify-content: center; gap: 8px;
-          margin-bottom: 16px; font-weight: 700; font-size: 0.95rem; color: #cbd5e1;
-        }
-        .khqr-card-container {
-          background: #fff; border-radius: 20px; overflow: hidden;
-          cursor: zoom-in; position: relative; transition: transform 0.2s;
-        }
-        .khqr-card-container:hover { transform: scale(1.02); }
-        .khqr-main { display: flex; flex-direction: column; }
-        .khqr-header { background: #E52E2A; color: #fff; padding: 10px; text-align: center; position: relative; }
-        .khqr-header::after { 
-          content: ''; position: absolute; bottom: -10px; right: 0; 
-          width: 0; height: 0; border-style: solid; border-width: 0 20px 10px 0; border-color: transparent #E52E2A transparent transparent; 
-        }
-        .khqr-merchant-info { padding: 16px 20px; text-align: left; background: #fff; }
-        .khqr-body { padding: 10px 20px 20px; display: flex; justify-content: center; align-items: center; min-height: 180px; }
-        .khqr-img { width: 100%; height: auto; display: block; border: 1px solid #f1f5f9; border-radius: 8px; }
-        .qr-hint { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); font-size: 0.55rem; color: #cbd5e1; text-transform: uppercase; letter-spacing: 1px; }
+        .bakong-payment-card.qr-only { width: 100%; max-width: 280px; margin: 0 auto; position: relative; }
+        .qr-display-box-minimal { width: 100%; background: #fff; border-radius: 24px; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
+        .qr-wrapper-minimal { width: 100%; position: relative; }
+        .qr-main-img { width: 100%; height: auto; display: block; }
+        .qr-amount-overlay { position: absolute; bottom: 12px; left: 12px; background: #e52e2a; color: #fff; padding: 4px 12px; border-radius: 10px; font-weight: 900; font-size: 0.8rem; }
+        .qr-download-btn-minimal { position: absolute; bottom: 12px; right: 12px; width: 32px; height: 32px; border-radius: 8px; border: none; background: #0f172a; color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        
+        .qr-loader { height: 200px; display: flex; align-items: center; justify-content: center; }
+        .loader-ring { width: 32px; height: 32px; border: 3px solid #f1f5f9; border-top-color: #e52e2a; border-radius: 50%; animation: spinRotate 0.8s linear infinite; }
+        @keyframes spinRotate { to { transform: rotate(360deg); } }
 
-        .footer-price { font-size: 1.1rem; font-weight: 800; color: #3b82f6; margin-top: 8px; }
-        .modal-close { position: absolute; top: 20px; right: 20px; background: #1e293b; border: none; color: #94a3b8; border-radius: 50%; padding: 6px; cursor: pointer; }
-        .loader-box { padding: 40px; display: flex; flexDirection: column; align-items: center; gap: 12px; color: #666; }
-        .spinner { width: 32px; height: 32px; border: 3px solid #eee; border-top-color: #E52E2A; border-radius: 50%; animation: cdSpin 0.7s linear infinite; }
-        @keyframes cdSpin { to { transform: rotate(360deg); } }
+        .btn-action-lux.donate-finish { background: #6366f1; color: #fff; height: 50px; border-radius: 16px; border: none; font-weight: 800; cursor: pointer; margin-top: 8px; transition: 0.3s; }
+        .btn-action-lux.donate-finish:hover { background: #4f46e5; transform: translateY(-2px); }
 
-        .expiry-overlay {
-          position: absolute; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(4px);
-          display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
-        }
-        .btn-retry { padding: 6px 16px; border-radius: 12px; border: none; background: #3b82f6; color: #fff; font-weight: 600; cursor: pointer; }
+        .expired-mask { position: absolute; inset: 0; background: rgba(255,255,255,0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; z-index: 10; font-weight: 900; color: #000; }
+        .refresh-btn { background: #e52e2a; color: #fff; border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 0.8rem; }
 
-        .lightbox-panel {
-          max-width: 450px; width: 100%; background: #0f172a; padding: 32px; border-radius: 32px;
-          text-align: center; position: relative; border: 1px solid rgba(255,255,255,0.1);
+        /* ─── Thank You Popup ─── */
+        .ty-layer { z-index: 6000; background: rgba(2, 6, 23, 0.95); backdrop-filter: blur(20px); }
+        .ty-card-lux { 
+          background: #0f172a; border-radius: 36px; padding: 40px; text-align: center;
+          width: 90%; max-width: 380px; position: relative; border: 1px solid rgba(255,255,255,0.06);
+          animation: tyEntrance 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
-        .lightbox-img-box { background: #fff; padding: 12px; border-radius: 20px; }
+        @keyframes tyEntrance { from { transform: scale(0.8) translateY(20px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+        .ty-icon-box { 
+          width: 80px; height: 80px; border-radius: 50%; background: rgba(236, 72, 153, 0.1);
+          display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;
+        }
+        .ty-heart-anim { animation: tyHeartBeat 1s infinite alternate; }
+        @keyframes tyHeartBeat { from { transform: scale(1); } to { transform: scale(1.25); filter: drop-shadow(0 0 15px #ec4899); } }
+        .ty-card-lux h3 { font-size: 2rem; color: #fff; font-weight: 900; margin-bottom: 12px; }
+        .ty-card-lux p { color: #94a3b8; font-size: 1rem; line-height: 1.6; }
+        
+        .ty-confetti-mini span { position: absolute; width: 10px; height: 10px; border-radius: 2px; }
+        .ty-confetti-mini span.p-0 { top: -20px; left: 10%; background: #6366f1; animation: tyFall 2s infinite linear; }
+        .ty-confetti-mini span.p-1 { top: -40px; left: 30%; background: #ec4899; animation: tyFall 1.5s infinite linear; }
+        .ty-confetti-mini span.p-2 { top: -10px; left: 50%; background: #a855f7; animation: tyFall 2.2s infinite linear; }
+        .ty-confetti-mini span.p-3 { top: -30px; left: 70%; background: #22c55e; animation: tyFall 1.8s infinite linear; }
+        .ty-confetti-mini span.p-4 { top: -50px; left: 90%; background: #eab308; animation: tyFall 2s infinite linear; }
+        @keyframes tyFall { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(400px) rotate(360deg); opacity: 0; } }
+
+        .lightbox-lux { width: 100%; max-width: 400px; background: #fff; border-radius: 32px; padding: 24px; position: relative; animation: zoomInPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        @keyframes zoomInPop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .lightbox-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; font-weight: 900; color: #0f172a; }
+        .close-lightbox { background: transparent; border: none; color: #64748b; cursor: pointer; }
+        .lightbox-img-box { background: #f8fafc; padding: 12px; border-radius: 20px; border: 1px solid #f1f5f9; }
         .lightbox-img-box img { width: 100%; border-radius: 12px; }
-        
-        /* Floating Coffee Styles */
-        .coffee-container { position: relative; width: 46px; height: 46px; }
-        .coffee-cup-btn { width: 46px; height: 46px; background: #6f4e37; border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 15px rgba(111,78,55,0.4); z-index: 2; position: relative; }
-        .steam { position: absolute; top: -25px; left: 50%; transform: translateX(-50%); display: flex; z-index: 1; }
-        .steam span { width: 2px; height: 20px; background: #fff; margin: 0 2px; border-radius: 50%; filter: blur(3px); animation: steam 3s infinite; opacity: 0; animation-delay: calc(var(--i) * -0.5s); }
-        @keyframes steam { 0% { transform: translateY(0) scaleX(1); opacity: 0; } 15% { opacity: 0.6; } 50% { transform: translateY(-15px) scaleX(3); opacity: 0.3; } 95% { opacity: 0; } 100% { transform: translateY(-30px) scaleX(5); } }
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); display: flex; justify-content: center; align-items: center; z-index: 2000; }
       `}</style>
     </>
   );

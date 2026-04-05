@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
-import { Terminal, Video, FileText, BookOpen, Layers, User, LogOut, DownloadCloud, Sun, Moon, Users, HelpCircle, Menu, X, Globe } from 'lucide-react';
+import { Terminal, Video, FileText, BookOpen, Layers, User, LogOut, DownloadCloud, Sun, Moon, Users, HelpCircle, Menu, X, Globe, Gift } from 'lucide-react';
 
 import { auth } from './firebase';
 import { onAuthStateChanged, signOut, sendEmailVerification } from 'firebase/auth';
@@ -17,6 +17,7 @@ import Community from './pages/Community';
 import RequestResource from './pages/RequestResource';
 import Profile from './pages/Profile';
 import AdminDashboard from './pages/AdminDashboard';
+import GiveawayKeys from './pages/GiveawayKeys';
 
 import ProtectedRoute from './components/ProtectedRoute';
 import CoffeeDonate from './components/CoffeeDonate';
@@ -95,9 +96,11 @@ function App() {
 
   const moreNavItems = isLoggedIn ? [
     { name: t('experiences'), path: '/experiences', icon: <BookOpen size={18} /> },
+    { name: t('giveaway'), path: '/giveaway', icon: <Gift size={18} /> },
     { name: t('request'), path: '/request', icon: <HelpCircle size={18} /> },
   ] : [
     { name: t('experiences'), path: '/experiences', icon: <BookOpen size={18} /> },
+    { name: t('giveaway'), path: '/giveaway', icon: <Gift size={18} /> },
   ];
 
   const allNavItems = [...mainNavItems, ...moreNavItems];
@@ -320,6 +323,7 @@ function App() {
           <Route path="/software" element={<Software />} />
           <Route path="/software/:id" element={<SoftwareViewer />} />
           <Route path="/community" element={<Community />} />
+          <Route path="/giveaway" element={<GiveawayKeys />} />
           <Route path="/request" element={<RequestResource />} />
           <Route path="/profile" element={
             <ProtectedRoute>
