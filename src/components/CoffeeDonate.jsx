@@ -259,9 +259,12 @@ const CoffeeDonate = () => {
 
       <style>{`
         .donate-trigger-lux {
-          position: fixed; bottom: 30px; right: 30px; z-index: 900;
+          position: fixed; bottom: 24px; right: 24px; z-index: 900;
           display: flex; flex-direction: column; align-items: center; gap: 8px;
           cursor: pointer; transition: all 0.4s cubic-bezier(0.17, 0.67, 0.83, 0.67);
+        }
+        @media (max-width: 768px) {
+          .donate-trigger-lux { bottom: 16px; right: 16px; transform: scale(0.85); }
         }
         .donate-trigger-lux:hover { transform: translateY(-8px); }
         .trigger-base {

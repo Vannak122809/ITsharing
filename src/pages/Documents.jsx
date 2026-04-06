@@ -151,10 +151,10 @@ const Documents = () => {
   }, [currentFolder, currentSubfolder, searchQuery, activeLang, sortBy]);
 
   return (
-    <div className="container doc-layout" style={{ maxWidth: '1400px', padding: '100px 24px 80px', minHeight: '100vh' }}>
+    <div className="container doc-layout" style={{ maxWidth: '1400px', minHeight: '100vh' }}>
       
       {/* SIDEBAR EXPLORER */}
-      <div className="doc-sidebar" style={{ background: 'var(--card-dark)', border: '1px solid var(--surface-border)', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '8px', overflowY: 'auto', maxHeight: 'calc(100vh - 140px)', position: 'sticky', top: '100px' }}>
+      <div className="doc-sidebar">
         <h2 style={{ fontSize: '0.85rem', marginBottom: '16px', padding: '0 12px', display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px' }}>
           <Folder size={16} color="var(--primary)" /> {t('documents_explorer')}
         </h2>
@@ -219,12 +219,27 @@ const Documents = () => {
       {/* MAIN CONTENT AREA */}
       <div className="doc-main">
         
+        {/* Back Button for Mobile/Desktop Flow */}
+        {(currentFolder || searchQuery) && (
+          <button 
+            onClick={() => { 
+              if (searchQuery) setSearchQuery('');
+              else if (currentSubfolder) setCurrentSubfolder(null);
+              else setCurrentFolder(null);
+            }}
+            className="btn btn-outline"
+            style={{ alignSelf: 'flex-start', padding: '8px 16px', marginBottom: '8px', fontSize: '0.85rem', gap: '6px' }}
+          >
+            <ArrowLeft size={16} /> {searchQuery ? t('back_to_folders') : (currentSubfolder ? `${t('back_to')} ${t('folder')} ${t(currentFolder.toLowerCase().replace(' ', '_'))}` : t('back_to_all'))}
+          </button>
+        )}
+        
         {/* TOP TOOLBAR */}
         <div style={{ background: 'var(--card-dark)', border: '1px solid var(--surface-border)', borderRadius: '12px', padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
             
             {/* Breadcrumbs */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1rem', fontWeight: 600 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1rem', fontWeight: 600, flexWrap: 'wrap' }}>
               <div 
                 onClick={() => { setCurrentFolder(null); setCurrentSubfolder(null); setSearchQuery(''); }} 
                 style={{ cursor: 'pointer', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px', transition: 'var(--transition)', padding: '6px 10px', borderRadius: '8px' }} 
@@ -265,7 +280,8 @@ const Documents = () => {
                     placeholder={t('search_files')} 
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    style={{ padding: '8px 16px 8px 36px', background: 'var(--card-dark)', border: '1px solid var(--surface-border)', borderRadius: '20px', color: 'var(--text-main)', outline: 'none', fontSize: '0.9rem', width: '220px', transition: 'var(--transition)' }}
+                    className="search-input-doc"
+                    style={{ padding: '8px 16px 8px 36px', background: 'var(--card-dark)', border: '1px solid var(--surface-border)', borderRadius: '20px', color: 'var(--text-main)', outline: 'none', fontSize: '0.9rem', transition: 'var(--transition)' }}
                     onFocus={(e) => e.currentTarget.style.borderColor = 'var(--primary)'}
                     onBlur={(e) => e.currentTarget.style.borderColor = 'var(--surface-border)'}
                   />

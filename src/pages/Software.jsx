@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Monitor, Apple, ChevronRight, Folder, File, ArrowLeft, Eye, Download as DownloadIcon, PlayCircle, Cpu, Settings, Search, X } from 'lucide-react';
+import { Monitor, Apple, ChevronRight, Folder, File, ArrowLeft, Eye, Download as DownloadIcon, PlayCircle, Cpu, Settings, Search, X, Printer, Briefcase, Globe, Code } from 'lucide-react';
 import { auth } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useLanguage } from '../LanguageContext';
@@ -23,20 +23,33 @@ const ModernFolderIcon = ({ size = 48, className = '', folderName = '' }) => {
   let color = "var(--primary)";
   let fillColor = "rgba(99, 102, 241, 0.15)";
 
-  if (folderName === 'Download') {
+  const name = folderName.toLowerCase();
+
+  if (name.includes('download')) {
     Icon = DownloadIcon;
-  } else if (folderName === 'Media') {
+  } else if (name.includes('media') || name.includes('video') || name.includes('audio')) {
     Icon = PlayCircle;
-  } else if (folderName === 'Driver' || folderName === 'Tools') {
+  } else if (name.includes('driver')) {
     Icon = Settings;
-  } else if (folderName === 'Windows Server') {
+    if (name.includes('printer')) {
+      Icon = Printer;
+    }
+  } else if (name.includes('tools')) {
+    Icon = Settings;
+  } else if (name.includes('windows server') || name.includes('cpu') || name.includes('chipset')) {
     Icon = Cpu;
+  } else if (name.includes('office')) {
+    Icon = Briefcase;
+  } else if (name.includes('network')) {
+    Icon = Globe;
+  } else if (name.includes('coding') || name.includes('visual studio')) {
+    Icon = Code;
   }
 
   return <Icon size={size} className={className} color={color} fill={fillColor} strokeWidth={1.5} />;
 };
 
-const SoftwareIcon = ({ id, os, size = 32 }) => {
+export const SoftwareIcon = ({ id, os, size = 32 }) => {
   const iconMap = {
     'chrome-win': 'google.com',
     'chrome-mac': 'google.com',
@@ -101,7 +114,35 @@ const SoftwareIcon = ({ id, os, size = 32 }) => {
     'zktimenet-4': 'zkteco.com',
     'bandicam': 'bandicam.com',
     'zdsoft': 'zdsoft.com',
+    'adobe-cc': 'adobe.com',
+    'spotify': 'spotify.com',
+    'youtube': 'youtube.com',
+    'nordvpn': 'nordvpn.com',
+    'bitdefender': 'bitdefender.com',
+    'kaspersky': 'kaspersky.com',
+    'malwarebytes': 'malwarebytes.com',
+    'ccleaner': 'ccleaner.com',
+    'canon': 'canon.com',
+    'epson': 'epson.com',
+    'hp': 'hp.com',
+    'brother': 'brother.com',
+    'ricoh': 'ricoh.com',
+    'kyocera': 'kyocera.com',
+    'windows-11': 'microsoft.com',
+    'windows-10': 'microsoft.com',
+    'office-2021': 'microsoft.com',
+    'office-2019': 'microsoft.com',
   };
+
+  if (id === 'potplayer') {
+    return <img src="/PotPlayer.png" className="software-real-icon" alt={id} style={{ width: size, height: size, objectFit: 'contain' }} />;
+  }
+  if (id.includes('vlc')) {
+    return <img src="/vlc.avif" className="software-real-icon" alt={id} style={{ width: size, height: size, objectFit: 'contain' }} />;
+  }
+  if (id.includes('klite')) {
+    return <img src="/k-liteplayer.webp" className="software-real-icon" alt={id} style={{ width: size, height: size, objectFit: 'contain' }} />;
+  }
 
   const domain = iconMap[id];
   if (domain) {
@@ -608,10 +649,10 @@ const Software = () => {
                   }}
                 >
                   <div style={{ width: '52px', height: '52px', borderRadius: '12px', background: 'var(--card-dark)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.05)' }}>
-                    <Folder size={32} color="var(--primary)" fill="rgba(99, 102, 241, 0.15)" strokeWidth={1.5} />
+                    <ModernFolderIcon size={32} folderName={folderName} />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <span style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text-main)' }}>{currentFolder === 'Office' || currentFolder === 'Driver' ? currentSubfolder : t(folderName.toLowerCase().replace(' ', '_'))}</span>
+                    <span style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text-main)' }}>{t(folderName.toLowerCase().replace(' ', '_'))}</span>
                     <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{t('folder')}</span>
                   </div>
                   <ChevronRight size={16} color="var(--text-muted)" style={{ marginLeft: 'auto' }} />
@@ -687,13 +728,16 @@ const Software = () => {
               className="btn btn-outline"
               style={{ padding: '8px 16px', marginBottom: '24px' }}
             >
-              <ArrowLeft size={16} /> {t('back_to')} {t(currentFolder.toLowerCase().replace(' ', '_'))}
+              <ArrowLeft size={16} /> {t('back_to')} {t('folder')} {t(currentFolder.toLowerCase().replace(' ', '_'))}
             </button>
             
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
               <ModernFolderIcon size={36} />
               <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <h1 className="text-animated-cyber" style={{ margin: 0, lineHeight: 1 }}>{currentFolder === 'Office' ? 'Office ' : ''}{currentSubfolder}</h1>
+                <h1 className="text-animated-cyber" style={{ margin: 0, lineHeight: 1 }}>
+                  {(currentFolder === 'Office' || currentFolder === 'Driver') ? `${currentFolder} ` : ''}
+                  {t(currentSubfolder.toLowerCase().replace(' ', '_'))}
+                </h1>
                 <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '4px' }}>
                   {activeOS === 'windows' ? 'Windows OS' : 'macOS'} Apps in {currentFolder}
                 </span>
@@ -772,14 +816,14 @@ const Software = () => {
               className="btn btn-outline"
               style={{ padding: '8px 16px', marginBottom: '24px' }}
             >
-              <ArrowLeft size={16} /> {currentTypeFolder ? `${t('back_to')} ${currentSubfolder}` : (currentSubfolder ? `${t('back_to')} ${t(currentFolder.toLowerCase().replace(' ', '_'))}` : t('back_to_folders'))}
+              <ArrowLeft size={16} /> {currentTypeFolder ? `${t('back_to')} ${t('folder')} ${t(currentSubfolder.toLowerCase().replace(' ', '_'))}` : (currentSubfolder ? `${t('back_to')} ${t('folder')} ${t(currentFolder.toLowerCase().replace(' ', '_'))}` : t('back_to_folders'))}
             </button>
             
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
               <ModernFolderIcon size={36} />
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <h1 className="text-animated-cyber" style={{ margin: 0, lineHeight: 1 }}>
-                  {currentTypeFolder ? `${currentTypeFolder} (${currentSubfolder})` : (currentSubfolder ? (currentFolder === 'Office' ? `Office ${currentSubfolder}` : currentSubfolder) : currentFolder)}
+                  {currentTypeFolder ? `${currentTypeFolder} (${t(currentSubfolder.toLowerCase().replace(' ', '_'))})` : (currentSubfolder ? ((currentFolder === 'Office' || currentFolder === 'Driver') ? `${currentFolder} ${t(currentSubfolder.toLowerCase().replace(' ', '_'))}` : t(currentSubfolder.toLowerCase().replace(' ', '_'))) : currentFolder)}
                 </h1>
                 <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '4px' }}>
                   {activeOS === 'windows' ? t('win_repo_desc') : t('mac_repo_desc')}

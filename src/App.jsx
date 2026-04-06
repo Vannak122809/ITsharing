@@ -100,7 +100,6 @@ function App() {
     { name: t('request'), path: '/request', icon: <HelpCircle size={18} /> },
   ] : [
     { name: t('experiences'), path: '/experiences', icon: <BookOpen size={18} /> },
-    { name: t('giveaway'), path: '/giveaway', icon: <Gift size={18} /> },
   ];
 
   const allNavItems = [...mainNavItems, ...moreNavItems];
@@ -323,7 +322,11 @@ function App() {
           <Route path="/software" element={<Software />} />
           <Route path="/software/:id" element={<SoftwareViewer />} />
           <Route path="/community" element={<Community />} />
-          <Route path="/giveaway" element={<GiveawayKeys />} />
+          <Route path="/giveaway" element={
+            <ProtectedRoute>
+              <GiveawayKeys />
+            </ProtectedRoute>
+          } />
           <Route path="/request" element={<RequestResource />} />
           <Route path="/profile" element={
             <ProtectedRoute>
