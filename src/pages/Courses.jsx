@@ -240,9 +240,9 @@ const Courses = () => {
                     <X size={24} />
                  </button>
               </div>
-
               <div className="viewer-main">
-                 <div className="video-viewport">
+                 <div className="video-viewport" onContextMenu={(e) => e.preventDefault()}>
+                    <div className="security-overlay"></div>
                     <iframe 
                        src={`https://drive.google.com/file/d/${selectedCourse.lessons[activeLesson].id}/preview`} 
                        width="100%" 
@@ -374,8 +374,13 @@ const Courses = () => {
         .nav-close:hover { background: #ff2a7a; transform: rotate(90deg); }
 
         .viewer-main { display: flex; flex-grow: 1; overflow: hidden; }
-        .video-viewport { flex-grow: 1; background: #000; overflow: hidden; }
-        .main-iframe { width: 100%; height: 100%; }
+        .video-viewport { flex-grow: 1; background: #000; overflow: hidden; position: relative; user-select: none; -webkit-user-select: none; }
+        .security-overlay { 
+          position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+          z-index: 10; pointer-events: none;
+          background: repeating-linear-gradient(45deg, transparent, transparent 100px, rgba(255,255,255,0.01) 100px, rgba(255,255,255,0.01) 200px);
+        }
+        .main-iframe { width: 100%; height: 100%; pointer-events: auto; }
 
         .playlist-sidebar { width: 380px; border-left: 1px solid var(--surface-border); display: flex; flex-direction: column; background: var(--nav-bg); }
         .playlist-header { padding: 24px; font-weight: 800; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--surface-border); }

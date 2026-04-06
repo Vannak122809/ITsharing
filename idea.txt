@@ -56,3 +56,53 @@ Bandicam.6.1.0.2044.x64.Repack : https://pub-5961bc36cb774286a50691aa994b2653.r2
 WinRAR.6.21 : https://pub-5961bc36cb774286a50691aa994b2653.r2.dev/WinRAR.6.21.rar
 ZD.Soft.Screen.Recorder.11.6.0 : https://pub-5961bc36cb774286a50691aa994b2653.r2.dev/ZD.Soft.Screen.Recorder.11.6.0.rar
 please update software in Driver creare sub folder more example : Printer Driver : HP , Canon,epson.....
+please add options back to folder Office, software,Media and Driver , in Driver i want to Show name folder 
+i want to update Course page ui and update videos courses , my course Basic HTML and CSS 
+video 1 : https://drive.google.com/file/d/1jvLSC9Lo5ty1qBHfNoz9NEJZA9UQwyGn/view?usp=sharing
+video 2 : https://drive.google.com/file/d/13SXJVETMa0_IgPLZ550zHTeJzfXrH2D_/view?usp=sharing
+vidoe 3 : https://drive.google.com/file/d/1yMWs24CM-9wU_Z5SoxsVTcFdlv9xi8kL/view?usp=sharing
+video 4 :https://drive.google.com/file/d/1Z0iwR07Iom3kF3qdiIY3zb8cgYyiP8eV/view?usp=sharing
+video 5 : https://drive.google.com/file/d/1YNHOUoYlaQrrH51KghN7XyQc2MZ5lYCO/view?usp=sharing
+video 6 : https://drive.google.com/file/d/1YctZcG7G7iAa-eXypn9pa0Y2aNdlCv6E/view?usp=sharing
+video 7 : https://drive.google.com/file/d/1ODUcD4KEkGXpJ_ZwjI8LET-GEsFzw7hQ/view?usp=sharing
+video 8 : https://drive.google.com/file/d/1C8h4MISI98wlDSW7r-zgiQ1fVDFUnXs8/view?usp=sharing
+video 9 : https://drive.google.com/file/d/1xBGy_VHCLLB4l31M_4Ma28T1Jmbpwcbj/view?usp=sharing
+video 10: https://drive.google.com/file/d/1UbxRoXJJZbPXc9K0fkXmnjk22ws5-9Gu/view?usp=sharing
+video 11: https://drive.google.com/file/d/14vr8QpcRgtmAois2eNv16HEMAoPx7N8a/view?usp=sharing
+vidoe 12: https://drive.google.com/file/d/1CbQE7Q0K_2_MU4soi5nepMtNRGsu-XVu/view?usp=sharing
+video 13: https://drive.google.com/file/d/1h-N8sNMhupSH8Slmp1V-qKAIJXMCoWP5/view?usp=sharing
+video 14: https://drive.google.com/file/d/1rxbk_NPFeGHaO8aDb2ZTEVEOrKsO_5R9/view?usp=sharing
+video 15: https://drive.google.com/file/d/1XT9WOQnKCX4Mjqi0TfkqeNLdIBPKcemd/view?usp=sharing
+video 16: https://drive.google.com/file/d/1eups_gQxWUwjxUTp1MEYlYtwG1IA-h9R/view?usp=sharing
+video 17: https://drive.google.com/file/d/1gV5huYjHang-p8mPBNthee9ypsuWGisD/view?usp=sharing
+video 18: https://drive.google.com/file/d/1zYsmV29YouMnprT04f_CjFkCM0xTjjt7/view?usp=sharing
+video 19: https://drive.google.com/file/d/1wyOZQvs3NoyRikVDdSxQE3EwsKfVKn7_/view?usp=sharing
+video 20: https://drive.google.com/file/d/1ux3uvt7bT-v0Vay3yuf1ijAo_xCLTMPm/view?usp=sharing
+video 21: https://drive.google.com/file/d/1ux3uvt7bT-v0Vay3yuf1ijAo_xCLTMPm/view?usp=sharing
+video 22: https://drive.google.com/file/d/1JnKogi2zM0FVqVqyfOeXYWyM02KVbVoX/view?usp=sharing
+video 23: https://drive.google.com/file/d/1qG-oeVKIyu6trhaK-mucZdL-niFSwiMO/view?usp=sharing
+video 24: https://drive.google.com/file/d/11PtwrivRzXVeb2PRl79V2v1jYXHq8LRG/view?usp=sharing
+video 25: https://drive.google.com/file/d/1ao9BYxmtzKhHjDU6WkyYozdmSIb4-8S0/view?usp=sharing
+video 26: https://drive.google.com/file/d/1lApcTqJ-YjI6QYEwqXm0ji206RXtzA34/view?usp=sharing
+video 27: https://drive.google.com/file/d/1-vu22HE0FfgFh9k6oM2ICbRBUc46ldjy/view?usp=sharing
+vidoe 28: https://drive.google.com/file/d/1_gqx3Xxjucsj-hTaEHgxOqq6yAWUpzRl/view?usp=sharing
+video 29: https://drive.google.com/file/d/1pF3_S58G9ESO7T7uYuy5C-inD6GTIjq5/view?usp=sharing
+video 30: https://drive.google.com/file/d/1wUQJUworoYMRoFQB-zmtIO6GFNh1G8lO/view?usp=sharing
+vidoe 31: https://drive.google.com/file/d/1JFeqmWkzWNcttQ2WLl03OWlOgU-m1dVb/view?usp=sharing
+video 32: https://drive.google.com/file/d/1KVMOyhcQOKa7bzEfLQjDfvPn_YoapVyU/view?usp=sharing
+video 33: https://drive.google.com/file/d/17Us7I001SjbS8IGWxfAFHriGRmFxHuql/view?usp=sharing
+vidoe 34: https://drive.google.com/file/d/1GQfgDLsF3hPDl0bD5QwLQ9pHK_r8bHD5/view?usp=sharing
+video 35: https://drive.google.com/file/d/1JxsBeluIwfvvGw7XqEBhtkyycgm6EHZn/view?usp=sharing
+video 36: https://drive.google.com/file/d/17i-wS5jgFDW5Dg-xQSxW5LexQfzVtjfs/view?usp=sharing
+vidoe 37: https://drive.google.com/file/d/1oIvY0mXQw4IGjlJprRz1mgPPJjmyaDEQ/view?usp=sharing
+video 38: https://drive.google.com/file/d/1m-VwggiyJ-We3xtJ6dsMZeQDTAQj42uF/view?usp=sharing
+vidoe 39: https://drive.google.com/file/d/1yZDvFaeBLO23miDuUlCEf6VK74ITFtTD/view?usp=sharing
+video 40: https://drive.google.com/file/d/1s2CqEvfm7rUzocRf6iYzYHtq77yO3Q-P/view?usp=sharing
+vidoe 41: https://drive.google.com/file/d/1aShzx-Kv42Sc8AT0UzUnu0I79NCTVjvx/view?usp=sharing
+video 42: https://drive.google.com/file/d/15URULrYDcUQx0xOHbsM9louMn0UB9MI6/view?usp=sharing
+vidoe 43: https://drive.google.com/file/d/1cjArhvTIGujzdOfW4jrMLsvXT9dIHAy2/view?usp=sharing
+vidoe 44: https://drive.google.com/file/d/1C5pLLUBxf0IXKLB-ShwqoO2xbgpPqqe6/view?usp=sharing
+video 45: https://drive.google.com/file/d/1DEEVDKVrFWNBuB0JOdqM_BfNPJR06hx3/view?usp=sharing
+video 46: https://drive.google.com/file/d/1jOUEN7YaExYKCfl2C0YBfjEBL8I82N3O/view?usp=sharing
+video 47: https://drive.google.com/file/d/1anyrQGg-Tv0u98EMLDqGoCykdmLKUB0L/view?usp=sharing
+vidoe 48: https://drive.google.com/file/d/1sxniTAlp2KdxvjyXrCwT3uDxQqFTOSoL/view?usp=sharing
