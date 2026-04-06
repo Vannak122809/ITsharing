@@ -294,14 +294,9 @@ function App() {
 
             {user ? (
               <>
-                <div className="drawer-user-info">
-                  {userProfile?.avatarUrl ? (
-                    <img src={userProfile.avatarUrl} alt="avatar" 
-                      style={{ width: '26px', height: '26px', borderRadius: '50%', objectFit: 'cover', border: '1px solid var(--primary)' }} />
-                  ) : (
-                    <User size={16} color="var(--primary)" />
-                  )}
-                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-main)' }}>
+                <div className="drawer-nav-link" style={{ background: 'var(--surface-badge)', borderRadius: '12px' }}>
+                  <User size={16} color="var(--primary)" />
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '0.85rem' }}>
                     {userProfile?.nickname || user.email}
                   </span>
                 </div>
@@ -346,17 +341,6 @@ function App() {
           <Route path="/login" element={<Login />} />
         </Routes>
       </main>
-
-      {/* Coffee Support Sidebar */}
-      <div className="coffee-sidebar" onClick={() => window.open('https://paypal.me/', '_blank')}>
-        <div className="coffee-icon-container">
-          <div className="steam-line" style={{ left: '15px', animationDelay: '0s' }}></div>
-          <div className="steam-line" style={{ left: '22px', animationDelay: '0.4s' }}></div>
-          <div className="steam-line" style={{ left: '29px', animationDelay: '0.2s' }}></div>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>
-        </div>
-        <span className="coffee-text">Support the Project</span>
-      </div>
 
       <footer style={{ marginTop: '100px', padding: '40px 0', borderTop: '1px solid var(--surface-border)', textAlign: 'center', background: 'var(--nav-bg)' }}>
         <p style={{ color: 'var(--text-muted)' }}>&copy; {new Date().getFullYear()} ITShare. {t('built_for')}</p>

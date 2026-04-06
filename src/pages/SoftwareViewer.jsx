@@ -224,10 +224,10 @@ const SoftwareViewer = () => {
         <ArrowLeft size={16} /> Back to Software
       </Link>
 
-      <div className="glass-panel viewer-info-box" style={{ padding: '40px', display: 'flex', flexDirection: 'column', gap: '40px' }}>
+      <div className="glass-panel" style={{ padding: '40px', display: 'flex', flexDirection: 'column', gap: '40px' }}>
 
         {/* Header Section */}
-        <div className="viewer-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '24px' }}>
           <div>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'var(--surface-badge)', padding: '6px 16px', borderRadius: '20px', fontSize: '0.85rem', marginBottom: '16px', color: 'var(--text-muted)' }}>
               {software.os === 'windows' ? <Monitor size={14} color="#00fa9a" /> : <Apple size={14} color="#ff2a7a" />}
@@ -238,7 +238,7 @@ const SoftwareViewer = () => {
             <p style={{ fontSize: '1.1rem', color: 'var(--text-muted)' }}>By: {software.developer}</p>
           </div>
 
-          <div className="viewer-cta-box" style={{ display: 'flex', flexDirection: 'column', gap: '16px', minWidth: '200px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', minWidth: '200px' }}>
             <a href={software.downloadUrl || "https://files.kichhoat24h.com/download"} target="_blank" rel="noreferrer" onClick={(e) => { if (isGuest) { e.preventDefault(); navigate('/login'); } }} className="btn btn-primary" style={{ padding: '16px', fontSize: '1.1rem', boxShadow: '0 8px 30px rgba(69, 243, 255, 0.4)', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
               <Download size={20} /> Download Now
             </a>
@@ -249,7 +249,7 @@ const SoftwareViewer = () => {
         </div>
 
         {/* Info Grid */}
-        <div className="viewer-info-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '32px', marginTop: '16px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '32px', marginTop: '16px' }}>
 
           {/* Overview */}
           <div style={{ background: 'var(--card-dark)', padding: '32px', borderRadius: '16px', border: '1px solid var(--surface-border)' }}>

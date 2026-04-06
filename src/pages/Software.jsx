@@ -407,78 +407,80 @@ const Software = () => {
       
       {!currentFolder ? (
         <>
-          <header className="software-header" style={{ textAlign: 'center' }}>
-            <h1 className="text-animated-cyber" style={{ fontSize: '3rem' }}>{t('software_repository_title')}</h1>
+          <header style={{ marginBottom: '40px', textAlign: 'center' }}>
+            <h1 className="text-animated-cyber">{t('software_repository_title')}</h1>
             <p style={{ color: 'var(--text-muted)', maxWidth: '600px', margin: '0 auto', fontSize: '1.1rem', marginTop: '16px' }}>
               {t('software_repository_desc')}
             </p>
 
             {/* OS Filter & Search Toggle */}
-            <div className="software-controls" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: '20px', marginTop: '40px', marginBottom: '16px' }}>
-              <div className="os-filter-group" style={{ background: 'var(--card-dark)', padding: '6px', borderRadius: '30px', display: 'flex', gap: '8px', border: '1px solid var(--surface-border)' }}>
-                <button 
-                  onClick={() => { setActiveOS('windows'); setCurrentFolder(null); setCurrentSubfolder(null); setCurrentTypeFolder(null); setSearchTerm(''); }}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 24px', borderRadius: '24px', border: 'none', cursor: 'pointer', fontWeight: 'bold', fontFamily: 'inherit',
-                    background: activeOS === 'windows' ? 'linear-gradient(135deg, var(--primary), var(--secondary))' : 'transparent',
-                    color: activeOS === 'windows' ? '#fff' : 'var(--text-muted)',
-                    transition: 'var(--transition)'
-                  }}
-                >
-                  <Monitor size={18} /> {t('windows')}
-                </button>
-                <button 
-                  onClick={() => { setActiveOS('mac'); setCurrentFolder(null); setCurrentSubfolder(null); setCurrentTypeFolder(null); setSearchTerm(''); }}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 24px', borderRadius: '24px', border: 'none', cursor: 'pointer', fontWeight: 'bold', fontFamily: 'inherit',
-                    background: activeOS === 'mac' ? 'linear-gradient(135deg, var(--primary), var(--secondary))' : 'transparent',
-                    color: activeOS === 'mac' ? '#fff' : 'var(--text-muted)',
-                    transition: 'var(--transition)'
-                  }}
-                >
-                  <Apple size={18} /> {t('macos')}
-                </button>
-              </div>
-
-              <div className="search-wrapper" style={{ position: 'relative', width: '100%', maxWidth: '400px' }}>
-                <div style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}>
-                  <Search size={18} />
-                </div>
-                <input 
-                  type="text"
-                  placeholder={t('search_software')}
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px 12px 48px',
-                    borderRadius: '30px',
-                    background: 'var(--card-dark)',
-                    border: '1px solid var(--surface-border)',
-                    color: 'var(--text-main)',
-                    fontSize: '0.95rem',
-                    outline: 'none',
-                    transition: 'var(--transition)',
-                    boxShadow: 'var(--shadow-sm)'
-                  }}
-                  onFocus={(e) => { e.target.style.borderColor = 'var(--primary)'; e.target.style.boxShadow = '0 0 15px rgba(99, 102, 241, 0.2)'; }}
-                  onBlur={(e) => { e.target.style.borderColor = 'var(--surface-border)'; e.target.style.boxShadow = 'var(--shadow-sm)'; }}
-                />
-                {searchTerm && (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', marginTop: '40px', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '16px', width: '100%' }}>
+                <div style={{ background: 'var(--card-dark)', padding: '6px', borderRadius: '30px', display: 'flex', gap: '8px', border: '1px solid var(--surface-border)' }}>
                   <button 
-                    onClick={() => setSearchTerm('')}
-                    style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+                    onClick={() => { setActiveOS('windows'); setCurrentFolder(null); setCurrentSubfolder(null); setCurrentTypeFolder(null); setSearchTerm(''); }}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 24px', borderRadius: '24px', border: 'none', cursor: 'pointer', fontWeight: 'bold', fontFamily: 'inherit',
+                      background: activeOS === 'windows' ? 'linear-gradient(135deg, var(--primary), var(--secondary))' : 'transparent',
+                      color: activeOS === 'windows' ? '#fff' : 'var(--text-muted)',
+                      transition: 'var(--transition)'
+                    }}
                   >
-                    <X size={16} />
+                    <Monitor size={18} /> {t('windows')}
                   </button>
-                )}
+                  <button 
+                    onClick={() => { setActiveOS('mac'); setCurrentFolder(null); setCurrentSubfolder(null); setCurrentTypeFolder(null); setSearchTerm(''); }}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 24px', borderRadius: '24px', border: 'none', cursor: 'pointer', fontWeight: 'bold', fontFamily: 'inherit',
+                      background: activeOS === 'mac' ? 'linear-gradient(135deg, var(--primary), var(--secondary))' : 'transparent',
+                      color: activeOS === 'mac' ? '#fff' : 'var(--text-muted)',
+                      transition: 'var(--transition)'
+                    }}
+                  >
+                    <Apple size={18} /> {t('macos')}
+                  </button>
+                </div>
+
+                <div style={{ position: 'relative', width: '100%', maxWidth: '400px' }}>
+                  <div style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}>
+                    <Search size={18} />
+                  </div>
+                  <input 
+                    type="text"
+                    placeholder={t('search_software')}
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px 12px 48px',
+                      borderRadius: '30px',
+                      background: 'var(--card-dark)',
+                      border: '1px solid var(--surface-border)',
+                      color: 'var(--text-main)',
+                      fontSize: '0.95rem',
+                      outline: 'none',
+                      transition: 'var(--transition)',
+                      boxShadow: 'var(--shadow-sm)'
+                    }}
+                    onFocus={(e) => { e.target.style.borderColor = 'var(--primary)'; e.target.style.boxShadow = '0 0 15px rgba(99, 102, 241, 0.2)'; }}
+                    onBlur={(e) => { e.target.style.borderColor = 'var(--surface-border)'; e.target.style.boxShadow = 'var(--shadow-sm)'; }}
+                  />
+                  {searchTerm && (
+                    <button 
+                      onClick={() => setSearchTerm('')}
+                      style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+                    >
+                      <X size={16} />
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </header>
 
           <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
             {searchTerm.trim() ? (
-              <div className="card-grid-software">
+              <div className="card-grid">
                 {filteredSoftware.map(software => (
                   <div key={software.id} className="card glass-panel flex flex-col" style={{ padding: '24px', position: 'relative', overflow: 'hidden' }}>
                     {software.isNew && <div style={{ position: 'absolute', top: '12px', right: '-30px', background: 'var(--secondary)', color: 'white', padding: '4px 35px', transform: 'rotate(45deg)', fontSize: '0.7rem', fontWeight: 'bold', zIndex: 1, boxShadow: '0 2px 5px rgba(0,0,0,0.2)' }}>{t('new')}</div>}
@@ -538,7 +540,7 @@ const Software = () => {
                 )}
               </div>
             ) : (
-              <div className="card-grid-software">
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '24px' }}>
                 {currentFoldersList.map((folderName) => (
                 <div 
                   key={folderName} 
@@ -619,7 +621,7 @@ const Software = () => {
           </div>
 
           <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
-            <div className="card-grid-software">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '24px' }}>
               
               {availableSubfolders.map((folderName) => (
                 <div 
@@ -744,7 +746,7 @@ const Software = () => {
           </div>
 
           <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-            <div className="card-grid-software">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '24px' }}>
               
               {availableTypes.map((folderName) => (
                 <div 
