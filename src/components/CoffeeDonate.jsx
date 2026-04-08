@@ -201,18 +201,21 @@ const CoffeeDonate = () => {
                           </div>
                         )}
                       </div>
-                      {qrImage && (
-                        <div className="qr-actions-minimal">
-                           <span className="qr-amount-overlay">{formatAmount(amount)}</span>
-                           <button className="qr-download-btn-minimal" onClick={handleDownload}>
-                              <Download size={14} />
-                           </button>
-                        </div>
-                      )}
                     </div>
                   )}
                 </div>
               </div>
+
+              {qrImage && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 8px', marginTop: '4px', marginBottom: '8px' }}>
+                  <span style={{ fontWeight: '900', color: '#e52e2a', fontSize: '1.2rem', background: 'rgba(229, 46, 42, 0.1)', padding: '4px 12px', borderRadius: '10px' }}>
+                    {formatAmount(amount)}
+                  </span>
+                  <button className="qr-download-btn-new" onClick={handleDownload} title="Download QR">
+                    <Download size={18} />
+                  </button>
+                </div>
+              )}
 
               <button className="btn-action-lux donate-finish" onClick={() => { setIsOpen(false); setShowThankYou(true); setTimeout(() => setShowThankYou(false), 3500); }}>
                  {t('i_have_paid')}
@@ -320,8 +323,9 @@ const CoffeeDonate = () => {
         .qr-display-box-minimal { width: 100%; background: #fff; border-radius: 20px; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
         .qr-wrapper-minimal { width: 100%; position: relative; }
         .qr-main-img { width: 100%; height: auto; display: block; }
-        .qr-amount-overlay { position: absolute; bottom: 12px; left: 12px; background: #e52e2a; color: #fff; padding: 4px 12px; border-radius: 10px; font-weight: 900; font-size: 0.8rem; }
-        .qr-download-btn-minimal { position: absolute; bottom: 12px; right: 12px; width: 32px; height: 32px; border-radius: 8px; border: none; background: #0f172a; color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        
+        .qr-download-btn-new { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); width: 40px; height: 40px; border-radius: 12px; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .qr-download-btn-new:hover { background: rgba(255,255,255,0.15); transform: translateY(-2px); }
         
         .qr-loader { height: 160px; display: flex; align-items: center; justify-content: center; }
         .loader-ring { width: 32px; height: 32px; border: 3px solid #f1f5f9; border-top-color: #e52e2a; border-radius: 50%; animation: spinRotate 0.8s linear infinite; }
