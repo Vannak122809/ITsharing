@@ -291,15 +291,15 @@ const CoffeeDonate = () => {
         }
         @keyframes modalPopUp { from { transform: scale(0.9) translateY(20px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
 
-        .modal-header-lux { padding: 20px 24px 16px; display: flex; justify-content: space-between; align-items: center; }
+        .modal-header-lux { padding: 16px 20px 12px; display: flex; justify-content: space-between; align-items: center; }
         .header-title-box { display: flex; align-items: center; gap: 12px; }
-        .heart-icon-box { width: 40px; height: 40px; border-radius: 12px; background: rgba(99, 102, 241, 0.1); display: flex; align-items: center; justify-content: center; color: #6366f1; }
+        .heart-icon-box { width: 36px; height: 36px; border-radius: 12px; background: rgba(99, 102, 241, 0.1); display: flex; align-items: center; justify-content: center; color: #6366f1; }
         .title-text-lux h2 { font-size: 1.25rem; color: #fff; font-weight: 900; margin: 0; }
         .expiry-mini { display: flex; align-items: center; gap: 4px; color: #64748b; font-size: 0.75rem; font-weight: 600; margin-top: 2px; }
         .btn-close-lux { background: transparent; border: none; color: #64748b; cursor: pointer; }
 
-        .modal-body-lux { padding: 0 24px 24px; display: flex; flex-direction: column; gap: 16px; }
-        .donation-controls-row { display: flex; flex-direction: column; gap: 12px; background: rgba(255,255,255,0.02); padding: 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.04); }
+        .modal-body-lux { padding: 0 20px 20px; display: flex; flex-direction: column; gap: 12px; }
+        .donation-controls-row { display: flex; flex-direction: column; gap: 10px; background: rgba(255,255,255,0.02); padding: 10px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.04); }
         .currency-selector-mini { display: flex; background: rgba(255,255,255,0.03); padding: 4px; border-radius: 12px; }
         .curr-btn { flex: 1; padding: 8px; border: none; background: transparent; color: #64748b; font-weight: 800; font-size: 0.8rem; cursor: pointer; border-radius: 8px; transition: 0.3s; }
         .curr-btn.active { background: #fff; color: #000; }
@@ -311,23 +311,23 @@ const CoffeeDonate = () => {
         .custom-input-wrapper { position: relative; display: flex; align-items: center; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 0 16px; transition: 0.3s; }
         .custom-input-wrapper:focus-within { border-color: #6366f1; background: rgba(99, 102, 241, 0.05); box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); }
         .curr-indicator { font-size: 0.8rem; font-weight: 900; color: #6366f1; border-right: 1px solid rgba(255,255,255,0.1); padding-right: 12px; margin-right: 12px; }
-        .custom-amt-input { flex: 1; height: 50px; background: transparent; border: none; color: #fff; font-size: 1.1rem; font-weight: 800; outline: none; width: 100%; }
+        .custom-amt-input { flex: 1; height: 40px; background: transparent; border: none; color: #fff; font-size: 1.1rem; font-weight: 800; outline: none; width: 100%; }
         .custom-amt-input::placeholder { color: #64748b; font-weight: 500; font-size: 0.95rem; }
         
         @media (min-width: 400px) { .amount-grid-compact { grid-template-columns: repeat(6, 1fr); } }
 
-        .bakong-payment-card.qr-only { width: 100%; max-width: 280px; margin: 0 auto; position: relative; }
-        .qr-display-box-minimal { width: 100%; background: #fff; border-radius: 24px; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
+        .bakong-payment-card.qr-only { width: 100%; max-width: 220px; margin: 0 auto; position: relative; }
+        .qr-display-box-minimal { width: 100%; background: #fff; border-radius: 20px; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
         .qr-wrapper-minimal { width: 100%; position: relative; }
         .qr-main-img { width: 100%; height: auto; display: block; }
         .qr-amount-overlay { position: absolute; bottom: 12px; left: 12px; background: #e52e2a; color: #fff; padding: 4px 12px; border-radius: 10px; font-weight: 900; font-size: 0.8rem; }
         .qr-download-btn-minimal { position: absolute; bottom: 12px; right: 12px; width: 32px; height: 32px; border-radius: 8px; border: none; background: #0f172a; color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; }
         
-        .qr-loader { height: 200px; display: flex; align-items: center; justify-content: center; }
+        .qr-loader { height: 160px; display: flex; align-items: center; justify-content: center; }
         .loader-ring { width: 32px; height: 32px; border: 3px solid #f1f5f9; border-top-color: #e52e2a; border-radius: 50%; animation: spinRotate 0.8s linear infinite; }
         @keyframes spinRotate { to { transform: rotate(360deg); } }
 
-        .btn-action-lux.donate-finish { background: #6366f1; color: #fff; height: 50px; border-radius: 16px; border: none; font-weight: 800; cursor: pointer; margin-top: 8px; transition: 0.3s; }
+        .btn-action-lux.donate-finish { background: #6366f1; color: #fff; height: 44px; border-radius: 14px; border: none; font-weight: 800; cursor: pointer; margin-top: 4px; transition: 0.3s; }
         .btn-action-lux.donate-finish:hover { background: #4f46e5; transform: translateY(-2px); }
 
         .expired-mask { position: absolute; inset: 0; background: rgba(255,255,255,0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; z-index: 10; font-weight: 900; color: #000; }

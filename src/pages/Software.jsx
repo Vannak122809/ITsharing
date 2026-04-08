@@ -277,6 +277,8 @@ export const softwareData = [
   { id: 'raycast', title: 'Raycast', desc: 'Blazingly fast, totally extendable launcher for macOS.', os: 'mac', folder: 'Tools', size: '35 MB', version: 'Latest' },
   { id: 'filezilla-win', title: 'FileZilla Client', desc: 'Fast and reliable cross-platform FTP, FTPS and SFTP client.', os: 'windows', folder: 'Tools', size: '12 MB', version: 'Latest' },
   { id: 'filezilla-mac', title: 'FileZilla Client (Mac)', desc: 'Fast and reliable cross-platform FTP, FTPS and SFTP client.', os: 'mac', folder: 'Tools', size: '15 MB', version: 'Latest' },
+  { id: 'vuescan', title: 'VueScan Pro', desc: 'Powerful scanning software compatible with thousands of scanners.', os: 'windows', folder: 'Tools', size: '18 MB', version: 'v9.8.27', url: 'https://pub-5961bc36cb774286a50691aa994b2653.r2.dev/VueScan_Pro-9.8.27.rar', isNew: true },
+
 
   // === DOWNLOAD ===
   { id: 'idm', title: 'Internet Download Manager', desc: 'Accelerate downloads by up to 5 times, schedule, and resume broken downloads.', os: 'windows', folder: 'Download', size: '12 MB', version: 'v6.42.6.3', url: 'https://pub-5961bc36cb774286a50691aa994b2653.r2.dev/Internet.Download.Manager.6.42.63.0.zip' },
