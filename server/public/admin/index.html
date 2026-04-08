@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backend Admin Dashboard | ITsharing</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --surface: #1e293b;
+            --surface-glass: rgba(30, 41, 59, 0.7);
+            --primary: #3b82f6;
+            --accent: #8b5cf6;
+            --border: rgba(255, 255, 255, 0.08);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.08), transparent 30%),
+                radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.08), transparent 30%);
+        }
+
+        .navbar {
+            height: 70px;
+            background: var(--surface-glass);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 40px; position: sticky; top: 0; z-index: 100;
+        }
+
+        .brand {
+            font-weight: 800; font-size: 1.4rem;
+            background: linear-gradient(to right, #60a5fa, #c084fc);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            display: flex; align-items: center; gap: 12px;
+        }
+
+        .user-menu { display: flex; align-items: center; gap: 20px; }
+        .user-name { font-size: 0.9rem; color: var(--text-muted); font-weight: 500; }
+
+        .btn {
+            padding: 8px 16px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; border: none; outline: none; display: flex; align-items: center; gap: 8px; justify-content: center;
+        }
+        .btn-logout { background: rgba(239, 68, 68, 0.1); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.2); }
+        .btn-logout:hover { background: rgba(239, 68, 68, 0.2); color: #fff; }
+        .btn-primary { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; box-shadow: 0 4px 14px 0 rgba(59, 130, 246, 0.39); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(59, 130, 246, 0.23); }
+        .btn-danger { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.2); padding: 6px 12px; }
+        .btn-danger:hover { background: var(--danger); color: white; }
+
+        .main-container { display: flex; height: calc(100vh - 70px); }
+
+        .sidebar {
+            width: 260px; background: rgba(15, 23, 42, 0.6); border-right: 1px solid var(--border);
+            padding: 30px 20px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto;
+        }
+
+        .nav-item {
+            padding: 12px 16px; border-radius: 10px; color: var(--text-muted);
+            text-decoration: none; font-weight: 500; font-size: 0.95rem;
+            display: flex; align-items: center; gap: 12px; transition: all 0.2s ease; cursor: pointer;
+        }
+        .nav-item:hover, .nav-item.active { background: rgba(59, 130, 246, 0.1); color: #60a5fa; }
+
+        .content-area { flex: 1; padding: 40px; overflow-y: auto; }
+        .page-header { margin-bottom: 40px; display: flex; justify-content: space-between; align-items: flex-end; }
+        .page-title { font-size: 2rem; font-weight: 700; margin-bottom: 8px; }
+        .page-subtitle { color: var(--text-muted); font-size: 0.95rem; }
+
+        .glass-panel {
+            background: var(--surface-glass); border: 1px solid var(--border);
+            border-radius: 16px; padding: 24px; backdrop-filter: blur(10px); margin-bottom: 24px;
+        }
+
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th { padding: 16px; border-bottom: 1px solid var(--border); color: var(--text-muted); font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        td { padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.02); font-size: 0.9rem; vertical-align: middle; }
+        tr:hover td { background: rgba(255,255,255,0.02); }
+
+        .badge { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
+        .badge.super_admin { background: rgba(139, 92, 246, 0.2); color: #c084fc; border: 1px solid rgba(139, 92, 246, 0.3); }
+        .badge.admin { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+        .badge.user { background: rgba(148, 163, 184, 0.2); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.3); }
+
+        /* Form / Modal */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(5px); z-index: 1000; display: none; align-items: center; justify-content: center;
+        }
+        .modal {
+            background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+            width: 100%; max-width: 500px; padding: 32px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+        }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 16px; }
+        .modal-title { font-size: 1.2rem; font-weight: 700; }
+        .close-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.5rem; }
+        
+        .form-group { margin-bottom: 16px; }
+        .form-label { display: block; margin-bottom: 8px; font-size: 0.85rem; color: var(--text-muted); }
+        .form-control, select {
+            width: 100%; background: rgba(15, 23, 42, 0.5); border: 1px solid var(--border);
+            color: var(--text-main); padding: 12px; border-radius: 8px; font-size: 0.95rem; outline: none;
+        }
+        .form-control:focus, select:focus { border-color: var(--primary); }
+
+        select { appearance: none; cursor: pointer; }
+
+        .fade-in { animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .loader {
+            display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%; border-top-color: var(--primary); animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.4s ease; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="brand">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            ITShare Core
+        </div>
+        <div class="user-menu">
+            <div class="user-name" id="userDisplay">Loading...</div>
+            <button class="btn btn-logout" id="logoutBtn">Logout</button>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <aside class="sidebar" id="sidebar">
+            <div class="nav-item active" data-tab="dashboard">Dashboard</div>
+            <div class="nav-item" data-tab="users">Users & Roles</div>
+            <div class="nav-item" data-tab="documents">Documents</div>
+            <div class="nav-item" data-tab="software">Software</div>
+            <div class="nav-item" data-tab="media">Media</div>
+            <div class="nav-item" data-tab="courses">Courses</div>
+            <div class="nav-item" data-tab="drivers">Drivers</div>
+            <div class="nav-item" data-tab="community">Community</div>
+        </aside>
+
+        <div class="content-area">
+            <!-- DASHBOARD TAB -->
+            <div id="tab-dashboard" class="tab-content active">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">Overview</h1>
+                        <p class="page-subtitle">Platform resources summary</p>
+                    </div>
+                </div>
+                <div class="glass-panel">
+                    <h2>Welcome to the Core Dashboard</h2>
+                    <p style="color: var(--text-muted); line-height: 1.6; margin-top: 10px;">Select a category from the sidebar to manage API resources, add new entries, and moderate users dynamically. Operations are performed live via Firebase Admin SDK backend wrappers.</p>
+                </div>
+            </div>
+
+            <!-- DYNAMIC TABLE TAB TEMPLATE -->
+            <div id="tab-dynamic" class="tab-content">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title" id="dynamicTitle">Data</h1>
+                        <p class="page-subtitle" id="dynamicSubtitle">Manage entries</p>
+                    </div>
+                    <button class="btn btn-primary" id="addBtn"><span style="font-size: 1.2rem; margin-right:4px;">+</span> Add New</button>
+                </div>
+
+                <div class="glass-panel" style="overflow-x: auto;">
+                    <table id="dataTable">
+                        <thead id="dataHead"></thead>
+                        <tbody id="dataBody">
+                            <tr><td colspan="5" style="text-align:center;"><div class="loader"></div></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <script>
+        const token = localStorage.getItem('backend_admin_token');
+        const userStr = localStorage.getItem('backend_admin_user');
+        
+        if (!token || !userStr) window.location.href = '/admin/login';
+
+        let currentUser;
+        try {
+            currentUser = JSON.parse(userStr);
+            document.getElementById('userDisplay').textContent = `${currentUser.email}`;
+            if(currentUser.role !== 'admin' && currentUser.role !== 'super_admin') {
+                alert('You are not authorized as admin! You cannot perform edits.');
+            }
+        } catch(e) {}
+
+        const headers = {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        };
+
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.clear();
+            window.location.href = '/admin/login';
+        });
+
+        // Tab Switching Logic
+        const tabs = document.querySelectorAll('.nav-item');
+        let currentTab = 'dashboard';
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                const tabName = tab.getAttribute('data-tab');
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                if (tabName === 'dashboard') {
+                    document.getElementById('tab-dashboard').classList.add('active');
+                } else {
+                    document.getElementById('tab-dynamic').classList.add('active');
+                    loadTabData(tabName);
+                }
+            });
+        });
+
+        // Config for different tabs
+        const TABS_CONFIG = {
+            users: {
+                title: 'Users & Roles', subtitle: 'Manage authorizations', endpoint: '/api/auth/users',
+                columns: ['Email', 'Display Name', 'Role', 'Joined', 'Actions'],
+                hideAdd: true // super admin sets roles, doesn't add users here
+            },
+            documents: {
+                title: 'Documents', subtitle: 'Manage files and manuals', endpoint: '/api/documents',
+                columns: ['Title', 'Category', 'File URL', 'Actions'],
+                fields: [
+                    { name: 'title', label: 'Document Title', type: 'text' },
+                    { name: 'category', label: 'Category', type: 'text' },
+                    { name: 'fileUrl', label: 'R2 File URL', type: 'text' }
+                ]
+            },
+            software: {
+                title: 'Software', subtitle: 'Manage available software', endpoint: '/api/software',
+                columns: ['Title', 'Category', 'Version', 'Download URL', 'Actions'],
+                fields: [
+                    { name: 'title', label: 'Software Name', type: 'text' },
+                    { name: 'category', label: 'Category', type: 'text' },
+                    { name: 'version', label: 'Version', type: 'text' },
+                    { name: 'downloadUrl', label: 'Download Link', type: 'text' }
+                ]
+            },
+            courses: {
+                title: 'Courses', subtitle: 'Manage e-learning', endpoint: '/api/courses',
+                columns: ['Title', 'Description', 'Instructor', 'Actions'],
+                fields: [
+                    { name: 'title', label: 'Course Title', type: 'text' },
+                    { name: 'instructor', label: 'Instructor', type: 'text' },
+                    { name: 'description', label: 'Description', type: 'text' }
+                ]
+            },
+            media: {
+                title: 'Media', subtitle: 'Images and Videos', endpoint: '/api/media',
+                columns: ['Title', 'Type', 'URL', 'Actions'],
+                fields: [
+                    { name: 'title', label: 'Title', type: 'text' },
+                    { name: 'type', label: 'Type (image/video)', type: 'text' },
+                    { name: 'url', label: 'Media URL', type: 'text' }
+                ]
+            },
+            drivers: {
+                title: 'Drivers', subtitle: 'Hardware driver links', endpoint: '/api/drivers',
+                columns: ['Title', 'Manufacturer', 'Download', 'Actions'],
+                fields: [
+                    { name: 'title', label: 'Device Title', type: 'text' },
+                    { name: 'manufacturer', label: 'Manufacturer', type: 'text' },
+                    { name: 'downloadUrl', label: 'Download URL', type: 'text' }
+                ]
+            },
+            community: {
+                title: 'Community Posts', subtitle: 'Moderate public forum posts', endpoint: '/api/community',
+                columns: ['Author', 'Content Preview', 'Created At', 'Actions'],
+                hideAdd: true // Admin just moderates/deletes
+            }
+        };
+
+        const modal = document.getElementById('addModal');
+        const closeModal = document.getElementById('closeModal');
+        const addBtn = document.getElementById('addBtn');
+        const formFields = document.getElementById('formFields');
+        const resourceForm = document.getElementById('resourceForm');
+
+        closeModal.addEventListener('click', () => modal.style.display = 'none');
+
+        addBtn.addEventListener('click', () => {
+            const config = TABS_CONFIG[currentTab];
+            document.getElementById('modalTitle').textContent = `Add ${config.title}`;
+            
+            formFields.innerHTML = config.fields.map(f => `
+                <div class="form-group">
+                    <label class="form-label">${f.label}</label>
+                    <input type="${f.type}" name="${f.name}" class="form-control" required autocomplete="off">
+                </div>
+            `).join('');
+            
+            modal.style.display = 'flex';
+        });
+
+        resourceForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const config = TABS_CONFIG[currentTab];
+            const formData = new FormData(resourceForm);
+            const payload = Object.fromEntries(formData.entries());
+
+            try {
+                const res = await fetch(config.endpoint, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify(payload)
+                });
+                
+                if(res.ok) {
+                    modal.style.display = 'none';
+                    loadTabData(currentTab); // refresh
+                } else {
+                    const err = await res.json();
+                    alert('Error: ' + err.message);
+                }
+            } catch(err) {
+                alert('Network Error');
+            }
+        });
+
+        // Load Tab Data
+        async function loadTabData(tab) {
+            currentTab = tab;
+            const config = TABS_CONFIG[tab];
+            
+            document.getElementById('dynamicTitle').textContent = config.title;
+            document.getElementById('dynamicSubtitle').textContent = config.subtitle;
+            document.getElementById('addBtn').style.display = config.hideAdd ? 'none' : 'block';
+            
+            const head = document.getElementById('dataHead');
+            const body = document.getElementById('dataBody');
+            
+            head.innerHTML = `<tr>${config.columns.map(col => `<th>${col}</th>`).join('')}</tr>`;
+            body.innerHTML = `<tr><td colspan="${config.columns.length}" style="text-align:center;"><div class="loader"></div></td></tr>`;
+
+            try {
+                const res = await fetch(config.endpoint, { headers });
+                
+                if (!res.ok) throw new Error('API Error');
+                const data = await res.json();
+                
+                if(data.length === 0) {
+                    body.innerHTML = `<tr><td colspan="${config.columns.length}" style="text-align:center; color: var(--text-muted); padding:30px;">No entries found.</td></tr>`;
+                    return;
+                }
+
+                body.innerHTML = data.map(row => {
+                    let html = '<tr>';
+                    
+                    if (tab === 'users') {
+                        html += `
+                            <td>${row.email}</td>
+                            <td>${row.displayName}</td>
+                            <td>
+                                <select class="form-control" style="padding: 4px 8px; width: auto;" onchange="updateRole('${row.uid}', this.value)">
+                                    <option value="user" ${row.role === 'user' ? 'selected' : ''}>User</option>
+                                    <option value="admin" ${row.role === 'admin' ? 'selected' : ''}>Admin</option>
+                                    <option value="super_admin" ${row.role === 'super_admin' ? 'selected' : ''}>Super Admin</option>
+                                </select>
+                            </td>
+                            <td>${new Date(row.creationTime).toLocaleDateString()}</td>
+                        `;
+                    } else if (tab === 'community') {
+                        html += `
+                            <td>${row.authorEmail || 'Unknown'}</td>
+                            <td style="max-width:300px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${row.content}</td>
+                            <td>${new Date(row.createdAt).toLocaleDateString()}</td>
+                        `;
+                    } else if (tab === 'documents') {
+                        html += `<td>${row.title}</td><td>${row.category || '-'}</td><td><a href="${row.fileUrl}" target="_blank" style="color:var(--primary)">View</a></td>`;
+                    } else if (tab === 'software') {
+                        html += `<td>${row.title}</td><td>${row.category || '-'}</td><td>${row.version || '-'}</td><td><a href="${row.downloadUrl}" target="_blank" style="color:var(--primary)">Link</a></td>`;
+                    } else if (tab === 'courses') {
+                        html += `<td>${row.title}</td><td>${row.description?.substring(0,30) || '-'}...</td><td>${row.instructor || '-'}</td>`;
+                    } else if (tab === 'media') {
+                        html += `<td>${row.title}</td><td>${row.type || '-'}</td><td><a href="${row.url}" target="_blank" style="color:var(--primary)">View</a></td>`;
+                    } else if (tab === 'drivers') {
+                        html += `<td>${row.title}</td><td>${row.manufacturer || '-'}</td><td><a href="${row.downloadUrl}" target="_blank" style="color:var(--primary)">Link</a></td>`;
+                    }
+
+                    // Action column
+                    if (tab === 'users') {
+                        html += `<td><span class="badge ${row.role}">${row.role}</span></td>`; // Just a badge
+                    } else {
+                        html += `<td><button class="btn btn-danger" onclick="deleteEntry('${tab}', '${row._id}')">Delete</button></td>`;
+                    }
+                    html += '</tr>';
+                    return html;
+                }).join('');
+            } catch (err) {
+                body.innerHTML = `<tr><td colspan="${config.columns.length}" style="color:var(--danger);text-align:center;">Failed to load data. Are you an Admin?</td></tr>`;
+            }
+        }
+
+        // Global functions for inline HTML buttons
+        window.deleteEntry = async (collection, id) => {
+            if(!confirm('Are you sure you want to delete this resource?')) return;
+            const endpoint = TABS_CONFIG[collection].endpoint + '/' + id;
+            try {
+                const res = await fetch(endpoint, { method: 'DELETE', headers });
+                if(res.ok) loadTabData(currentTab);
+                else alert('Delete failed');
+            } catch(err) { alert('Network error'); }
+        };
+
+        window.updateRole = async (uid, newRole) => {
+            try {
+                const res = await fetch(`/api/auth/users/${uid}/role`, {
+                    method: 'PUT',
+                    headers,
+                    body: JSON.stringify({ role: newRole })
+                });
+                const data = await res.json();
+                if(res.ok) {
+                    alert('Role updated successfully! Make sure user relogins.');
+                } else {
+                    alert('Error: ' + data.message);
+                    loadTabData('users'); // reload to revert select box visually
+                }
+            } catch(e) {
+                alert('Network error');
+            }
+        };
+    </script>
+</body>
+</html>

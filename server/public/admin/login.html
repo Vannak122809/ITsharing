@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backend Admin Login | ITsharing</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        /* (Same beautiful styles as before) */
+        :root {
+            --bg-color: #0f172a;
+            --surface: rgba(30, 41, 59, 0.7);
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --border: rgba(255, 255, 255, 0.1);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: radial-gradient(circle at top right, rgba(59, 130, 246, 0.15), transparent 40%),
+                              radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.15), transparent 40%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 440px;
+            padding: 20px;
+            z-index: 10;
+        }
+
+        .glass-card {
+            background: var(--surface);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 48px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: float 6s ease-in-out infinite, fadeIn 0.8s ease-out;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .logo-wrap {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .logo-wrap h1 {
+            font-weight: 800;
+            font-size: 2rem;
+            background: linear-gradient(to right, #60a5fa, #c084fc);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .logo-wrap p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .form-input {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 14px 16px;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .form-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+            background: rgba(15, 23, 42, 0.8);
+        }
+
+        .btn-submit {
+            width: 100%;
+            background: linear-gradient(135deg, var(--primary), #8b5cf6);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            margin-top: 10px;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.4);
+        }
+
+        .error-message {
+            color: #ef4444;
+            background: rgba(239, 68, 68, 0.1);
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            margin-bottom: 24px;
+            display: none;
+            text-align: center;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .sphere {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: -1;
+        }
+        .sphere-1 { background: #3b82f6; width: 300px; height: 300px; top: -100px; right: -100px; opacity: 0.3; }
+        .sphere-2 { background: #a855f7; width: 400px; height: 400px; bottom: -150px; left: -150px; opacity: 0.2; }
+    </style>
+</head>
+<body>
+    <div class="sphere sphere-1"></div>
+    <div class="sphere sphere-2"></div>
+
+    <div class="login-container">
+        <div class="glass-card">
+            <div class="logo-wrap">
+                <h1>Backend Admin</h1>
+                <p>Firebase Authentication Mode</p>
+            </div>
+
+            <div id="errorMsg" class="error-message">Invalid credentials</div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" class="form-input" placeholder="admin@itsharing.com" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" class="form-input" placeholder="••••••••" required>
+                </div>
+
+                <button type="submit" class="btn-submit" id="submitBtn">Sign In with Firebase</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Integrate Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+
+        // Check if already logged in
+        if (localStorage.getItem('backend_admin_token')) {
+            window.location.href = '/admin';
+        }
+
+        const loginForm = document.getElementById('loginForm');
+        const errorMsg = document.getElementById('errorMsg');
+        const submitBtn = document.getElementById('submitBtn');
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            errorMsg.style.display = 'none';
+            submitBtn.textContent = 'Authenticating...';
+            submitBtn.style.opacity = '0.7';
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                // Initialize temporary firebase app to grab token (Hardcoded API Key for ease of use)
+                const firebaseConfig = {
+                    apiKey: "AIzaSyC8Q_HiOb9uxLUO5kB9SrWO_KELS4DOjuw",
+                    authDomain: "login-form-49609.firebaseapp.com",
+                    projectId: "login-form-49609"
+                };
+                const app = initializeApp(firebaseConfig);
+                const auth = getAuth(app);
+                
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+                const tokenResult = await user.getIdTokenResult();
+                const token = tokenResult.token;
+                const role = tokenResult.claims.role || 'user';
+
+                // Save token securely
+                localStorage.setItem('backend_admin_token', token);
+                localStorage.setItem('backend_admin_user', JSON.stringify({ email: user.email, role: role }));
+                
+                submitBtn.textContent = 'Success! Redirecting...';
+                setTimeout(() => window.location.href = '/admin', 500);
+
+            } catch (err) {
+                errorMsg.textContent = err.message || 'Invalid email or password';
+                errorMsg.style.display = 'block';
+                submitBtn.textContent = 'Sign In with Firebase';
+                submitBtn.style.opacity = '1';
+            }
+        });
+    </script>
+</body>
+</html>

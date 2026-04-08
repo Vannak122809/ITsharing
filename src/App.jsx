@@ -16,7 +16,7 @@ import SoftwareViewer from './pages/SoftwareViewer';
 import Community from './pages/Community';
 import RequestResource from './pages/RequestResource';
 import Profile from './pages/Profile';
-import AdminDashboard from './pages/AdminDashboard';
+
 import GiveawayKeys from './pages/GiveawayKeys';
 
 import ProtectedRoute from './components/ProtectedRoute';
@@ -333,11 +333,7 @@ function App() {
               <Profile user={user} />
             </ProtectedRoute>
           } />
-          <Route path="/admin" element={
-            <ProtectedRoute>
-              <AdminDashboard />
-            </ProtectedRoute>
-          } />
+
           <Route path="/login" element={<Login />} />
         </Routes>
       </main>
