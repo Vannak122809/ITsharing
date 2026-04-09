@@ -181,12 +181,17 @@ const Assets = () => {
                 <div className="hero-content">
                     <h1>{t('premium_stock_assets')}</h1>
                     <div className="search-bar-container glass-panel">
-                        <Search color="var(--text-muted)" size={24} />
-                        <input 
-                            type="text" placeholder={t('search_assets_placeholder')} 
-                            value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-                        <button className="btn btn-primary">{t('search')}</button>
+                        <div className="search-input-wrapper">
+                            <Search className="search-icon-mobile" color="var(--text-muted)" size={20} />
+                            <input 
+                                type="text" placeholder={t('search_assets_placeholder')} 
+                                value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                        </div>
+                        <button className="btn btn-primary search-submit-btn">
+                            <span className="desktop-search-text">{t('search')}</span>
+                            <Search className="mobile-search-icon" size={18} />
+                        </button>
                     </div>
                 </div>
             </section>
@@ -316,8 +321,12 @@ const Assets = () => {
                 .hero-bg { position: absolute; inset: 0; background-size: cover; background-position: center; filter: brightness(0.5); transform: translateZ(0); }
                 .hero-content { position: relative; z-index: 1; padding: 0 24px; max-width: 800px; width: 100%; margin: 0 auto; }
                 .hero-content h1 { color: #fff; font-size: 3.5rem; font-weight: 900; margin-bottom: 24px; letter-spacing: -0.04em; }
-                .search-bar-container { background: #fff !important; border-radius: 24px; padding: 8px 8px 8px 24px; display: flex; align-items: center; gap: 16px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
-                .search-bar-container input { border: none; outline: none; flex-grow: 1; font-size: 1.1rem; color: #111; font-weight: 500; background: transparent; }
+                
+                .search-bar-container { background: #fff !important; border-radius: 24px; padding: 6px; display: flex; align-items: center; gap: 8px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); width: 100%; }
+                .search-input-wrapper { display: flex; align-items: center; gap: 12px; flex-grow: 1; padding-left: 16px; min-width: 0; }
+                .search-input-wrapper input { border: none; outline: none; flex-grow: 1; font-size: 1.1rem; color: #111; font-weight: 500; background: transparent; width: 100%; }
+                .search-submit-btn { padding: 12px 28px; border-radius: 18px; display: flex; align-items: center; justify-content: center; min-width: fit-content; }
+                .mobile-search-icon { display: none; }
                 
                 .assets-explorer-grid { display: grid; grid-template-columns: 280px 1fr; gap: 32px; max-width: 1440px; }
                 .sidebar-inner { padding: 24px; border-radius: 32px; position: sticky; top: 100px; border: 1px solid var(--surface-border); }
@@ -379,8 +388,20 @@ const Assets = () => {
                     .preview-section { padding: 32px; }
                 }
 
+                @media (max-width: 600px) {
+                    .search-bar-container { border-radius: 16px; padding: 4px; }
+                    .search-input-wrapper { padding-left: 12px; gap: 8px; }
+                    .search-input-wrapper input { font-size: 0.95rem; }
+                    .search-submit-btn { padding: 10px 16px; border-radius: 12px; }
+                    .desktop-search-text { display: none; }
+                    .mobile-search-icon { display: block; }
+                    .search-icon-mobile { width: 18px; height: 18px; }
+                    .hero-content { padding: 0 16px; }
+                    .hero-content h1 { font-size: 2rem; margin-bottom: 16px; }
+                    .assets-hero { height: 280px; }
+                }
+
                 @media (max-width: 480px) {
-                    .hero-content h1 { font-size: 2rem; }
                     .main-title { font-size: 1.5rem; }
                     .asset-grid { grid-template-columns: 1fr; }
                     .modal-header { padding: 12px 20px; }
