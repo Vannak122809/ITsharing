@@ -217,9 +217,16 @@ const CoffeeDonate = () => {
                 </div>
               )}
 
-              <button className="btn-action-lux donate-finish" onClick={() => { setIsOpen(false); setShowThankYou(true); setTimeout(() => setShowThankYou(false), 3500); }}>
-                 {t('i_have_paid')}
-              </button>
+              <a 
+                href="https://link.payway.com.kh/ABAPAYKi431899N" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="btn-action-lux donate-finish" 
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', whiteSpace: 'nowrap', fontSize: '1rem' }}
+                onClick={() => { setIsOpen(false); setShowThankYou(true); setTimeout(() => setShowThankYou(false), 3500); }}
+              >
+                 ABA Payway
+              </a>
             </div>
           </div>
         </div>

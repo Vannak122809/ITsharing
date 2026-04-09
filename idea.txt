@@ -112,3 +112,15 @@ for manage all data in this project
 document, software, media, driver, course, community, user, 
 and create permission for user role, admin role, super admin role
 នៅក្នុង admin form or bankend dashboard i want to create login form and add more feature for manage all data in this project
+i no need it i need 
+  - day 1
+    video 1
+    video 2
+    ----
+  - day 2
+    video 1
+    video 2
+    ----
+  - day 3
+    video 1
+    video 2

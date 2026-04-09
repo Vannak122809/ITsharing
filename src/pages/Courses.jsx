@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PlayCircle, Award, Search, Filter, Clock, BookOpen, ChevronRight, X, Play, Shield, Star, CheckCircle2, Layout, Code2, Globe2, Sparkles, Brain } from 'lucide-react';
+import { PlayCircle, Award, Search, Filter, Clock, BookOpen, ChevronRight, ChevronDown, ChevronUp, X, Play, Shield, Star, CheckCircle2, Layout, Code2, Globe2, Sparkles, Brain } from 'lucide-react';
 import { auth } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useLanguage } from '../LanguageContext';
@@ -13,7 +13,26 @@ const Courses = () => {
   const [activeLesson, setActiveLesson] = useState(0);
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [expandedSections, setExpandedSections] = useState({});
   const navigate = useNavigate();
+
+  const groupedLessons = useMemo(() => {
+    if (!selectedCourse || !selectedCourse.lessons) return [];
+    return selectedCourse.lessons.reduce((acc, lesson, i) => {
+      const gName = lesson.day || `Module ${Math.floor(i/10) + 1}`;
+      let group = acc.find(g => g.name === gName);
+      if (!group) {
+        group = { name: gName, items: [] };
+        acc.push(group);
+      }
+      group.items.push({ ...lesson, originalIndex: i });
+      return acc;
+    }, []);
+  }, [selectedCourse]);
+
+  const toggleSection = (gName) => {
+    setExpandedSections(prev => ({ ...prev, [gName]: !prev[gName] }));
+  };
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => {
@@ -89,6 +108,52 @@ const Courses = () => {
       ]
     },
     {
+      id: 10,
+      title: 'JQuery + Javascript',
+      category: 'Web',
+      lessonsCount: 31,
+      desc: 'Comprehensive JQuery and Javascript course from Day 1 to Day 17. Master front-end interactive web development.',
+      color: '#f7df1e',
+      isNew: true,
+      coverImage: 'https://pub-4f82c0b8e14544aca1aa8a82ea8d41c1.r2.dev/Cover/ChatGPT%20Image%20Apr%209%2C%202026%2C%2009_06_28%20AM.png',
+      documents: [
+        { day: 'Day 1', url: 'https://pub-564a73e336f14a32b457c2d7fa1b0446.r2.dev/documents/js-slide%20(2).pptx', title: 'JS Slide' }
+      ],
+      lessons: [
+        { title: '1', id: '1N014TuoIvA8FgH8H-g4hHJUpgRwVUDUp', day: 'Day 1' },
+        { title: '2', id: '1JOhtHo6uNGJ1fwAvQllDDS5il-mU9J13', day: 'Day 1' },
+        { title: '4', id: '1Jsm68t3qmm2rHZctukb00VEZVxVOpzdE', day: 'Day 2' },
+        { title: '3', id: '1LEmPZ82szFrpwVIIEtxcIzfkIGIy_jms', day: 'Day 2' },
+        { title: '5', id: '1-u2r1B1WqpynM7MBwlLAq7_exO0_W6jS', day: 'Day 3' },
+        { title: '6', id: '1iztvXtNn9onjIcOchjShBHSsHTndB1d8', day: 'Day 3' },
+        { title: '8', id: '1BeNB5ewc5ndp5awSksTgU3GZGb0hfoOv', day: 'Day 4' },
+        { title: '7', id: '1Jccy87Vct7dB6xcIM5EQjhDJGEKpTtjk', day: 'Day 4' },
+        { title: '11', id: '1H10PsDY-OyhJiC0eOntEsrcW6WWtxdmp', day: 'Day 5' },
+        { title: '12', id: '1KyIfbkGUrtIitR_0EjlWEA4jKm5o_FHD', day: 'Day 5' },
+        { title: '9', id: '1L3Be5zWbzaNO9OCsLpB2eseOplY0yUdw', day: 'Day 5' },
+        { title: '10', id: '1lk2Yn4yYhPYpqdhiPB8hUr3iuVQrUUvq', day: 'Day 5' },
+        { title: '14', id: '1Ine3YmfiQdwaw-3m0tEh2-1NT-9JTVBU', day: 'Day 6' },
+        { title: '13', id: '1UgeBrpjr4OAn7-K4jO6H7VSjZu9KlK7B', day: 'Day 6' },
+        { title: '15', id: '1-pVDahooh19q4mdQKlBCxiW-D0tneu_j', day: 'Day 7' },
+        { title: '16 (2)', id: '1ggmww9wG2hWiX9ciI_iRmQL_IYIjqhoV', day: 'Day 7' },
+        { title: '17 (2)', id: '1jonfZo5g-VkO4vdoGxGmAum-rgPPrb-D', day: 'Day 8' },
+        { title: '19 (2)', id: '1KqKu_JfMF11Yyty4-rkoelodtq0dO6uu', day: 'Day 9' },
+        { title: '18 (2)', id: '1XCLxx624n5zUz2zYWwnuAE0nq8WVbpAb', day: 'Day 9' },
+        { title: '21 (2)', id: '1pp6R93MS2Uz_z7GsodeqBo-jt8LTGo-6', day: 'Day 10' },
+        { title: '20 (2)', id: '1sN30xAYbWUkpHJH3KiQLqngB1IWIOs4G', day: 'Day 10' },
+        { title: '24 (2)', id: '1HrpiQsKq9PbomviLnXrqHbniAyE52X7P', day: 'Day 11' },
+        { title: '25 (2)', id: '1sFe47EEOBf6d-XNJOST2VLV4Vj8bt8EK', day: 'Day 12' },
+        { title: '27 (2)', id: '1QqXg_NjPrRg5apIzvX9QBxGZnoPrMp_O', day: 'Day 13' },
+        { title: '26 (2)', id: '1kbHahJnw7dMM4Tl8Z6i1brpKY-1yL5kg', day: 'Day 13' },
+        { title: '29 (2)', id: '1fmid9DU7bNEvX0PGIss2vVe3VBMcO55_', day: 'Day 14' },
+        { title: '28 (2)', id: '1nMWIBReLr3o_3IgtaEFAbpcKI3Dz1epE', day: 'Day 14' },
+        { title: 'JQery', id: '1XFrLKyxFwiAIaVPsjkNvyKMLbLNcdvY7', day: 'Day 15' },
+        { title: 'Day 16', id: '13gjIyjZvjk_KP7soBu8n5bN6aoaRhVx6', day: 'Day 16' },
+        { title: 'Day 171', id: '1KS45apm6UJeO68IjJID1lb339ozG5Gmv', day: 'Day 17' },
+        { title: 'Day 17', id: '1QwH2XLpnVRSjq0T2XdDiPju4dMzavEmp', day: 'Day 17' }
+      ]
+    },
+    {
       id: 1,
       title: 'React Masterclass',
       category: 'Code',
@@ -134,6 +199,8 @@ const Courses = () => {
     if (course.lessons && course.lessons.length > 0) {
       setSelectedCourse(course);
       setActiveLesson(0);
+      const firstSection = course.lessons[0].day || 'Module 1';
+      setExpandedSections({ [firstSection]: true });
     } else {
       alert(t('coming_soon'));
     }
@@ -261,23 +328,55 @@ const Courses = () => {
                        <div className="prog-pill">{activeLesson + 1} / {selectedCourse.lessonsCount}</div>
                     </div>
                     <div className="playlist-scroll">
-                       {selectedCourse.lessons.map((lesson, idx) => (
-                         <div 
-                           key={idx} 
-                           className={`p-item ${activeLesson === idx ? 'cur' : ''}`}
-                           onClick={() => setActiveLesson(idx)}
-                         >
-                            <div className="p-num">{idx + 1}</div>
-                            <div className="p-info">
-                               <span className="p-title">{lesson.title}</span>
-                               <span className="p-meta">Module {Math.floor(idx/10) + 1}</span>
-                            </div>
-                            {activeLesson === idx && <div className="pulse-dot"></div>}
+                       {groupedLessons.map((group, groupIdx) => (
+                         <div key={groupIdx} className="accordion-section">
+                           <div 
+                             className="accordion-header"
+                             onClick={() => toggleSection(group.name)}
+                           >
+                             <div className="acc-left">
+                               <span className="acc-title">{group.name}</span>
+                               <span className="acc-meta">{group.items.length} lectures</span>
+                             </div>
+                             <div className="acc-icon">
+                               {expandedSections[group.name] ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                             </div>
+                           </div>
+                           
+                           {expandedSections[group.name] && (
+                             <div className="accordion-body">
+                               {group.items.map((item) => (
+                                 <div 
+                                   key={item.originalIndex}
+                                   className={`p-item ${activeLesson === item.originalIndex ? 'cur' : ''}`}
+                                   onClick={() => setActiveLesson(item.originalIndex)}
+                                 >
+                                    <div className="p-num">{item.originalIndex + 1}</div>
+                                    <div className="p-info">
+                                       <span className="p-title">{item.title}</span>
+                                       <span className="p-meta">Lecture {item.originalIndex + 1}</span>
+                                    </div>
+                                    {activeLesson === item.originalIndex && <div className="pulse-dot"></div>}
+                                 </div>
+                               ))}
+                               {selectedCourse.documents && selectedCourse.documents.filter(d => d.day === group.name).map((doc, idx) => (
+                                 <a 
+                                   key={`doc-${idx}`} 
+                                   href={doc.url} 
+                                   target="_blank" rel="noreferrer"
+                                   className="group-doc-btn"
+                                 >
+                                   <BookOpen size={14} /> Download {doc.title} (.pptx)
+                                 </a>
+                               ))}
+                             </div>
+                           )}
                          </div>
                        ))}
                     </div>
                     
                     <div className="playlist-footer">
+                       {/* Course level resources can go here if needed in the future */}
                        <button className="btn-resource">
                           <Star size={14} /> Download Source Code
                        </button>
@@ -387,6 +486,21 @@ const Courses = () => {
         .prog-pill { margin-left: auto; background: var(--primary); color: #fff; font-size: 0.75rem; padding: 4px 12px; border-radius: 40px; }
         
         .playlist-scroll { flex-grow: 1; overflow-y: auto; padding: 16px; }
+        
+        .accordion-section { border: 1px solid var(--surface-border); border-radius: 16px; margin-bottom: 12px; overflow: hidden; background: rgba(255,255,255,0.01); }
+        .accordion-header { padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.2s; background: var(--surface-badge); }
+        .accordion-header:hover { background: rgba(99, 102, 241, 0.1); }
+        .acc-left { display: flex; flex-direction: column; }
+        .acc-title { font-size: 0.95rem; font-weight: 800; color: var(--text-main); margin-bottom: 4px; }
+        .acc-meta { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
+        .acc-icon { color: var(--text-muted); display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); border: 1px solid var(--surface-border); padding: 6px; border-radius: 50%; transition: 0.2s; }
+        .accordion-header:hover .acc-icon { background: var(--primary); color: #fff; border-color: var(--primary); }
+        
+        .accordion-body { padding: 12px; border-top: 1px solid var(--surface-border); display: flex; flex-direction: column; gap: 8px; }
+
+        .group-doc-btn { padding: 14px 16px; margin-top: 6px; border-radius: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.85rem; font-weight: 800; background: rgba(99, 102, 241, 0.1); color: var(--primary); text-decoration: none; border: 1px dashed rgba(99, 102, 241, 0.4); transition: 0.2s; }
+        .group-doc-btn:hover { background: var(--primary); color: #fff; border-style: solid; box-shadow: 0 5px 15px rgba(99, 102, 241, 0.3); }
+
         .p-item { 
           padding: 16px 20px; border-radius: 20px; display: flex; align-items: center; gap: 16px;
           cursor: pointer; transition: 0.3s; margin-bottom: 10px; border: 1px solid transparent;

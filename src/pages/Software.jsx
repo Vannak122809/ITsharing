@@ -132,6 +132,7 @@ export const SoftwareIcon = ({ id, os, size = 32 }) => {
     'windows-10': 'microsoft.com',
     'office-2021': 'microsoft.com',
     'office-2019': 'microsoft.com',
+    'vuescan': 'hamrick.com',
   };
 
   if (id === 'potplayer') {
