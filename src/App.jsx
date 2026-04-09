@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
-import { Terminal, Video, FileText, BookOpen, Layers, User, LogOut, DownloadCloud, Sun, Moon, Users, HelpCircle, Menu, X, Globe, Gift } from 'lucide-react';
+import { Terminal, Video, FileText, BookOpen, Layers, User, LogOut, DownloadCloud, Sun, Moon, Users, HelpCircle, Menu, X, Globe, Gift, Image as ImageIcon } from 'lucide-react';
 
 import { auth } from './firebase';
 import { onAuthStateChanged, signOut, sendEmailVerification } from 'firebase/auth';
@@ -16,6 +16,7 @@ import SoftwareViewer from './pages/SoftwareViewer';
 import Community from './pages/Community';
 import RequestResource from './pages/RequestResource';
 import Profile from './pages/Profile';
+import Assets from './pages/Assets';
 
 import GiveawayKeys from './pages/GiveawayKeys';
 
@@ -122,11 +123,13 @@ function App() {
   const mainNavItems = isLoggedIn ? [
     { name: t('software'), path: '/software', icon: <DownloadCloud size={18} /> },
     { name: t('documents'), path: '/documents', icon: <FileText size={18} /> },
+    { name: t('assets'), path: '/assets', icon: <ImageIcon size={18} /> },
     { name: t('courses'), path: '/courses', icon: <Video size={18} /> },
     { name: t('forum'), path: '/community', icon: <Users size={18} /> },
   ] : [
     { name: t('software'), path: '/software', icon: <DownloadCloud size={18} /> },
     { name: t('documents'), path: '/documents', icon: <FileText size={18} /> },
+    { name: t('assets'), path: '/assets', icon: <ImageIcon size={18} /> },
     { name: t('courses'), path: '/courses', icon: <Video size={18} /> },
   ];
 
@@ -196,42 +199,43 @@ function App() {
 
           {/* Desktop actions */}
           <div className="nav-actions" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-
-            <button
-              onClick={() => setLang(lang === 'km' ? 'en' : 'km')}
-              className="btn btn-outline"
-              style={{ padding: '6px 12px', border: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}
-              title={t('language')}
-            >
-              <Globe size={18} /> <span style={{ fontSize: '0.8rem', fontWeight: 'bold' }}>{lang === 'km' ? 'EN' : 'KM'}</span>
-            </button>
             <button
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className="btn btn-outline"
-              style={{ padding: '6px 12px', border: 'none' }}
+              style={{ background: 'none', border: 'none', color: 'var(--text-main)', cursor: 'pointer', padding: '8px', display: 'flex', alignItems: 'center' }}
               title="Toggle Theme"
             >
-              {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+              {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
             </button>
+
             {user ? (
-              <>
-                <Link to="/profile" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', color: 'var(--text-muted)', textDecoration: 'none' }}>
-                  {userProfile?.avatarUrl ? (
-                    <img src={userProfile.avatarUrl} alt="avatar"
-                      style={{ width: '26px', height: '26px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary)' }} />
-                  ) : (
-                    <User size={16} color="var(--primary)" />
-                  )}
-                  <span className="nav-user-email" style={{ maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={userProfile?.nickname || user.email}>
-                    {userProfile?.nickname || user.email}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginLeft: '8px' }}>
+                <Link to="/profile" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none', color: 'var(--text-main)', fontWeight: 600 }}>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '50%', border: '2px solid var(--primary)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--surface-badge)' }}>
+                    {userProfile?.avatarUrl ? (
+                      <img src={userProfile.avatarUrl} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      <User size={20} color="var(--primary)" />
+                    )}
+                  </div>
+                  <span style={{ fontSize: '1rem', color: '#64748b' }}>
+                    {userProfile?.nickname || user.email.split('@')[0]}
                   </span>
                 </Link>
-                <button onClick={handleSignOut} className="btn btn-outline" style={{ padding: '6px 12px', fontSize: '0.85rem' }} title={t('signout')}>
-                  <LogOut size={16} />
+                <button 
+                  onClick={handleSignOut} 
+                  style={{ 
+                    background: 'none', border: '1px solid var(--surface-border)', borderRadius: '20px', 
+                    padding: '8px 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                    cursor: 'pointer', color: 'var(--text-main)', transition: '0.3s' 
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.background = 'var(--surface-badge)'}
+                  onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+                >
+                  <LogOut size={20} />
                 </button>
-              </>
+              </div>
             ) : (
-              <Link to="/login" className="btn btn-outline" style={{ padding: '8px 16px', fontSize: '0.9rem' }}>
+              <Link to="/login" className="btn btn-outline" style={{ padding: '8px 20px', borderRadius: '12px' }}>
                 {t('signin')}
               </Link>
             )}
@@ -358,6 +362,7 @@ function App() {
           <Route path="/software" element={<Software />} />
           <Route path="/software/:id" element={<SoftwareViewer />} />
           <Route path="/community" element={<Community />} />
+          <Route path="/assets" element={<Assets />} />
           <Route path="/giveaway" element={
             <ProtectedRoute>
               <GiveawayKeys />

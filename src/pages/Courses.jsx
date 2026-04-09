@@ -207,109 +207,144 @@ const Courses = () => {
   };
 
   return (
-    <div className="courses-page" style={{ paddingTop: '80px', minHeight: '100vh', background: 'var(--bg-main)' }}>
-      <div className="container">
+    <div className="container" style={{ paddingTop: '100px', paddingBottom: '100px', minHeight: '100vh' }}>
+      
+      {/* HERO SECTION */}
+      <header style={{ textAlign: 'center', marginBottom: '80px', position: 'relative' }}>
+        <div style={{ position: 'absolute', top: '-150px', left: '50%', transform: 'translateX(-50%)', width: '600px', height: '600px', background: 'var(--primary)', filter: 'blur(200px)', opacity: 0.1, zIndex: -1 }} />
         
-        {/* ENHANCED HERO */}
-        <header className="courses-hero">
-          <div className="hero-badge"><Sparkles size={14} /> {t('explore_courses')}</div>
-          <h1 className="hero-title text-gradient">{t('short_video_courses')}</h1>
-          <p className="hero-desc">{t('courses_subtitle')}</p>
+        <div className="badge-glow" style={{ marginBottom: '24px' }}>
+          <Sparkles size={14} /> {t('explore_courses')}
+        </div>
+        <h1 className="text-gradient" style={{ fontSize: '4.5rem', fontWeight: 900, marginBottom: '24px', letterSpacing: '-0.03em' }}>
+          {t('short_video_courses')}
+        </h1>
+        <p style={{ fontSize: '1.25rem', color: 'var(--text-muted)', maxWidth: '650px', margin: '0 auto 50px', lineHeight: 1.6 }}>
+          {t('courses_subtitle')}
+        </p>
 
-          <div className="search-filter-hub">
-             <div className="search-box-premium">
-                <Search size={20} className="search-icon" />
-                <input 
-                  type="text" 
-                  placeholder="Search courses..." 
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-                {searchQuery && <X size={18} className="clear-icon" onClick={() => setSearchQuery('')} />}
-             </div>
-             
-             <div className="category-chips">
-                {categories.map(category => (
-                  <button 
-                    key={category}
-                    onClick={() => setActiveCategory(category)}
-                    className={`chip ${activeCategory === category ? 'active' : ''}`}
-                  >
-                    {t(category.toLowerCase())}
-                  </button>
-                ))}
-             </div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '30px' }}>
+           <div className="glass-panel" style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '12px 28px', borderRadius: '24px', maxWidth: '550px', width: '100%' }}>
+              <Search size={22} color="var(--text-muted)" />
+              <input 
+                type="text" 
+                placeholder="Search for courses or topics..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{ background: 'none', border: 'none', color: 'var(--text-main)', fontSize: '1.1rem', width: '100%', outline: 'none', fontWeight: 500 }}
+              />
+              {searchQuery && <X size={18} style={{ color: 'var(--text-muted)', cursor: 'pointer' }} onClick={() => setSearchQuery('')} />}
+           </div>
+           
+           <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
+              {categories.map(category => (
+                <button 
+                  key={category}
+                  onClick={() => setActiveCategory(category)}
+                  style={{
+                    padding: '10px 24px',
+                    borderRadius: '16px',
+                    border: '1px solid var(--surface-border)',
+                    background: activeCategory === category ? 'var(--primary)' : 'rgba(255,255,255,0.03)',
+                    color: activeCategory === category ? '#fff' : 'var(--text-muted)',
+                    fontWeight: 700,
+                    fontSize: '0.9rem',
+                    cursor: 'pointer',
+                    transition: '0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+                    boxShadow: activeCategory === category ? '0 10px 20px rgba(37, 99, 235, 0.2)' : 'none'
+                  }}
+                >
+                  {t(category.toLowerCase())}
+                </button>
+              ))}
+           </div>
+        </div>
+      </header>
+
+      {/* STATS STRIP */}
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '24px', marginBottom: '80px', flexWrap: 'wrap' }}>
+         <div className="glass-panel" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 24px', borderRadius: '18px', fontSize: '0.9rem', fontWeight: 700 }}>
+            <Brain size={18} color="var(--primary)" /> <span>120+ Interactive Lessons</span>
+         </div>
+         <div className="glass-panel" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 24px', borderRadius: '18px', fontSize: '0.9rem', fontWeight: 700 }}>
+            <Layout size={18} color="#8b5cf6" /> <span>4 Complete Learning Paths</span>
+         </div>
+         <div className="glass-panel" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 24px', borderRadius: '18px', fontSize: '0.9rem', fontWeight: 700 }}>
+            <Shield size={18} color="#10b981" /> <span>Lifetime Access</span>
+         </div>
+      </div>
+
+      {/* GRID */}
+      <div className="card-grid">
+        {filteredCourses.map(course => (
+          <div key={course.id} className="glass-panel luxury-card" style={{ padding: '0', borderRadius: '32px', overflow: 'hidden', cursor: 'pointer' }} onClick={() => handleStartCourse(course)}>
+            <div style={{ height: '220px', position: 'relative', overflow: 'hidden' }}>
+               {course.coverImage ? (
+                 <img src={course.coverImage} alt={course.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+               ) : (
+                 <div style={{ width: '100%', height: '100%', background: `${course.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <PlayCircle size={64} style={{ color: course.color, opacity: 0.5 }} />
+                 </div>
+               )}
+               {course.isNew && <div className="new-badge" style={{ position: 'absolute', top: '20px', left: '20px' }}>NEW</div>}
+               <div style={{ position: 'absolute', bottom: '20px', right: '20px', background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', padding: '6px 16px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 800, color: course.color, border: `1px solid ${course.color}40`, textTransform: 'uppercase' }}>
+                 {course.category}
+               </div>
+            </div>
+
+            <div style={{ padding: '32px' }}>
+              <h3 style={{ fontSize: '1.6rem', fontWeight: 800, marginBottom: '14px', lineHeight: 1.2 }}>{course.title}</h3>
+              <p style={{ color: 'var(--text-muted)', fontSize: '1rem', lineHeight: 1.6, marginBottom: '28px' }}>{course.desc}</p>
+              
+              <div style={{ display: 'flex', gap: '16px', marginBottom: '32px' }}>
+                 <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, background: 'var(--surface-badge)', padding: '6px 14px', borderRadius: '12px' }}>
+                   <BookOpen size={16} /> {course.lessonsCount} Lessons
+                 </div>
+                 <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, background: 'var(--surface-badge)', padding: '6px 14px', borderRadius: '12px' }}>
+                   <Clock size={16} /> Self-paced
+                 </div>
+              </div>
+
+              <button className="btn btn-primary" style={{ width: '100%', padding: '16px', borderRadius: '18px', fontSize: '1rem', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', background: course.color, borderColor: course.color }}>
+                <Play size={18} fill="currentColor" />
+                {t('start_course')}
+              </button>
+            </div>
           </div>
-        </header>
-
-        {/* STATS STRIP */}
-        <div className="stats-row">
-           <div className="stat-pill"><Brain size={16} /> <span>120+ Interactive Lessons</span></div>
-           <div className="stat-pill"><Layout size={16} /> <span>4 Complete Learning Paths</span></div>
-           <div className="stat-pill"><Shield size={16} /> <span>Lifetime Community Access</span></div>
-        </div>
-
-        {/* GRID */}
-        <div className="course-grid-lux">
-          {filteredCourses.map(course => (
-            <div key={course.id} className="course-card-lux" onClick={() => handleStartCourse(course)}>
-              <div className="card-media">
-                 {course.coverImage ? (
-                   <img src={course.coverImage} alt={course.title} className="cover-img" />
-                 ) : (
-                   <div className="no-cover" style={{ backgroundColor: `${course.color}20` }}>
-                      <PlayCircle size={48} color={course.color} />
-                   </div>
-                 )}
-                 {course.isNew && <div className="new-badge">ULTRA NEW</div>}
-                 <div className="cat-overlay" style={{ color: course.color }}>{course.category}</div>
-              </div>
-
-              <div className="card-body">
-                <h3 className="card-title">{course.title}</h3>
-                <p className="card-text">{course.desc}</p>
-                
-                <div className="card-info">
-                   <div className="info-tag"><BookOpen size={14} /> {course.lessonsCount} Lessons</div>
-                   <div className="info-tag"><Clock size={14} /> Self-paced</div>
-                </div>
-
-                <div className="card-cta">
-                   <button className="btn-play-lux" style={{ '--accent': course.color }}>
-                      <Play size={16} fill="currentColor" />
-                      <span>{t('start_course')}</span>
-                   </button>
-                </div>
-              </div>
-            </div>
-          ))}
-          
-          {filteredCourses.length === 0 && (
-            <div className="no-results">
-              <Code2 size={64} className="no-res-icon" />
-              <h3>Course matching "{searchQuery}" not found</h3>
-              <p>Try searching for a different topic or browser our categories above.</p>
-            </div>
-          )}
-        </div>
+        ))}
+        
+        {filteredCourses.length === 0 && (
+          <div className="empty-state glass-panel" style={{ borderRadius: '32px', gridColumn: '1 / -1' }}>
+            <Code2 size={64} style={{ opacity: 0.1, marginBottom: '24px' }} />
+            <h3>Course matching "{searchQuery}" not found</h3>
+            <p>Try searching for a different topic or browse our categories above.</p>
+          </div>
+        )}
       </div>
 
       {/* LUXURY VIEWER */}
       {selectedCourse && (
-        <div className="viewer-backdrop">
-           <div className="viewer-stage glass-panel">
-              <div className="viewer-nav">
-                 <div className="nav-left">
-                    <span className="course-label">{selectedCourse.category} Track</span>
-                    <h2 className="lesson-display">{selectedCourse.lessons[activeLesson].title}</h2>
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', backdropFilter: 'blur(20px)' }}>
+           <div className="glass-panel" style={{ width: '100%', maxWidth: '1440px', height: '90vh', borderRadius: '40px', display: 'flex', flexDirection: 'column', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)', boxShadow: '0 0 100px rgba(0,0,0,0.5)' }}>
+              
+              <div style={{ padding: '24px 40px', borderBottom: '1px solid var(--surface-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.02)' }}>
+                 <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--primary)', letterSpacing: '0.1em' }}>{selectedCourse.category} Track</span>
+                    <h2 style={{ fontSize: '1.75rem', fontWeight: 900, marginTop: '4px', color: '#fff' }}>{selectedCourse.lessons[activeLesson].title}</h2>
                  </div>
-                 <button className="nav-close" onClick={() => setSelectedCourse(null)}>
+                 <button 
+                  onClick={() => setSelectedCourse(null)}
+                  style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: '#fff', width: '54px', height: '54px', borderRadius: '20px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: '0.3s' }}
+                  onMouseOver={(e) => { e.currentTarget.style.background = '#ef4444'; e.currentTarget.style.transform = 'rotate(90deg)'; }}
+                  onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.transform = 'rotate(0deg)'; }}
+                 >
                     <X size={24} />
                  </button>
               </div>
-              <div className="viewer-main">
-                 <div className="video-viewport" onContextMenu={(e) => e.preventDefault()}>
-                    <div className="security-overlay"></div>
+
+              <div style={{ display: 'flex', flexGrow: 1, overflow: 'hidden' }}>
+                 <div style={{ flexGrow: 1, background: '#000', position: 'relative' }}>
+                    <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 10, pointerEvents: 'none', background: 'radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.2) 100%)' }} />
                     <iframe 
                        src={`https://drive.google.com/file/d/${selectedCourse.lessons[activeLesson].id}/preview`} 
                        width="100%" 
@@ -317,56 +352,54 @@ const Courses = () => {
                        allow="autoplay" 
                        frameBorder="0"
                        title="Course Video"
-                       className="main-iframe"
+                       style={{ border: 'none' }}
                     />
                  </div>
 
-                 <div className="playlist-sidebar">
-                    <div className="playlist-header">
-                       <Layout size={18} />
-                       <span>Lessons</span>
-                       <div className="prog-pill">{activeLesson + 1} / {selectedCourse.lessonsCount}</div>
+                 <div style={{ width: '400px', borderLeft: '1px solid var(--surface-border)', display: 'flex', flexDirection: 'column', background: 'rgba(255,255,255,0.02)' }}>
+                    <div style={{ padding: '24px', fontWeight: 800, borderBottom: '1px solid var(--surface-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><Layout size={18} /> Lesson Content</div>
+                       <div style={{ background: 'var(--primary)', color: '#fff', fontSize: '0.75rem', padding: '6px 14px', borderRadius: '40px' }}>{activeLesson + 1} / {selectedCourse.lessonsCount}</div>
                     </div>
-                    <div className="playlist-scroll">
+                    
+                    <div style={{ flexGrow: 1, overflowY: 'auto', padding: '20px' }}>
                        {groupedLessons.map((group, groupIdx) => (
-                         <div key={groupIdx} className="accordion-section">
+                         <div key={groupIdx} style={{ marginBottom: '16px', border: '1px solid var(--surface-border)', borderRadius: '20px', overflow: 'hidden' }}>
                            <div 
-                             className="accordion-header"
                              onClick={() => toggleSection(group.name)}
+                             style={{ padding: '18px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', background: 'rgba(255,255,255,0.03)', transition: '0.3s' }}
                            >
-                             <div className="acc-left">
-                               <span className="acc-title">{group.name}</span>
-                               <span className="acc-meta">{group.items.length} lectures</span>
+                             <div style={{ display: 'flex', flexDirection: 'column' }}>
+                               <span style={{ fontSize: '1rem', fontWeight: 800, color: '#fff' }}>{group.name}</span>
+                               <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>{group.items.length} lectures</span>
                              </div>
-                             <div className="acc-icon">
-                               {expandedSections[group.name] ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                             </div>
+                             {expandedSections[group.name] ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                            </div>
                            
                            {expandedSections[group.name] && (
-                             <div className="accordion-body">
+                             <div style={{ padding: '10px', display: 'flex', flexDirection: 'column', gap: '8px', borderTop: '1px solid var(--surface-border)' }}>
                                {group.items.map((item) => (
                                  <div 
                                    key={item.originalIndex}
-                                   className={`p-item ${activeLesson === item.originalIndex ? 'cur' : ''}`}
                                    onClick={() => setActiveLesson(item.originalIndex)}
+                                   style={{ 
+                                     padding: '16px 20px', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '16px',
+                                     cursor: 'pointer', transition: '0.3s', 
+                                     background: activeLesson === item.originalIndex ? 'var(--primary)' : 'transparent',
+                                     color: activeLesson === item.originalIndex ? '#fff' : 'var(--text-main)'
+                                   }}
                                  >
-                                    <div className="p-num">{item.originalIndex + 1}</div>
-                                    <div className="p-info">
-                                       <span className="p-title">{item.title}</span>
-                                       <span className="p-meta">Lecture {item.originalIndex + 1}</span>
+                                    <div style={{ fontSize: '0.8rem', fontWeight: 800, opacity: 0.5 }}>{item.originalIndex + 1}</div>
+                                    <div style={{ flexGrow: 1 }}>
+                                       <div style={{ fontSize: '0.95rem', fontWeight: 700 }}>{item.title}</div>
+                                       <div style={{ fontSize: '0.7rem', opacity: 0.7, fontWeight: 800, textTransform: 'uppercase' }}>Lecture {item.originalIndex + 1}</div>
                                     </div>
-                                    {activeLesson === item.originalIndex && <div className="pulse-dot"></div>}
+                                    {activeLesson === item.originalIndex && <div style={{ width: '8px', height: '8px', background: '#fff', borderRadius: '50%', boxShadow: '0 0 10px #fff' }} />}
                                  </div>
                                ))}
                                {selectedCourse.documents && selectedCourse.documents.filter(d => d.day === group.name).map((doc, idx) => (
-                                 <a 
-                                   key={`doc-${idx}`} 
-                                   href={doc.url} 
-                                   target="_blank" rel="noreferrer"
-                                   className="group-doc-btn"
-                                 >
-                                   <BookOpen size={14} /> Download {doc.title} (.pptx)
+                                 <a key={`doc-${idx}`} href={doc.url} target="_blank" rel="noreferrer" style={{ padding: '14px', borderRadius: '14px', border: '1px dashed var(--primary)', textAlign: 'center', fontSize: '0.85rem', fontWeight: 800, color: 'var(--primary)', textDecoration: 'none', background: 'rgba(37, 99, 235, 0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                   <BookOpen size={16} /> Download {doc.title}
                                  </a>
                                ))}
                              </div>
@@ -374,166 +407,14 @@ const Courses = () => {
                          </div>
                        ))}
                     </div>
-                    
-                    <div className="playlist-footer">
-                       {/* Course level resources can go here if needed in the future */}
-                       <button className="btn-resource">
-                          <Star size={14} /> Download Source Code
-                       </button>
-                    </div>
                  </div>
               </div>
            </div>
         </div>
       )}
-
-      <style>{`
-        .courses-hero { text-align: center; margin-bottom: 40px; }
-        .hero-badge { 
-          display: inline-flex; align-items: center; gap: 8px;
-          padding: 6px 16px; border-radius: 40px; background: rgba(99, 102, 241, 0.1);
-          color: var(--primary); font-size: 0.75rem; font-weight: 800; text-transform: uppercase;
-          margin-bottom: 24px; border: 1px solid rgba(99, 102, 241, 0.2);
-        }
-        .hero-title { font-size: 4rem; font-weight: 950; margin-bottom: 20px; letter-spacing: -2px; }
-        .hero-desc { font-size: 1.25rem; color: var(--text-muted); max-width: 600px; margin: 0 auto 40px; }
-
-        .search-filter-hub { display: flex; flex-direction: column; align-items: center; gap: 24px; }
-        .search-box-premium { 
-          display: flex; align-items: center; gap: 14px; background: var(--nav-bg);
-          border: 1px solid var(--surface-border); padding: 14px 28px; border-radius: 50px;
-          width: 100%; max-width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-          transition: 0.3s;
-        }
-        .search-box-premium:focus-within { border-color: var(--primary); transform: scale(1.02); }
-        .search-box-premium input { background: none; border: none; color: var(--text-main); font-size: 1rem; width: 100%; outline: none; }
-        .search-icon { color: var(--text-muted); }
-        .clear-icon { color: var(--text-muted); cursor: pointer; }
-
-        .category-chips { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
-        .chip { 
-          background: var(--nav-bg); border: 1px solid var(--surface-border); color: var(--text-muted);
-          padding: 8px 22px; border-radius: 40px; font-weight: 700; cursor: pointer; transition: 0.2s;
-        }
-        .chip:hover { border-color: var(--primary); color: var(--text-main); }
-        .chip.active { background: var(--primary); color: #fff; border-color: var(--primary); }
-
-        .stats-row { display: flex; justify-content: center; gap: 24px; margin-bottom: 60px; flex-wrap: wrap; }
-        .stat-pill { display: flex; align-items: center; gap: 10px; background: var(--surface-badge); padding: 8px 18px; border-radius: 12px; font-size: 0.85rem; color: var(--text-main); font-weight: 600; border: 1px solid var(--surface-border); }
-
-        .course-grid-lux { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 32px; }
-        .course-card-lux { 
-          background: var(--nav-bg); border: 1px solid var(--surface-border); border-radius: 32px;
-          overflow: hidden; cursor: pointer; transition: all 0.4s cubic-bezier(0.2, 0, 0, 1);
-          display: flex; flex-direction: column;
-        }
-        .course-card-lux:hover { transform: translateY(-12px); border-color: var(--primary); box-shadow: 0 30px 60px rgba(0,0,0,0.3); }
-        
-        .card-media { height: 210px; position: relative; overflow: hidden; }
-        .cover-img { width: 100%; height: 100%; object-fit: cover; transition: 0.6s; }
-        .course-card-lux:hover .cover-img { transform: scale(1.1); }
-        .no-cover { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
-        
-        .new-badge { position: absolute; top: 16px; left: 16px; background: #00fa9a; color: #000; padding: 4px 14px; border-radius: 40px; font-size: 0.7rem; font-weight: 900; }
-        .cat-overlay { position: absolute; bottom: 16px; right: 16px; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); padding: 4px 14px; border-radius: 10px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; border: 1px solid currentColor; }
-
-        .card-body { padding: 30px; display: flex; flex-direction: column; flex-grow: 1; }
-        .card-title { font-size: 1.6rem; font-weight: 900; color: var(--text-main); margin-bottom: 12px; }
-        .card-text { color: var(--text-muted); line-height: 1.6; font-size: 1rem; margin-bottom: 24px; flex-grow: 1; }
-        
-        .card-info { display: flex; gap: 16px; margin-bottom: 24px; }
-        .info-tag { font-size: 0.8rem; color: var(--text-muted); display: flex; align-items: center; gap: 6px; font-weight: 600; background: var(--surface-badge); padding: 5px 12px; border-radius: 10px; }
-
-        .btn-play-lux { 
-          width: 100%; background: none; border: 2px solid var(--surface-border); color: var(--text-main);
-          padding: 14px; border-radius: 18px; font-weight: 800; font-size: 1rem;
-          display: flex; align-items: center; justify-content: center; gap: 12px;
-          cursor: pointer; transition: 0.3s;
-        }
-        .course-card-lux:hover .btn-play-lux { background: var(--accent); color: #000; border-color: var(--accent); }
-
-        .no-results { grid-column: 1 / -1; text-align: center; padding: 100px 0; color: var(--text-muted); }
-        .no-res-icon { margin-bottom: 24px; opacity: 0.2; }
-
-        /* VIEWER SYSTEM */
-        .viewer-backdrop { 
-          position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-          background: rgba(8, 8, 12, 0.95); z-index: 10000; display: flex; 
-          align-items: center; justify-content: center; padding: 15px; backdrop-filter: blur(12px);
-        }
-        .viewer-stage { 
-          width: 100%; max-width: 1440px; height: 92vh; border-radius: 32px;
-          display: flex; flex-direction: column; overflow: hidden;
-          box-shadow: 0 0 100px rgba(99, 102, 241, 0.2); border: 1px solid rgba(255,255,255,0.05);
-        }
-        .viewer-nav { padding: 24px 40px; border-bottom: 1px solid var(--surface-border); display: flex; justify-content: space-between; align-items: center; }
-        .nav-left .course-label { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; color: var(--primary); letter-spacing: 1px; }
-        .lesson-display { font-size: 1.6rem; font-weight: 900; margin: 4px 0 0; color: var(--text-main); }
-        .nav-close { background: var(--surface-badge); border: none; color: var(--text-main); width: 48px; height: 48px; border-radius: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
-        .nav-close:hover { background: #ff2a7a; transform: rotate(90deg); }
-
-        .viewer-main { display: flex; flex-grow: 1; overflow: hidden; }
-        .video-viewport { flex-grow: 1; background: #000; overflow: hidden; position: relative; user-select: none; -webkit-user-select: none; }
-        .security-overlay { 
-          position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-          z-index: 10; pointer-events: none;
-          background: repeating-linear-gradient(45deg, transparent, transparent 100px, rgba(255,255,255,0.01) 100px, rgba(255,255,255,0.01) 200px);
-        }
-        .main-iframe { width: 100%; height: 100%; pointer-events: auto; }
-
-        .playlist-sidebar { width: 380px; border-left: 1px solid var(--surface-border); display: flex; flex-direction: column; background: var(--nav-bg); }
-        .playlist-header { padding: 24px; font-weight: 800; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--surface-border); }
-        .prog-pill { margin-left: auto; background: var(--primary); color: #fff; font-size: 0.75rem; padding: 4px 12px; border-radius: 40px; }
-        
-        .playlist-scroll { flex-grow: 1; overflow-y: auto; padding: 16px; }
-        
-        .accordion-section { border: 1px solid var(--surface-border); border-radius: 16px; margin-bottom: 12px; overflow: hidden; background: rgba(255,255,255,0.01); }
-        .accordion-header { padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.2s; background: var(--surface-badge); }
-        .accordion-header:hover { background: rgba(99, 102, 241, 0.1); }
-        .acc-left { display: flex; flex-direction: column; }
-        .acc-title { font-size: 0.95rem; font-weight: 800; color: var(--text-main); margin-bottom: 4px; }
-        .acc-meta { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
-        .acc-icon { color: var(--text-muted); display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); border: 1px solid var(--surface-border); padding: 6px; border-radius: 50%; transition: 0.2s; }
-        .accordion-header:hover .acc-icon { background: var(--primary); color: #fff; border-color: var(--primary); }
-        
-        .accordion-body { padding: 12px; border-top: 1px solid var(--surface-border); display: flex; flex-direction: column; gap: 8px; }
-
-        .group-doc-btn { padding: 14px 16px; margin-top: 6px; border-radius: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.85rem; font-weight: 800; background: rgba(99, 102, 241, 0.1); color: var(--primary); text-decoration: none; border: 1px dashed rgba(99, 102, 241, 0.4); transition: 0.2s; }
-        .group-doc-btn:hover { background: var(--primary); color: #fff; border-style: solid; box-shadow: 0 5px 15px rgba(99, 102, 241, 0.3); }
-
-        .p-item { 
-          padding: 16px 20px; border-radius: 20px; display: flex; align-items: center; gap: 16px;
-          cursor: pointer; transition: 0.3s; margin-bottom: 10px; border: 1px solid transparent;
-        }
-        .p-item:hover { background: rgba(255,255,255,0.03); }
-        .p-item.cur { background: rgba(99, 102, 241, 0.1); border-color: var(--primary); }
-        
-        .p-num { font-size: 0.8rem; font-weight: 800; opacity: 0.4; }
-        .cur .p-num { opacity: 1; color: var(--primary); }
-        .p-info { display: flex; flex-direction: column; flex-grow: 1; }
-        .p-title { font-size: 0.9rem; font-weight: 700; color: var(--text-main); margin-bottom: 2px; }
-        .p-meta { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; font-weight: 800; }
-        
-        .pulse-dot { width: 6px; height: 6px; background: var(--primary); border-radius: 50%; box-shadow: 0 0 10px var(--primary); animation: pDot 1.5s infinite; }
-        @keyframes pDot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.5); } }
-
-        .playlist-footer { padding: 24px; border-top: 1px solid var(--surface-border); }
-        .btn-resource { width: 100%; padding: 12px; border-radius: 12px; background: var(--surface-badge); border: 1px solid var(--surface-border); color: var(--text-main); font-weight: 700; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: 0.2s; }
-        .btn-resource:hover { border-color: var(--primary); background: rgba(99, 102, 241, 0.05); }
-
-        @media (max-width: 1100px) {
-           .viewer-main { flex-direction: column; overflow-y: auto; }
-           .video-viewport { min-height: 400px; height: 50vh; flex-grow: 0; }
-           .playlist-sidebar { width: 100%; border-left: none; border-top: 1px solid var(--surface-border); height: auto; }
-           .hero-title { font-size: 3rem; }
-        }
-        @media (max-width: 768px) {
-           .hero-title { font-size: 2.5rem; }
-           .course-grid-lux { grid-template-columns: 1fr; }
-        }
-      `}</style>
     </div>
   );
 };
+
 
 export default Courses;

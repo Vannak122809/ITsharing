@@ -744,3 +744,204 @@ main {
     grid-template-columns: 1fr;
   }
 }
+
+/* ─── MODERN LUXURY UI EXTENSIONS ─── */
+
+.luxury-card {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease, border-color 0.4s ease !important;
+  border: 1px solid var(--surface-border);
+  position: relative;
+  overflow: hidden;
+}
+
+.luxury-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.15) !important;
+  border-color: var(--primary);
+}
+
+.icon-box {
+  width: 72px;
+  height: 72px;
+  background: var(--card-dark);
+  border-radius: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.05);
+  border: 1px solid var(--surface-border);
+}
+
+.version-tag {
+  font-size: 0.75rem;
+  font-weight: 800;
+  background: var(--surface-badge);
+  color: var(--primary);
+  padding: 4px 12px;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.folder-tag {
+  font-size: 0.7rem;
+  font-weight: 600;
+  border: 1px solid var(--surface-border);
+  color: var(--text-muted);
+  padding: 3px 10px;
+  border-radius: 8px;
+}
+
+.software-title-link {
+  font-size: 1.4rem;
+  font-weight: 800;
+  margin-bottom: 12px;
+  color: var(--text-main);
+  transition: color 0.3s;
+  letter-spacing: -0.01em;
+}
+
+.luxury-card:hover .software-title-link {
+  color: var(--primary);
+}
+
+.software-desc-text {
+  color: var(--text-muted);
+  line-height: 1.7;
+  font-size: 0.95rem;
+  margin-bottom: 24px;
+}
+
+.card-footer-modern {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--surface-border);
+}
+
+.size-text {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.details-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 800;
+  color: var(--primary);
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: 0.3s;
+}
+
+.details-btn:hover {
+  gap: 12px;
+}
+
+.new-badge {
+  position: absolute;
+  top: 12px;
+  right: -30px;
+  background: linear-gradient(135deg, var(--secondary), #ec4899);
+  color: white;
+  padding: 4px 35px;
+  transform: rotate(45deg);
+  font-size: 0.7rem;
+  font-weight: 900;
+  z-index: 1;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.folder-grid-modern {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+.folder-item-modern {
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  border-radius: 28px;
+  padding: 40px 32px;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  text-align: center;
+}
+
+.folder-item-modern:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+  border-color: var(--primary);
+}
+
+.folder-icon-wrapper {
+  width: 80px;
+  height: 80px;
+  border-radius: 24px;
+  background: var(--card-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--surface-border);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.03);
+  transition: 0.4s;
+}
+
+.folder-item-modern:hover .folder-icon-wrapper {
+  background: var(--surface-badge);
+  border-color: var(--primary);
+}
+
+.folder-title-modern {
+  font-weight: 800;
+  font-size: 1.2rem;
+  color: var(--text-main);
+  display: block;
+}
+
+.folder-subtitle-modern {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-top: 4px;
+  display: block;
+}
+
+.empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 120px 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.empty-state h2 {
+  font-size: 2rem;
+  color: var(--text-main);
+}
+
+.empty-state p {
+  color: var(--text-muted);
+  font-size: 1.1rem;
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

@@ -219,108 +219,123 @@ const SoftwareViewer = () => {
   }
 
   return (
-    <div className="container" style={{ paddingTop: '80px', minHeight: '80vh' }}>
-      <Link to="/software" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)', marginBottom: '32px' }}>
-        <ArrowLeft size={16} /> Back to Software
-      </Link>
+    <div className="container" style={{ paddingTop: '100px', minHeight: '100vh', paddingBottom: '100px' }}>
+      
+      <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
+        
+        {/* Navigation Breadcrumb */}
+        <nav style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '40px', fontSize: '0.95rem' }}>
+          <Link to="/software" style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-muted)', textDecoration: 'none', fontWeight: 600 }}>
+            <ArrowLeft size={16} /> Software Base
+          </Link>
+          <span style={{ color: 'var(--surface-border)' }}>/</span>
+          <span style={{ color: 'var(--text-main)', fontWeight: 800 }}>{software.title}</span>
+        </nav>
 
-      <div className="glass-panel" style={{ padding: '40px', display: 'flex', flexDirection: 'column', gap: '40px' }}>
-
-        {/* Header Section */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '24px' }}>
-          <div>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'var(--surface-badge)', padding: '6px 16px', borderRadius: '20px', fontSize: '0.85rem', marginBottom: '16px', color: 'var(--text-muted)' }}>
-              {software.os === 'windows' ? <Monitor size={14} color="#00fa9a" /> : <Apple size={14} color="#ff2a7a" />}
-              {software.os === 'windows' ? 'Windows OS' : 'macOS Application'} • {software.version}
-            </div>
-
-            <h1 style={{ fontSize: '3rem', marginBottom: '8px' }} className="text-gradient">{software.title}</h1>
-            <p style={{ fontSize: '1.1rem', color: 'var(--text-muted)' }}>By: {software.developer}</p>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', minWidth: '200px' }}>
-            <a href={software.downloadUrl || "https://files.kichhoat24h.com/download"} target="_blank" rel="noreferrer" onClick={(e) => { if (isGuest) { e.preventDefault(); navigate('/login'); } }} className="btn btn-primary" style={{ padding: '16px', fontSize: '1.1rem', boxShadow: '0 8px 30px rgba(69, 243, 255, 0.4)', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-              <Download size={20} /> Download Now
-            </a>
-            <div style={{ textAlign: 'center', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-              File Size: <strong>{software.size}</strong>
-            </div>
-          </div>
-        </div>
-
-        {/* Info Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '32px', marginTop: '16px' }}>
-
-          {/* Overview */}
-          <div style={{ background: 'var(--card-dark)', padding: '32px', borderRadius: '16px', border: '1px solid var(--surface-border)' }}>
-            <h3 style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '1.5rem', marginBottom: '16px', color: 'var(--primary)' }}>
-              <Box size={24} /> Overview
-            </h3>
-            <p style={{ lineHeight: '1.8', color: 'var(--text-main)', fontSize: '1.05rem' }}>
-              {software.description}
-            </p>
-          </div>
-
-          {/* Key Features */}
-          <div style={{ background: 'var(--card-dark)', padding: '32px', borderRadius: '16px', border: '1px solid var(--surface-border)' }}>
-            <h3 style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '1.5rem', marginBottom: '16px', color: '#00fa9a' }}>
-              <Zap size={24} /> Key Features
-            </h3>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {software.features.map((feature, i) => (
-                <li key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--text-main)', fontSize: '1.05rem' }}>
-                  <CheckCircle size={18} color="#00fa9a" /> {feature}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* System Requirements */}
-          <div style={{ background: 'var(--card-dark)', padding: '32px', borderRadius: '16px', border: '1px solid var(--surface-border)' }}>
-            <h3 style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '1.5rem', marginBottom: '16px', color: '#ff2a7a' }}>
-              <ShieldAlert size={24} /> Requirements
-            </h3>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {software.requirements.map((req, i) => (
-                <li key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--text-main)', fontSize: '1.05rem' }}>
-                  <div style={{ width: '6px', height: '6px', background: '#ff2a7a', borderRadius: '50%' }} />
-                  {req}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-        </div>
-
-        {/* Ratings & Reviews System */}
-        <div className="card-dark" style={{ padding: '32px', borderRadius: '16px', border: '1px solid var(--surface-border)', marginTop: '24px' }}>
-          <h3 style={{ fontSize: '1.5rem', marginBottom: '24px', color: 'var(--primary)' }}>Community Feedback</h3>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '32px' }}>
-            <div style={{ fontSize: '3rem', fontWeight: 'bold', color: 'white' }}>4.8</div>
-            <div>
-              <div style={{ color: '#ff9900', fontSize: '1.2rem', marginBottom: '4px' }}>★★★★★</div>
-              <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Based on 124 user ratings</div>
-            </div>
-          </div>
+        <div className="glass-panel" style={{ padding: '60px', borderRadius: '40px', border: '1px solid var(--surface-border)', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', top: '-100px', right: '-100px', width: '300px', height: '300px', background: 'var(--primary)', filter: 'blur(150px)', opacity: 0.1, zIndex: 0 }} />
           
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div style={{ padding: '16px', background: 'var(--surface)', borderRadius: '12px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <strong style={{ color: 'var(--text-main)' }}>TechStudent99</strong>
-                <span style={{ color: '#ff9900' }}>★★★★★</span>
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            
+            {/* Header Content */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '40px', marginBottom: '60px' }}>
+              <div style={{ flex: 1, minWidth: '300px' }}>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 20px', borderRadius: '14px', background: 'var(--surface-badge)', color: 'var(--primary)', fontSize: '0.85rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '24px' }}>
+                  {software.os === 'windows' ? <Monitor size={16} /> : <Apple size={16} />}
+                  {software.os === 'windows' ? 'Windows Optimized' : 'macOS Application'} • {software.version}
+                </div>
+                <h1 className="text-gradient" style={{ fontSize: '4rem', lineHeight: 1.1, marginBottom: '16px' }}>{software.title}</h1>
+                <p style={{ fontSize: '1.25rem', color: 'var(--text-muted)', fontWeight: 500 }}>Published by {software.developer}</p>
               </div>
-              <p style={{ color: 'var(--text-muted)', margin: 0 }}>Works perfectly. Installed without any issues.</p>
-            </div>
-            <div style={{ padding: '16px', background: 'var(--surface)', borderRadius: '12px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <strong style={{ color: 'var(--text-main)' }}>Alex Devel</strong>
-                <span style={{ color: '#ff9900' }}>★★★★☆</span>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', minWidth: '240px' }}>
+                <a href={software.downloadUrl} target="_blank" rel="noreferrer" onClick={(e) => { if (isGuest) { e.preventDefault(); navigate('/login'); } }} className="btn btn-primary" style={{ padding: '20px 40px', fontSize: '1.2rem', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', boxShadow: '0 15px 40px rgba(37, 99, 235, 0.3)' }}>
+                  <Download size={22} /> Download Now
+                </a>
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: 600 }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Box size={14} /> {software.size}</span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><ShieldAlert size={14} /> Verified</span>
+                </div>
               </div>
-              <p style={{ color: 'var(--text-muted)', margin: 0 }}>Great software, but the download speed was slightly slow today.</p>
             </div>
+
+            {/* Info Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '30px', marginBottom: '60px' }}>
+              
+              {/* Requirements */}
+              <div className="glass-panel" style={{ padding: '32px', borderRadius: '24px', background: 'rgba(255,255,255,0.02)' }}>
+                <h3 style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--primary)', marginBottom: '24px', fontSize: '1.4rem' }}>
+                  <Zap size={22} /> {t('requirements') || 'Requirements'}
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  {software.requirements.map((req, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '1rem', color: 'var(--text-muted)' }}>
+                      <CheckCircle size={16} color="var(--primary)" /> {req}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Features */}
+              <div className="glass-panel" style={{ padding: '32px', borderRadius: '24px', background: 'rgba(255,255,255,0.02)' }}>
+                <h3 style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#00fa9a', marginBottom: '24px', fontSize: '1.4rem' }}>
+                  <Rocket size={22} /> {t('features') || 'Key Features'}
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  {software.features.map((feature, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '1rem', color: 'var(--text-muted)' }}>
+                      <CheckCircle size={16} color="#00fa9a" /> {feature}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+            </div>
+
+            {/* Content Area */}
+            <div style={{ marginBottom: '60px' }}>
+              <h2 style={{ fontSize: '1.8rem', marginBottom: '20px' }}>General Information</h2>
+              <p style={{ fontSize: '1.15rem', color: 'var(--text-muted)', lineHeight: 1.8 }}>
+                {software.description}
+              </p>
+            </div>
+
+            {/* Feedback Sidebar Concept */}
+            <div style={{ borderTop: '1px solid var(--surface-border)', paddingTop: '60px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+                <h2 style={{ fontSize: '1.8rem' }}>Community Insight</h2>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <span style={{ fontSize: '1.8rem', fontWeight: 800 }}>4.8</span>
+                  <div style={{ display: 'flex', color: '#fbbf24' }}>
+                    <Star size={20} fill="#fbbf24" />
+                    <Star size={20} fill="#fbbf24" />
+                    <Star size={20} fill="#fbbf24" />
+                    <Star size={20} fill="#fbbf24" />
+                    <Star size={20} fill="none" />
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '20px' }}>
+                <div className="glass-panel" style={{ padding: '24px', borderRadius: '20px', background: 'rgba(255,255,255,0.01)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+                    <span style={{ fontWeight: 700 }}>TechStudent99</span>
+                    <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>2 days ago</span>
+                  </div>
+                  <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: '0.95rem' }}>Installs perfectly on Win 11 24H2. The speed is amazing!</p>
+                </div>
+                <div className="glass-panel" style={{ padding: '24px', borderRadius: '20px', background: 'rgba(255,255,255,0.01)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+                    <span style={{ fontWeight: 700 }}>Alex Devel</span>
+                    <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>1 week ago</span>
+                  </div>
+                  <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: '0.95rem' }}>Clean file, no issues with Defender. High reliability repository.</p>
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
-
       </div>
     </div>
   );

@@ -406,48 +406,61 @@ const Software = () => {
     : [];
 
   return (
-    <div className="container" style={{ paddingTop: '80px', minHeight: '80vh', paddingBottom: '80px' }}>
+    <div className="container" style={{ paddingTop: '100px', minHeight: '100vh', paddingBottom: '100px' }}>
       
       {!currentFolder ? (
         <>
-          <header style={{ marginBottom: '40px', textAlign: 'center' }}>
-            <h1 className="text-animated-cyber">{t('software_repository_title')}</h1>
-            <p style={{ color: 'var(--text-muted)', maxWidth: '600px', margin: '0 auto', fontSize: '1.1rem', marginTop: '16px' }}>
+          <header style={{ marginBottom: '60px', textAlign: 'center' }}>
+            <h1 className="text-gradient" style={{ fontSize: '3.5rem', marginBottom: '16px' }}>{t('software_repository_title')}</h1>
+            <p style={{ color: 'var(--text-muted)', maxWidth: '650px', margin: '0 auto', fontSize: '1.15rem', lineHeight: 1.6 }}>
               {t('software_repository_desc')}
             </p>
 
-            {/* OS Filter & Search Toggle */}
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', marginTop: '40px', marginBottom: '16px' }}>
-              <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '16px', width: '100%' }}>
-                <div style={{ background: 'var(--card-dark)', padding: '6px', borderRadius: '30px', display: 'flex', gap: '8px', border: '1px solid var(--surface-border)' }}>
+            {/* OS Filter & Search Bar */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px', marginTop: '60px' }}>
+              
+              <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '30px', width: '100%', alignItems: 'center' }}>
+                
+                {/* OS Switcher */}
+                <div style={{ 
+                  background: 'rgba(255,255,255,0.03)', 
+                  padding: '6px', 
+                  borderRadius: '18px', 
+                  display: 'flex', 
+                  gap: '4px', 
+                  border: '1px solid var(--surface-border)',
+                  backdropFilter: 'blur(10px)',
+                  boxShadow: '0 10px 30px rgba(0,0,0,0.1)'
+                }}>
                   <button 
                     onClick={() => { setActiveOS('windows'); setCurrentFolder(null); setCurrentSubfolder(null); setCurrentTypeFolder(null); setSearchTerm(''); }}
                     style={{
-                      display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 24px', borderRadius: '24px', border: 'none', cursor: 'pointer', fontWeight: 'bold', fontFamily: 'inherit',
-                      background: activeOS === 'windows' ? 'linear-gradient(135deg, var(--primary), var(--secondary))' : 'transparent',
+                      display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 28px', borderRadius: '14px', border: 'none', cursor: 'pointer', fontWeight: 800, fontFamily: 'inherit',
+                      background: activeOS === 'windows' ? 'var(--primary)' : 'transparent',
                       color: activeOS === 'windows' ? '#fff' : 'var(--text-muted)',
-                      transition: 'var(--transition)'
+                      transition: '0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+                      boxShadow: activeOS === 'windows' ? '0 8px 20px rgba(37, 99, 235, 0.25)' : 'none'
                     }}
                   >
-                    <Monitor size={18} /> {t('windows')}
+                    <Monitor size={20} /> {t('windows')}
                   </button>
                   <button 
                     onClick={() => { setActiveOS('mac'); setCurrentFolder(null); setCurrentSubfolder(null); setCurrentTypeFolder(null); setSearchTerm(''); }}
                     style={{
-                      display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 24px', borderRadius: '24px', border: 'none', cursor: 'pointer', fontWeight: 'bold', fontFamily: 'inherit',
-                      background: activeOS === 'mac' ? 'linear-gradient(135deg, var(--primary), var(--secondary))' : 'transparent',
+                      display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 28px', borderRadius: '14px', border: 'none', cursor: 'pointer', fontWeight: 800, fontFamily: 'inherit',
+                      background: activeOS === 'mac' ? 'var(--secondary)' : 'transparent',
                       color: activeOS === 'mac' ? '#fff' : 'var(--text-muted)',
-                      transition: 'var(--transition)'
+                      transition: '0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+                      boxShadow: activeOS === 'mac' ? '0 8px 20px rgba(168, 85, 247, 0.25)' : 'none'
                     }}
                   >
-                    <Apple size={18} /> {t('macos')}
+                    <Apple size={20} /> {t('macos')}
                   </button>
                 </div>
 
-                <div style={{ position: 'relative', width: '100%', maxWidth: '400px' }}>
-                  <div style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}>
-                    <Search size={18} />
-                  </div>
+                {/* Search Bar */}
+                <div style={{ position: 'relative', width: '100%', maxWidth: '450px' }}>
+                  <Search size={20} style={{ position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                   <input 
                     type="text"
                     placeholder={t('search_software')}
@@ -455,143 +468,87 @@ const Software = () => {
                     onChange={(e) => setSearchTerm(e.target.value)}
                     style={{
                       width: '100%',
-                      padding: '12px 16px 12px 48px',
-                      borderRadius: '30px',
-                      background: 'var(--card-dark)',
+                      padding: '16px 20px 16px 56px',
+                      borderRadius: '18px',
+                      background: 'rgba(255,255,255,0.03)',
                       border: '1px solid var(--surface-border)',
                       color: 'var(--text-main)',
-                      fontSize: '0.95rem',
+                      fontSize: '1rem',
                       outline: 'none',
-                      transition: 'var(--transition)',
-                      boxShadow: 'var(--shadow-sm)'
+                      transition: '0.3s',
+                      backdropFilter: 'blur(10px)',
+                      boxShadow: '0 4px 20px rgba(0,0,0,0.05)'
                     }}
-                    onFocus={(e) => { e.target.style.borderColor = 'var(--primary)'; e.target.style.boxShadow = '0 0 15px rgba(99, 102, 241, 0.2)'; }}
-                    onBlur={(e) => { e.target.style.borderColor = 'var(--surface-border)'; e.target.style.boxShadow = 'var(--shadow-sm)'; }}
+                    onFocus={(e) => { e.target.style.borderColor = 'var(--primary)'; e.target.style.background = 'rgba(255,255,255,0.05)'; }}
+                    onBlur={(e) => { e.target.style.borderColor = 'var(--surface-border)'; e.target.style.background = 'rgba(255,255,255,0.03)'; }}
                   />
-                  {searchTerm && (
-                    <button 
-                      onClick={() => setSearchTerm('')}
-                      style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
-                    >
-                      <X size={16} />
-                    </button>
-                  )}
                 </div>
               </div>
             </div>
           </header>
 
-          <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+          <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
             {searchTerm.trim() ? (
               <div className="card-grid">
                 {filteredSoftware.map(software => (
-                  <div key={software.id} className="card glass-panel flex flex-col" style={{ padding: '24px', position: 'relative', overflow: 'hidden' }}>
-                    {software.isNew && <div style={{ position: 'absolute', top: '12px', right: '-30px', background: 'var(--secondary)', color: 'white', padding: '4px 35px', transform: 'rotate(45deg)', fontSize: '0.7rem', fontWeight: 'bold', zIndex: 1, boxShadow: '0 2px 5px rgba(0,0,0,0.2)' }}>{t('new')}</div>}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
-                      <div style={{ background: 'var(--surface-badge)', padding: '12px', borderRadius: '16px', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div key={software.id} className="card glass-panel luxury-card" style={{ padding: '32px', borderRadius: '28px' }}>
+                    {software.isNew && <div className="new-badge">{t('new')}</div>}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
+                      <div className="icon-box">
                         {(software.title.toLowerCase().includes('iso') || (software.url && software.url.toLowerCase().includes('.iso'))) ? (
-                          <ModernIsoIcon size={32} />
+                          <ModernIsoIcon size={44} />
                         ) : (
-                          <SoftwareIcon id={software.id} os={software.os} size={36} />
+                          <SoftwareIcon id={software.id} os={software.os} size={48} />
                         )}
                       </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'flex-end' }}>
-                        <span style={{ fontSize: '0.8rem', background: 'var(--surface-badge)', padding: '4px 12px', borderRadius: '12px', color: 'var(--text-muted)' }}>
-                          {software.version}
-                        </span>
-                        <span style={{ fontSize: '0.75rem', border: '1px solid var(--primary)', padding: '2px 10px', borderRadius: '12px', color: 'var(--primary)', opacity: 0.8 }}>
-                          {software.folder}
-                        </span>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end' }}>
+                        <span className="version-tag">{software.version}</span>
+                        <span className="folder-tag">{software.folder}</span>
                       </div>
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', width: '100%' }}>
-                      <a 
-                        href={software.downloadUrl || software.url || `https://files.kichhoat24h.com/download/${encodeURIComponent(software.folder)}/${encodeURIComponent(software.title)}`}
-                        target="_blank" 
-                        rel="noreferrer"
-                        onClick={(e) => { 
-                          e.stopPropagation();
-                          if (authLoading) { e.preventDefault(); return; }
-                          if (isGuest) { e.preventDefault(); navigate('/login'); } 
-                        }}
-                        style={{ textDecoration: 'none', color: 'inherit' }}
-                      >
-                        <h3 
-                          style={{ fontSize: '1.25rem', marginBottom: '6px', cursor: 'pointer', transition: 'color 0.2s', textAlign: 'left' }}
-                          onMouseOver={(e) => e.target.style.color = 'var(--primary)'}
-                          onMouseOut={(e) => e.target.style.color = 'inherit'}
-                        >
-                          {software.title}
-                        </h3>
-                      </a>
+                    <div style={{ flexGrow: 1 }}>
+                      <Link to={`/software/${software.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                        <h3 className="software-title-link">{software.title}</h3>
+                      </Link>
+                      <p className="software-desc-text">{software.desc}</p>
                     </div>
-                    <p style={{ color: 'var(--text-muted)', flexGrow: 1, fontSize: '0.9rem', lineHeight: 1.5 }}>{software.desc}</p>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--surface-border)' }}>
-                      <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{software.size}</span>
-                      <Link to={`/software/${software.id}`} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 'bold', color: 'var(--primary)', textDecoration: 'none', fontSize: '0.9rem' }}>
-                        <Eye size={16} /> {t('details')}
+                    <div className="card-footer-modern">
+                      <span className="size-text">{software.size}</span>
+                      <Link to={`/software/${software.id}`} className="details-btn">
+                        <Eye size={18} /> {t('details')}
                       </Link>
                     </div>
                   </div>
                 ))}
                 {filteredSoftware.length === 0 && (
-                  <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '100px 40px', background: 'var(--surface)', borderRadius: '24px', border: '1px solid var(--surface-border)' }}>
-                    <Search size={48} style={{ margin: '0 auto 20px auto', opacity: 0.3 }} />
-                    <h2 style={{ fontSize: '1.5rem', marginBottom: '10px' }}>{t('no_matches_found')}</h2>
-                    <p style={{ color: 'var(--text-muted)' }}>{t('search_no_match')} "{searchTerm}"</p>
+                  <div className="glass-panel empty-state">
+                    <Ghost size={64} style={{ opacity: 0.2 }} />
+                    <h2>{t('no_matches_found')}</h2>
+                    <p>{t('search_no_match')} "{searchTerm}"</p>
                   </div>
                 )}
               </div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '24px' }}>
+              <div className="folder-grid-modern">
                 {currentFoldersList.map((folderName) => (
-                <div 
-                  key={folderName} 
-                  onClick={() => setCurrentFolder(folderName)}
-                  style={{
-                    background: 'var(--surface)',
-                    border: '1px solid var(--surface-border)',
-                    borderRadius: '16px',
-                    padding: '32px 24px',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '16px',
-                    boxShadow: 'var(--shadow-sm)',
-                    textAlign: 'center'
-                  }}
-                  onMouseOver={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-6px)';
-                    e.currentTarget.style.boxShadow = 'var(--shadow-lg)';
-                    e.currentTarget.style.borderColor = 'var(--primary)';
-                  }}
-                  onMouseOut={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
-                    e.currentTarget.style.borderColor = 'var(--surface-border)';
-                  }}
-                >
-                  <div style={{ 
-                    width: '64px', height: '64px', borderRadius: '16px', 
-                    background: 'var(--card-dark)', display: 'flex', alignItems: 'center', 
-                    justifyContent: 'center', border: '1px solid var(--surface-border)',
-                    boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.1)'
-                  }}>
-                    <ModernFolderIcon size={40} folderName={folderName} />
+                  <div 
+                    key={folderName} 
+                    onClick={() => setCurrentFolder(folderName)}
+                    className="folder-item-modern"
+                  >
+                    <div className="folder-icon-wrapper">
+                      <ModernFolderIcon size={48} folderName={folderName} />
+                    </div>
+                    <div className="folder-text-content">
+                      <span className="folder-title-modern">
+                        {t(folderName.toLowerCase().replace(' ', '_'))}
+                      </span>
+                      <span className="folder-subtitle-modern">
+                        {softwareData.filter(s => s.os === activeOS && s.folder === folderName).length} Resources
+                      </span>
+                    </div>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <span style={{ fontWeight: 700, fontSize: '1.15rem', color: 'var(--text-main)', letterSpacing: '0.3px' }}>
-                      {t(folderName.toLowerCase().replace(' ', '_'))}
-                    </span>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                      {t('folder')}
-                    </span>
-                  </div>
-                </div>
-              ))}
+                ))}
               </div>
             )}
           </div>
