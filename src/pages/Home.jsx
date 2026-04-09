@@ -41,8 +41,8 @@ const Home = () => {
               <BookOpen size={24} />
               <span style={{ fontSize: '0.8rem', background: 'var(--surface-badge)', padding: '4px 12px', borderRadius: '12px' }}>{t('experience')}</span>
             </div>
-            <h3 className="card-title">My Journey to Senior Dev</h3>
-            <p className="card-desc">From a bootcamp grad to leading a team of 10. Here are the hard lessons I learned along the way.</p>
+            <h3 className="card-title">Network & Application Admin</h3>
+            <p className="card-desc">Designing resilient infrastructures and optimizing enterprise applications for high-performance environments.</p>
             <Link to="/experiences" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '16px', fontWeight: 'bold', color: '#ff2a7a' }}>
               {t('read_story')} <ArrowRight size={16} />
             </Link>
