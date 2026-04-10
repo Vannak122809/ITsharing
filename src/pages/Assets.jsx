@@ -5,129 +5,7 @@ import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useLanguage } from '../LanguageContext';
 
-// Featured Static Assets (Full Collection) - Defined outside component to prevent re-declarations
-const featuredAssets = [
-    {
-        id: 'kny-7',
-        title: 'សួស្ដីឆ្នាំថ្មី - Premium KKS 008',
-        type: 'Frame',
-        format: 'Photoshop (PSD)',
-        url: 'https://pub-337d5bdcb73d4c85a90006cf59c8c399.r2.dev/photo_2026-04-08_13-51-08.jpg',
-        sourceUrl: 'https://pub-337d5bdcb73d4c85a90006cf59c8c399.r2.dev/KKS_008.psd',
-        tags: ['khmer new year', 'kny', 'psd', 'frame'],
-        downloads: 1560, likes: 620, featured: true, dimensions: 'High-Res PSD', size: '54.2 MB', dpi: '300 DPI'
-    },
-    {
-        id: 'kny-8',
-        title: 'សួស្ដីឆ្នាំថ្មី - Premium KKS 019',
-        type: 'Frame',
-        format: 'Photoshop (PSD)',
-        url: 'https://pub-337d5bdcb73d4c85a90006cf59c8c399.r2.dev/KKS_019.png',
-        sourceUrl: 'https://pub-337d5bdcb73d4c85a90006cf59c8c399.r2.dev/KKS_019.psd',
-        tags: ['khmer new year', 'kny', 'psd', 'frame'],
-        downloads: 2100, likes: 840, featured: true, dimensions: 'Master PSD', size: '48.5 MB', dpi: 'Editable'
-    },
-    {
-        id: 'kny-9',
-        title: 'សួស្ដីឆ្នាំថ្មី - Premium KKS 016',
-        type: 'Frame',
-        format: 'Photoshop (PSD)',
-        url: 'https://pub-337d5bdcb73d4c85a90006cf59c8c399.r2.dev/photo_2026-04-08_13-50-40.jpg',
-        sourceUrl: 'https://pub-337d5bdcb73d4c85a90006cf59c8c399.r2.dev/KKS_016.psd',
-        tags: ['khmer new year', 'kny', 'psd', 'frame'],
-        downloads: 1890, likes: 710, featured: true, dimensions: '4000x3000 px', size: '51.3 MB', dpi: '300 DPI'
-    },
-    {
-        id: 'kny-1',
-        title: 'សួស្ដីឆ្នាំថ្មី - Official KNY Poster 2026',
-        type: 'Khmer New Year',
-        format: 'Photoshop (PSD)',
-        url: 'https://pub-337d5bdcb73d4c85a90006cf59c8c399.r2.dev/d5c7c377-e3a2-4d0f-bf0b-af8e112825e6.jpg',
-        sourceUrl: 'https://pub-337d5bdcb73d4c85a90006cf59c8c399.r2.dev/d5c7c377-e3a2-4d0f-bf0b-af8e112825e6.eps',
-        tags: ['khmer new year', 'kny', 'សួស្ដីឆ្នាំថ្មី', '2026', 'poster'],
-        downloads: 4200, likes: 1800, featured: true, dimensions: 'Vector Scalable', size: '24.5 MB', dpi: '300 DPI'
-    },
-    {
-        id: 'kny-2',
-        title: 'សួស្ដីឆ្នាំថ្មី - Festive Celebration Banner',
-        type: 'Khmer New Year',
-        format: 'Photoshop (PSD)',
-        url: 'https://pub-337d5bdcb73d4c85a90006cf59c8c399.r2.dev/363d572d-1337-46a6-8579-2f01e21eb4b7.jpg',
-        sourceUrl: 'https://pub-337d5bdcb73d4c85a90006cf59c8c399.r2.dev/363d572d-1337-46a6-8579-2f01e21eb4b7.eps',
-        tags: ['khmer new year', 'kny', 'banner', 'festive'],
-        downloads: 3100, likes: 1450, featured: true, dimensions: 'Print Ready', size: '18.2 MB', dpi: 'High Res'
-    },
-    {
-        id: 'kny-3',
-        title: 'សួស្ដីឆ្នាំថ្មី - Traditional Art Elements',
-        type: 'Khmer New Year',
-        format: 'Photoshop (PSD)',
-        url: 'https://pub-337d5bdcb73d4c85a90006cf59c8c399.r2.dev/8107f372-6c18-4aaf-b04a-98d44c82d0ed.jpg',
-        sourceUrl: 'https://pub-337d5bdcb73d4c85a90006cf59c8c399.r2.dev/8107f372-6c18-4aaf-b04a-98d44c82d0ed.eps',
-        tags: ['khmer new year', 'kny', 'traditional', 'art'],
-        downloads: 2800, likes: 920, featured: true, dimensions: 'Vector AI/EPS', size: '12.8 MB', dpi: 'Clean'
-    },
-    {
-        id: 'kny-4',
-        title: 'សួស្ដីឆ្នាំថ្មី - Khmer Decor Collection',
-        type: 'Khmer New Year',
-        format: 'Photoshop (PSD)',
-        url: 'https://pub-337d5bdcb73d4c85a90006cf59c8c399.r2.dev/192ef4fb-5f1d-4ef2-a7b4-a00f9518b365.jpg',
-        sourceUrl: 'https://pub-337d5bdcb73d4c85a90006cf59c8c399.r2.dev/192ef4fb-5f1d-4ef2-a7b4-a00f9518b365.eps',
-        tags: ['khmer new year', 'kny', 'decor', 'bundle'],
-        downloads: 5120, likes: 2100, featured: true, dimensions: 'Original Vector', size: '32.1 MB', dpi: '300 DPI'
-    },
-    {
-        id: 'kny-5',
-        title: 'សួស្ដីឆ្នាំថ្មី - Typography 2026 Collection',
-        type: 'Khmer New Year',
-        format: 'Photoshop (PSD)',
-        url: 'https://pub-337d5bdcb73d4c85a90006cf59c8c399.r2.dev/Text%202026.webp',
-        sourceUrl: 'https://pub-337d5bdcb73d4c85a90006cf59c8c399.r2.dev/drive-download-20260408T092432Z-3-001.zip',
-        tags: ['khmer new year', 'kny', 'typography', '2026', 'text'],
-        downloads: 6400, likes: 3200, featured: true, dimensions: 'Multi-Format ZIP', size: '45.0 MB', dpi: 'Editable'
-    },
-    {
-        id: 'kny-6',
-        title: 'សួស្ដីឆ្នាំថ្មី - KKS Premium Design',
-        type: 'Khmer New Year',
-        format: 'Photoshop (PSD)',
-        url: 'https://pub-337d5bdcb73d4c85a90006cf59c8c399.r2.dev/photo_2026-04-08_13-51-24.jpg',
-        sourceUrl: 'https://pub-337d5bdcb73d4c85a90006cf59c8c399.r2.dev/KKS_061.psd',
-        tags: ['khmer new year', 'kny', 'kks', 'design', 'psd'],
-        downloads: 1200, likes: 540, featured: true, dimensions: '4000 x 3000 px', size: '61.0 MB', dpi: 'Lossless PSD'
-    },
-    {
-        id: 'feat-a',
-        title: 'សួស្ដីឆ្នាំថ្មី - KNY Modern Poster',
-        type: 'Khmer New Year',
-        format: 'Photoshop (PSD)',
-        url: 'https://pub-337d5bdcb73d4c85a90006cf59c8c399.r2.dev/4382dac1-b79a-48ea-947e-e664310f4c0c.jpg',
-        sourceUrl: 'https://pub-337d5bdcb73d4c85a90006cf59c8c399.r2.dev/4382dac1-b79a-48ea-947e-e664310f4c0c.eps',
-        tags: ['khmer new year', 'kny', 'សួស្ដីឆ្នាំថ្មី'],
-        downloads: 2450, likes: 1200, featured: true, dimensions: '3508 x 2480 px', size: '12.4 MB', dpi: '300 DPI'
-    },
-    {
-        id: 'feat-b',
-        title: 'សួស្ដីឆ្នាំថ្មី - Celebration Art',
-        type: 'Khmer New Year',
-        format: 'Photoshop (PSD)',
-        url: 'https://pub-337d5bdcb73d4c85a90006cf59c8c399.r2.dev/eae75759-b594-4a81-b5c5-ae0d7770586f.jpg',
-        sourceUrl: 'https://pub-337d5bdcb73d4c85a90006cf59c8c399.r2.dev/eae75759-b594-4a81-b5c5-ae0d7770586f.eps',
-        tags: ['khmer new year', 'kny'],
-        downloads: 1890, likes: 950, featured: true, dimensions: 'Vector Scalable', size: '8.2 MB', dpi: 'Print Ready'
-    },
-    {
-        id: 'feat-c',
-        title: 'សួស្ដីឆ្នាំថ្មី - Traditional Pattern HQ',
-        type: 'Khmer New Year',
-        format: 'Photoshop (PSD)',
-        url: 'https://pub-337d5bdcb73d4c85a90006cf59c8c399.r2.dev/b145780a-817a-41d7-b4b2-d8d8e7d8daeb.jpg',
-        sourceUrl: 'https://pub-337d5bdcb73d4c85a90006cf59c8c399.r2.dev/b145780a-817a-41d7-b4b2-d8d8e7d8daeb.eps',
-        tags: ['khmer new year', 'kny', 'pattern'],
-        downloads: 3200, likes: 1540, featured: true, dimensions: '4000 x 3000 px', size: '15.1 MB', dpi: 'HQ Quality'
-    }
-];
+import { featuredAssets } from '../data/assetsData';
 
 const Assets = () => {
     const { t } = useLanguage();
@@ -145,7 +23,7 @@ const Assets = () => {
         { id: 'Frame', name: 'Frames', icon: <Box size={18} /> },
         { id: 'Template', name: 'Templates', icon: <Layers size={18} /> },
         { id: 'Illustration', name: 'Illustrations', icon: <ImageIcon size={18} /> },
-        { id: 'Image', name: 'Stock Photos', icon: <Image size={18} /> }
+        { id: 'Image', name: 'Image', icon: <Image size={18} /> }
     ], [t]);
 
     useEffect(() => {
@@ -163,7 +41,11 @@ const Assets = () => {
     const filteredAssets = useMemo(() => {
         const queryStr = searchQuery.toLowerCase().trim();
         return allAssets.filter(asset => {
-            const matchesTab = activeTab === 'All' || asset.type === activeTab;
+            // Updated filtering logic to support dual categorization (Type or Tag matches)
+            const matchesTab = activeTab === 'All' || 
+                             asset.type === activeTab || 
+                             (activeTab === 'Khmer New Year' && asset.tags?.some(tag => tag.toLowerCase() === 'khmer new year'));
+            
             if (!matchesTab) return false;
             return !queryStr || asset.title?.toLowerCase().includes(queryStr) || 
                    asset.tags?.some(tag => tag.toLowerCase().includes(queryStr));
@@ -271,7 +153,7 @@ const Assets = () => {
                                 <div className="brand-icon">IT</div>
                                 <div>
                                     <h3>{selectedAsset.title}</h3>
-                                    <span>Premium Verified Template</span>
+                                    <span>{selectedAsset.type === 'Khmer New Year' ? 'Official Holiday Asset' : 'Premium Stock Resource'}</span>
                                 </div>
                             </div>
                             <button className="close-btn" onClick={() => setSelectedAsset(null)}><X size={24} /></button>
@@ -286,7 +168,7 @@ const Assets = () => {
                                 <div className="download-cta glass-panel">
                                     <h4 className="cta-label">Download Resource</h4>
                                     <a href={selectedAsset.sourceUrl || selectedAsset.url} download={selectedAsset.title} target="_blank" className="btn btn-primary download-btn">
-                                        <Download size={22} /> {selectedAsset.format || 'Photoshop (PSD)'}
+                                        <Download size={22} /> {selectedAsset.format || 'Download Resource'}
                                     </a>
                                     <div className="cta-meta">
                                         <CheckCircle2 size={14} color="var(--tertiary)" />
@@ -299,7 +181,7 @@ const Assets = () => {
                                     <div className="tech-grid">
                                         <div><label>Dimensions</label><p>{selectedAsset.dimensions || 'High-Res'}</p></div>
                                         <div><label>File Size</label><p>{selectedAsset.size || 'Varies'}</p></div>
-                                        <div><label>Format</label><p>PSD / EPS</p></div>
+                                        <div><label>Format</label><p>{selectedAsset.format?.replace(' Image', '').replace('Photoshop ', '') || 'Asset'}</p></div>
                                         <div><label>Quality</label><p>{selectedAsset.dpi || 'Print Ready'}</p></div>
                                     </div>
                                 </section>
@@ -366,7 +248,7 @@ const Assets = () => {
                 .details-section { width: 460px; background: var(--surface); border-left: 1px solid var(--surface-border); padding: 48px; overflow-y: auto; display: flex; flex-direction: column; gap: 32px; }
                 .download-cta { padding: 32px; border-radius: 28px; background: var(--bg-color); border: 1px solid var(--surface-border); }
                 .cta-label { color: var(--text-main); font-size: 0.95rem; font-weight: 800; margin-bottom: 20px; text-transform: uppercase; }
-                .download-btn { width: 100%; padding: 18px; border-radius: 16px; display: flex; align-items: center; justify-content: center; gap: 12px; font-size: 1.1rem; font-weight: 800; }
+                .download-btn { width: 100%; padding: 18px; border-radius: 16px; display: flex; align-items: center; justify-content: center; gap: 12px; font-size: 1.1rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
                 .cta-meta { margin-top: 16px; display: flex; align-items: center; gap: 8px; opacity: 0.7; justify-content: center; font-size: 0.8rem; }
                 .tech-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
                 .tech-grid label { display: block; font-size: 0.75rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; }
