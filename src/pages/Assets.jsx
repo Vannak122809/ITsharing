@@ -14,11 +14,46 @@ const Assets = () => {
     const [activeTab, setActiveTab] = useState('All');
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedAsset, setSelectedAsset] = useState(null);
+    const [isDownloading, setIsDownloading] = useState(false);
+
+    const handleDownload = async (asset) => {
+        if (!asset) return;
+        setIsDownloading(true);
+        try {
+            const url = asset.sourceUrl || asset.url;
+            const response = await fetch(url, {
+                mode: 'cors',
+                credentials: 'omit'
+            });
+            
+            if (!response.ok) throw new Error('Network response was not ok');
+            
+            const blob = await response.blob();
+            const blobUrl = window.URL.createObjectURL(blob);
+            
+            const link = document.createElement('a');
+            link.href = blobUrl;
+            const ext = url.split('.').pop().split('?')[0] || 'png';
+            link.download = `${asset.title}.${ext}`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(blobUrl);
+        } catch (error) {
+            console.error('Download failed:', error);
+            alert('ការទាញយកមានបញ្ហា! សូមពិនិត្យមើលការកំណត់ CORS នៅក្នុង Cloudflare R2 ឬប្រើ Right Click -> Save Image As ជំនួសវិញ។');
+            // Fallback
+            window.open(asset.sourceUrl || asset.url, '_blank');
+        } finally {
+            setIsDownloading(false);
+        }
+    };
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     // Optimized categories memo
     const categories = useMemo(() => [
         { id: 'All', name: t('all'), icon: <Layout size={18} /> },
+        { id: 'Chinese New Year', name: 'Chinese New Year', icon: <Star size={18} /> },
         { id: 'Khmer New Year', name: 'Khmer New Year', icon: <Sparkles size={18} /> },
         { id: 'Frame', name: 'Frames', icon: <Box size={18} /> },
         { id: 'Template', name: 'Templates', icon: <Layers size={18} /> },
@@ -44,7 +79,9 @@ const Assets = () => {
             // Updated filtering logic to support dual categorization (Type or Tag matches)
             const matchesTab = activeTab === 'All' || 
                              asset.type === activeTab || 
-                             (activeTab === 'Khmer New Year' && asset.tags?.some(tag => tag.toLowerCase() === 'khmer new year'));
+                             asset.collection === activeTab ||
+                             (activeTab === 'Khmer New Year' && asset.tags?.some(tag => tag.toLowerCase() === 'khmer new year')) ||
+                             (activeTab === 'Chinese New Year' && asset.tags?.some(tag => tag.toLowerCase() === 'chinese new year'));
             
             if (!matchesTab) return false;
             return !queryStr || asset.title?.toLowerCase().includes(queryStr) || 
@@ -167,9 +204,14 @@ const Assets = () => {
                             <div className="details-section">
                                 <div className="download-cta glass-panel">
                                     <h4 className="cta-label">Download Resource</h4>
-                                    <a href={selectedAsset.sourceUrl || selectedAsset.url} download={selectedAsset.title} target="_blank" className="btn btn-primary download-btn">
-                                        <Download size={22} /> {selectedAsset.format || 'Download Resource'}
-                                    </a>
+                                    <button 
+                                        onClick={() => handleDownload(selectedAsset)}
+                                        disabled={isDownloading}
+                                        className="btn btn-primary download-btn"
+                                    >
+                                        <Download size={22} /> 
+                                        {isDownloading ? 'Downloading...' : (selectedAsset.format || 'Download Resource')}
+                                    </button>
                                     <div className="cta-meta">
                                         <CheckCircle2 size={14} color="var(--tertiary)" />
                                         <span>High Quality PSD / Vector included</span>
@@ -239,7 +281,9 @@ const Assets = () => {
 
                 .asset-viewer-modal { position: fixed; inset: 0; background: var(--nav-bg); z-index: 20000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(30px); }
                 .modal-container { width: 100%; height: 100%; display: flex; flex-direction: column; }
-                .modal-header { padding: 16px 48px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--surface-border); background: var(--surface); }
+                .modal-header { padding: 18px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--surface-border); background: var(--surface); position: relative; }
+                .close-btn { position: absolute; top: 20px; right: 40px; width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.05); color: var(--text-main); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 12px rgba(0,0,0,0.05); z-index: 100; }
+                .close-btn:hover { background: #ff4d4d; color: white; transform: rotate(90deg) scale(1.1); border-color: #ff4d4d; box-shadow: 0 10px 25px rgba(255, 77, 77, 0.4); }
                 .header-brand { display: flex; align-items: center; gap: 20px; }
                 .brand-icon { width: 40px; height: 40px; border-radius: 12px; background: var(--primary); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 900; }
                 .modal-content { flex-grow: 1; display: flex; overflow: hidden; }

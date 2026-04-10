@@ -9,36 +9,6 @@ import { collection, addDoc, getDocs, orderBy, query, serverTimestamp } from "fi
 const R2_PUBLIC_URL = import.meta.env.VITE_R2_PUBLIC_URL; // Please replace with your actual R2.dev URL if you have one enabled
 
 /**
- * Converts an image file to WebP format client-side using Canvas
- * @param {File} file 
- * @param {number} quality (0 to 1)
- * @returns {Promise<Blob>}
- */
-export const convertToWebP = (file, quality = 0.8) => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0);
-        canvas.toBlob((blob) => {
-          if (blob) resolve(blob);
-          else reject(new Error('Canvas conversion failed'));
-        }, 'image/webp', quality);
-      };
-      img.onerror = () => reject(new Error('Image load failed'));
-      img.src = e.target.result;
-    };
-    reader.onerror = () => reject(new Error('File read failed'));
-    reader.readAsDataURL(file);
-  });
-};
-
-/**
  * Uploads a file directly to Cloudflare R2
  * @param {File} file 
  * @param {string} folder 
@@ -46,27 +16,14 @@ export const convertToWebP = (file, quality = 0.8) => {
  */
 export const uploadFileToR2 = async (file, folder = "documents") => {
   try {
-    let uploadBody = file;
-    let contentType = file.type;
-    let fileName = `${folder}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.\-_]/g, '')}`;
+    const fileExtension = file.name.split('.').pop();
+    const fileName = `${folder}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.\-_]/g, '')}`;
 
-    // Auto-convert to WebP if it's an image
-    if (file.type.startsWith('image/') && file.type !== 'image/gif') {
-      try {
-        const webpBlob = await convertToWebP(file);
-        uploadBody = webpBlob;
-        contentType = 'image/webp';
-        fileName = fileName.substring(0, fileName.lastIndexOf('.')) + '.webp';
-      } catch (e) {
-        console.warn('WebP conversion failed, falling back to original format', e);
-      }
-    }
-    
     const command = new PutObjectCommand({
       Bucket: BUCKET_NAME,
       Key: fileName,
-      Body: uploadBody,
-      ContentType: contentType,
+      Body: file,
+      ContentType: file.type,
     });
 
     await r2Client.send(command);
@@ -84,7 +41,7 @@ export const uploadFileToR2 = async (file, folder = "documents") => {
 export const getFileUrl = async (fileKey) => {
   // Option A: If bucket has public access turned on (Faster, best for CDN)
   return `${R2_PUBLIC_URL}/${fileKey}`;
-  
+
   // Option B: If bucket is private, generate a 1-hour signed URL:
   /*
   const command = new GetObjectCommand({
@@ -118,7 +75,7 @@ export const fetchAllDocuments = async () => {
   try {
     const q = query(collection(db, "documents"), orderBy("createdAt", "desc"));
     const querySnapshot = await getDocs(q);
-    
+
     const docs = [];
     querySnapshot.forEach((doc) => {
       docs.push({ id: doc.id, ...doc.data() });
@@ -136,8 +93,8 @@ export const fetchAllDocuments = async () => {
 
 /** Allowed image types and max size */
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-const MAX_AVATAR_SIZE_MB  = 2;
-const MAX_COVER_SIZE_MB   = 4;
+const MAX_AVATAR_SIZE_MB = 2;
+const MAX_COVER_SIZE_MB = 4;
 
 /**
  * Validate image before upload
@@ -189,9 +146,9 @@ export const uploadAvatarToR2 = async (uid, file, oldKey = null) => {
 
   // Upload → document bucket (public CDN: pub-564a73...r2.dev)
   await r2Client.send(new PutObjectCommand({
-    Bucket:      BUCKET_NAME,
-    Key:         key,
-    Body:        new Uint8Array(arrayBuffer),
+    Bucket: BUCKET_NAME,
+    Key: key,
+    Body: new Uint8Array(arrayBuffer),
     ContentType: file.type,
   }));
 
@@ -224,12 +181,45 @@ export const uploadCoverToR2 = async (uid, file, oldKey = null) => {
 
   // Upload → document bucket
   await r2Client.send(new PutObjectCommand({
-    Bucket:      BUCKET_NAME,
-    Key:         key,
-    Body:        new Uint8Array(arrayBuffer),
+    Bucket: BUCKET_NAME,
+    Key: key,
+    Body: new Uint8Array(arrayBuffer),
     ContentType: file.type,
   }));
 
   const url = `${R2_PUBLIC_URL}/${key}?v=${Date.now()}`;
   return { url, key };
+};
+
+/**
+ * Converts an image file to WebP format using Canvas API
+ * @param {File} file The original image file
+ * @param {number} quality Compression quality (0 to 1)
+ * @returns {Promise<Blob>} The converted WebP image as a Blob
+ */
+export const convertToWebP = async (file, quality = 0.8) => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0);
+                canvas.toBlob((blob) => {
+                    if (blob) {
+                        resolve(blob);
+                    } else {
+                        reject(new Error('Canvas toBlob conversion failed'));
+                    }
+                }, 'image/webp', quality);
+            };
+            img.onerror = () => reject(new Error('Failed to load image for WebP conversion'));
+            img.src = event.target.result;
+        };
+        reader.onerror = () => reject(new Error('Failed to read file for WebP conversion'));
+        reader.readAsDataURL(file);
+    });
 };

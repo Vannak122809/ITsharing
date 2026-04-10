@@ -370,5 +370,85 @@ export const featuredAssets = [
         sourceUrl: 'https://pub-d1a291624a2449dfa5dc29dc91b022ce.r2.dev/PNG/png/Layer%204.png',
         tags: ['khmer new year', 'kny', 'png', 'element', 'layer', '2026'],
         downloads: 420, likes: 145, featured: false, dimensions: 'Overlay PNG', size: '1.8 MB', dpi: '300 DPI'
+    },
+    {
+        id: 'kny-png-star3',
+        title: 'Khmer New Year Star Element - 3',
+        type: 'Image',
+        format: 'PNG Image',
+        url: 'https://pub-d1a291624a2449dfa5dc29dc91b022ce.r2.dev/PNG/png/star%203.webp',
+        sourceUrl: 'https://pub-d1a291624a2449dfa5dc29dc91b022ce.r2.dev/PNG/png/star%203.png',
+        tags: ['khmer new year', 'kny', 'star', 'decoration'],
+        downloads: 320, likes: 95, featured: false, dimensions: 'Transparent PNG', size: '0.5 MB', dpi: '72 DPI'
+    },
+    {
+        id: 'kny-png-star1',
+        title: 'Khmer New Year Star Element - 1',
+        type: 'Image',
+        format: 'PNG Image',
+        url: 'https://pub-d1a291624a2449dfa5dc29dc91b022ce.r2.dev/PNG/png/star1.webp',
+        sourceUrl: 'https://pub-d1a291624a2449dfa5dc29dc91b022ce.r2.dev/PNG/png/star1.png',
+        tags: ['khmer new year', 'kny', 'star', 'decoration'],
+        downloads: 280, likes: 88, featured: false, dimensions: 'Transparent PNG', size: '0.4 MB', dpi: '72 DPI'
+    },
+    {
+        id: 'kny-png-stars',
+        title: 'Khmer New Year Stars Collection',
+        type: 'Image',
+        format: 'PNG Image',
+        url: 'https://pub-d1a291624a2449dfa5dc29dc91b022ce.r2.dev/PNG/png/stars.webp',
+        sourceUrl: 'https://pub-d1a291624a2449dfa5dc29dc91b022ce.r2.dev/PNG/png/stars.png',
+        tags: ['khmer new year', 'kny', 'stars', 'decoration'],
+        downloads: 540, likes: 160, featured: true, dimensions: 'Transparent PNG', size: '1.2 MB', dpi: '300 DPI'
+    },
+    {
+        id: 'kny-png-untitled',
+        title: 'Khmer Decorative Element - Untitled',
+        type: 'Image',
+        format: 'PNG Image',
+        url: 'https://pub-d1a291624a2449dfa5dc29dc91b022ce.r2.dev/PNG/png/untitled.webp',
+        sourceUrl: 'https://pub-d1a291624a2449dfa5dc29dc91b022ce.r2.dev/PNG/png/untitled.png',
+        tags: ['khmer new year', 'kny', 'decoration', 'abstract'],
+        downloads: 190, likes: 45, featured: false, dimensions: 'Transparent PNG', size: '0.8 MB', dpi: '72 DPI'
+    },
+    {
+        id: 'kny-png-kroma',
+        title: 'Traditional Khmer Kroma',
+        type: 'Image',
+        format: 'PNG Image',
+        url: 'https://pub-d1a291624a2449dfa5dc29dc91b022ce.r2.dev/PNG/png/%E1%9E%80%E1%9F%92%E1%9E%9A%E1%9E%98%E1%9E%B6.webp',
+        sourceUrl: 'https://pub-d1a291624a2449dfa5dc29dc91b022ce.r2.dev/PNG/png/%E1%9E%80%E1%9F%92%E1%9E%9A%E1%9E%98%E1%9E%B6.jpg',
+        tags: ['khmer new year', 'kny', 'kroma', 'traditional', 'cloth'],
+        downloads: 850, likes: 320, featured: true, dimensions: 'High-Res Photo', size: '2.1 MB', dpi: '300 DPI'
+    },
+    {
+        id: 'kny-png-trud1',
+        title: 'Traditional Trud Dance Mask - 1',
+        type: 'Image',
+        format: 'PNG Image',
+        url: 'https://pub-d1a291624a2449dfa5dc29dc91b022ce.r2.dev/PNG/png/%E1%9E%8F%E1%9F%92%E1%9E%9A%E1%9E%BB%E1%9E%8A%E1%9E%B7.webp',
+        sourceUrl: 'https://pub-d1a291624a2449dfa5dc29dc91b022ce.r2.dev/PNG/png/%E1%9E%8F%E1%9F%92%E1%9E%9A%E1%9E%BB%E1%9E%8A%E1%9E%B7.png',
+        tags: ['khmer new year', 'kny', 'trud', 'dance', 'traditional'],
+        downloads: 670, likes: 210, featured: true, dimensions: 'Transparent PNG', size: '1.5 MB', dpi: '300 DPI'
+    },
+    {
+        id: 'kny-png-trud2',
+        title: 'Traditional Trud Dance Mask - 2',
+        type: 'Image',
+        format: 'PNG Image',
+        url: 'https://pub-d1a291624a2449dfa5dc29dc91b022ce.r2.dev/PNG/png/%E1%9E%8F%E1%9F%92%E1%9E%9A%E1%9E%BB%E1%9E%8A%E1%9E%B7%E1%9F%A2.webp',
+        sourceUrl: 'https://pub-d1a291624a2449dfa5dc29dc91b022ce.r2.dev/PNG/png/%E1%9E%8F%E1%9F%92%E1%9E%9A%E1%9E%BB%E1%9E%8A%E1%9E%B7%E1%9F%A2.png',
+        tags: ['khmer new year', 'kny', 'trud', 'dance', 'traditional'],
+        downloads: 590, likes: 185, featured: false, dimensions: 'Transparent PNG', size: '1.4 MB', dpi: '300 DPI'
+    },
+    {
+        id: 'kny-png-trud3',
+        title: 'Traditional Trud Dance Mask - 3',
+        type: 'Image',
+        format: 'PNG Image',
+        url: 'https://pub-d1a291624a2449dfa5dc29dc91b022ce.r2.dev/PNG/png/%E1%9E%8F%E1%9F%92%E1%9E%9A%E1%9E%BB%E1%9E%8A%E1%9E%B7%E1%9F%A3.webp',
+        sourceUrl: 'https://pub-d1a291624a2449dfa5dc29dc91b022ce.r2.dev/PNG/png/%E1%9E%8F%E1%9F%92%E1%9E%9A%E1%9E%BB%E1%9E%8A%E1%9E%B7%E1%9F%A3.png',
+        tags: ['khmer new year', 'kny', 'trud', 'dance', 'traditional'],
+        downloads: 480, likes: 140, featured: false, dimensions: 'Transparent PNG', size: '1.3 MB', dpi: '300 DPI'
     }
 ];

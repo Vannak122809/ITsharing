@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
-import { Terminal, Video, FileText, BookOpen, Layers, User, LogOut, DownloadCloud, Sun, Moon, Users, HelpCircle, Menu, X, Globe, Gift, Image as ImageIcon } from 'lucide-react';
+import { Terminal, Video, FileText, BookOpen, Layers, User, LogOut, DownloadCloud, Sun, Moon, Users, HelpCircle, Menu, X, Globe, Gift, Image as ImageIcon, LayoutDashboard } from 'lucide-react';
 
 import { auth } from './firebase';
 import { onAuthStateChanged, signOut, sendEmailVerification } from 'firebase/auth';
@@ -17,6 +17,7 @@ import Community from './pages/Community';
 import RequestResource from './pages/RequestResource';
 import Profile from './pages/Profile';
 import Assets from './pages/Assets';
+import AdminAssets from './pages/AdminAssets';
 
 import GiveawayKeys from './pages/GiveawayKeys';
 
@@ -135,6 +136,7 @@ function App() {
 
   const moreNavItems = isLoggedIn ? [
     { name: t('experiences'), path: '/experiences', icon: <BookOpen size={18} /> },
+    { name: 'Admin Dashboard', path: '/admin/assets', icon: <LayoutDashboard size={18} /> },
     { name: t('giveaway'), path: '/giveaway', icon: <Gift size={18} /> },
     { name: t('request'), path: '/request', icon: <HelpCircle size={18} /> },
   ] : [
@@ -374,6 +376,11 @@ function App() {
               <Profile user={user} />
             </ProtectedRoute>
           } />
+            <Route path="/admin/assets" element={
+              <ProtectedRoute requiredRole="admin">
+                <AdminAssets />
+              </ProtectedRoute>
+            } />
 
           <Route path="/login" element={<Login />} />
         </Routes>
