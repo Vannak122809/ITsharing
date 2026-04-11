@@ -129,4 +129,11 @@ i no need it i need
     previews image , previews template , 
     download image , download template , 
     display image , display template , 
-    
+    ខ្ញុំចង់បង្កើត admin dashboard សម្រាប់ upload image , template , 
+    download image , download template , 
+    display image , display template , 
+    ហើយខ្ញុំត្រូវការ optoins for convert image to webp automatically 
+
+update ui upload form upload by gatagory and upload main file , cover image
+and user can be select buckets for upload image , template , 
+i want to user login in this form for security i need local user example user : seunvannak33047@gmail.com and password : Vannak@123 is super admin

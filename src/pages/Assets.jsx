@@ -55,6 +55,7 @@ const Assets = () => {
         { id: 'All', name: t('all'), icon: <Layout size={18} /> },
         { id: 'Chinese New Year', name: 'Chinese New Year', icon: <Star size={18} /> },
         { id: 'Khmer New Year', name: 'Khmer New Year', icon: <Sparkles size={18} /> },
+        { id: 'Luxury', name: 'Luxury Assets', icon: <Zap size={18} /> },
         { id: 'Frame', name: 'Frames', icon: <Box size={18} /> },
         { id: 'Template', name: 'Templates', icon: <Layers size={18} /> },
         { id: 'Illustration', name: 'Illustrations', icon: <ImageIcon size={18} /> },

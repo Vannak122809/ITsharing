@@ -201,6 +201,15 @@ function App() {
 
           {/* Desktop actions */}
           <div className="nav-actions" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+
+            <button
+              onClick={() => setLang(lang === 'km' ? 'en' : 'km')}
+              style={{ background: 'var(--surface-badge)', border: '1px solid var(--surface-border)', color: 'var(--text-main)', borderRadius: '12px', padding: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              title={lang === 'km' ? 'Switch to English' : 'ប្តូរទៅភាសាខ្មែរ'}
+            >
+              <Globe size={18} />
+            </button>
+
             <button
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
               style={{ background: 'none', border: 'none', color: 'var(--text-main)', cursor: 'pointer', padding: '8px', display: 'flex', alignItems: 'center' }}
@@ -208,20 +217,16 @@ function App() {
             >
               {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
             </button>
-
             {user ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginLeft: '8px' }}>
-                <Link to="/profile" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none', color: 'var(--text-main)', fontWeight: 600 }}>
-                  <div style={{ width: '36px', height: '36px', borderRadius: '50%', border: '2px solid var(--primary)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--surface-badge)' }}>
+                <Link to="/profile" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }} title={userProfile?.nickname || 'Account Settings'}>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '50%', border: '2px solid var(--primary)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--surface-badge)', transition: '0.3s' }}>
                     {userProfile?.avatarUrl ? (
                       <img src={userProfile.avatarUrl} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
                       <User size={20} color="var(--primary)" />
                     )}
                   </div>
-                  <span style={{ fontSize: '1rem', color: '#64748b' }}>
-                    {userProfile?.nickname || user.email.split('@')[0]}
-                  </span>
                 </Link>
                 <button 
                   onClick={handleSignOut} 
@@ -324,7 +329,7 @@ function App() {
               className="btn btn-outline"
               style={{ justifyContent: 'center', gap: '8px' }}
             >
-              <Globe size={16} /> {lang === 'km' ? 'English' : 'Khmer'}
+              <Globe size={16} /> {lang === 'km' ? 'EN' : 'KH'}
             </button>
             <button
               onClick={() => { setTheme(theme === 'dark' ? 'light' : 'dark'); }}

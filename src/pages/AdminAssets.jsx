@@ -10,15 +10,19 @@ import {
 import { auth, db } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { collection, query, orderBy, onSnapshot, deleteDoc, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { useLanguage } from '../LanguageContext';
 import AssetUploadForm from '../components/AssetUploadForm';
 
 const AdminAssets = () => {
+    const { lang, setLang } = useLanguage();
     const [user, setUser] = useState(null);
     const [userProfile, setUserProfile] = useState(null);
     const [activeTab, setActiveTab] = useState('assets'); // 'assets' or 'users'
     const [assets, setAssets] = useState([]);
     const [usersList, setUsersList] = useState([]);
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [editingAsset, setEditingAsset] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [userSearchQuery, setUserSearchQuery] = useState('');
     
@@ -91,6 +95,11 @@ const AdminAssets = () => {
             console.error('Update role failed:', error);
             alert(`Error: ${error.message}. Please check your Firebase Security Rules.`);
         }
+    };
+
+    const handleEditAsset = (asset) => {
+        setEditingAsset({ ...asset });
+        setIsEditModalOpen(true);
     };
 
     if (!isAdmin) {
@@ -218,8 +227,8 @@ const AdminAssets = () => {
                             <thead>
                                 <tr>
                                     <th>Asset Preview</th>
-                                    <th>Category & Format</th>
-                                    <th>Collection</th>
+                                    <th>Format & Software</th>
+                                    <th>Primary Category</th>
                                     <th>Date Added</th>
                                     <th>Management</th>
                                 </tr>
@@ -243,7 +252,7 @@ const AdminAssets = () => {
                                         <td><div className="date-cell"><Calendar size={12} /> {asset.createdAt?.toDate().toLocaleDateString()}</div></td>
                                         <td>
                                             <div className="action-btns">
-                                                <button className="btn-icon" title="View"><Eye size={16} /></button>
+                                                <button className="btn-icon" onClick={() => handleEditAsset(asset)} title="Edit Asset Metadata"><UserCog size={16} /></button>
                                                 <button className="btn-icon delete" onClick={() => handleDeleteAsset(asset.id)} title="Delete"><Trash2 size={16} /></button>
                                             </div>
                                         </td>
@@ -311,71 +320,100 @@ const AdminAssets = () => {
             {isUploadModalOpen && (
                 <div className="upload-modal-overlay">
                     <div className="modal-inner">
-                        <button className="close-modal" onClick={() => setIsUploadModalOpen(false)}><X size={24} /></button>
                         <AssetUploadForm onComplete={() => setIsUploadModalOpen(false)} />
                     </div>
                 </div>
             )}
 
+            {isEditModalOpen && editingAsset && (
+                <div className="upload-modal-overlay">
+                    <div className="modal-inner">
+                        <AssetUploadForm 
+                            editData={editingAsset} 
+                            onComplete={() => setIsEditModalOpen(false)} 
+                        />
+                    </div>
+                </div>
+            )}
+
             <style dangerouslySetInnerHTML={{ __html: `
-                .unified-admin-page { display: flex; min-height: 100vh; background: #f8f9fc; }
-                .admin-sidebar { width: 280px; background: white; border-right: 1px solid #edf2f7; padding: 40px 24px; display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; }
+                .unified-admin-page { display: flex; min-height: 100vh; background: var(--bg-color); color: var(--text-main); }
+                .admin-sidebar { width: 280px; background: var(--surface); border-right: 1px solid var(--surface-border); padding: 40px 24px; display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; backdrop-filter: var(--blur); }
                 .sidebar-brand { display: flex; align-items: center; gap: 12px; margin-bottom: 48px; }
-                .b-icon { background: #5c67ff; color: white; width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 900; }
-                .sidebar-brand span { font-size: 1.1rem; font-weight: 800; color: #1a1a1a; }
+                .b-icon { background: var(--primary); color: white; width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 900; }
+                .sidebar-brand span { font-size: 1.1rem; font-weight: 800; color: var(--text-main); }
                 
                 .side-nav { display: flex; flex-direction: column; gap: 8px; flex: 1; }
-                .side-nav button { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 14px; border: none; background: transparent; color: #718096; font-weight: 600; cursor: pointer; transition: 0.3s; text-align: left; }
-                .side-nav button.active { background: #5c67ff; color: white; box-shadow: 0 10px 20px rgba(92,103,255,0.2); }
-                .side-nav button:hover:not(.active) { background: #f7fafc; color: #1a1a1a; }
+                .side-nav button { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 14px; border: none; background: transparent; color: var(--text-muted); font-weight: 600; cursor: pointer; transition: 0.3s; text-align: left; }
+                .side-nav button.active { background: var(--primary); color: white; box-shadow: 0 10px 20px rgba(92,103,255,0.2); }
+                .side-nav button:hover:not(.active) { background: var(--surface-badge); color: var(--text-main); }
+                
+                .lang-toggle-admin-icon { margin-top: 12px; border: 1.5px solid var(--surface-border); background: var(--surface); color: var(--text-muted); width: 44px; height: 44px; border-radius: 14px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.3s; }
+                .lang-toggle-admin-icon:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-2px); }
 
-                .sidebar-footer { border-top: 1px solid #edf2f7; padding-top: 24px; }
-                .admin-status { display: flex; align-items: center; gap: 8px; font-size: 0.75rem; font-weight: 800; color: #10b981; background: #f0fdf4; padding: 12px; border-radius: 12px; }
+                .sidebar-footer { border-top: 1px solid var(--surface-border); padding-top: 24px; }
+                .admin-status { display: flex; align-items: center; gap: 8px; font-size: 0.75rem; font-weight: 800; color: #10b981; background: rgba(16,185,129,0.1); padding: 12px; border-radius: 12px; }
                 .pulse { width: 8px; height: 8px; border-radius: 50%; background: #10b981; animation: pulse 2s infinite; }
                 @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(16,185,129,0.4); } 70% { box-shadow: 0 0 0 10px rgba(16,185,129,0); } 100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); } }
 
                 .admin-content { flex: 1; padding: 48px; max-width: 1400px; margin: 0 auto; width: 100%; }
                 .content-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
-                .h-text h1 { font-size: 2rem; font-weight: 900; color: #1a1a1a; margin-bottom: 4px; }
-                .h-text p { color: #718096; font-size: 1rem; }
-                .btn-upload-new { background: #1a1a1a; color: white; border: none; padding: 14px 24px; border-radius: 16px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: 0.3s; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+                .h-text h1 { font-size: 2rem; font-weight: 900; color: var(--text-main); margin-bottom: 4px; }
+                .h-text p { color: var(--text-muted); font-size: 1rem; }
+                .btn-upload-new { background: var(--text-main); color: var(--bg-color); border: none; padding: 14px 24px; border-radius: 16px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: 0.3s; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
                 .btn-upload-new:hover { transform: translateY(-2px); box-shadow: 0 15px 30px rgba(0,0,0,0.15); }
 
                 .stats-row { display: flex; gap: 16px; margin-bottom: 32px; }
-                .stat-pill { background: white; padding: 8px 16px; border-radius: 12px; font-size: 0.85rem; display: flex; align-items: center; gap: 8px; border: 1px solid #edf2f7; color: #4a5568; }
-                .stat-pill strong { color: #1a1a1a; }
+                .stat-pill { background: var(--surface); padding: 8px 16px; border-radius: 12px; font-size: 0.85rem; display: flex; align-items: center; gap: 8px; border: 1px solid var(--surface-border); color: var(--text-muted); }
+                .stat-pill strong { color: var(--text-main); }
 
-                .table-wrapper { background: white; border-radius: 28px; padding: 0; overflow: hidden; border: 1px solid #edf2f7; box-shadow: 0 4px 20px rgba(0,0,0,0.02); }
-                .table-controls { padding: 24px; border-bottom: 1px solid #edf2f7; display: flex; justify-content: space-between; }
-                .search-bar { display: flex; align-items: center; gap: 12px; background: #f7fafc; padding: 12px 20px; border-radius: 14px; width: 400px; }
-                .search-bar input { border: none; background: transparent; outline: none; width: 100%; font-weight: 600; font-size: 0.95rem; }
+                .table-wrapper { background: var(--surface); border-radius: 28px; padding: 0; overflow: hidden; border: 1px solid var(--surface-border); box-shadow: var(--shadow-glass); }
+                .table-controls { padding: 24px; border-bottom: 1px solid var(--surface-border); display: flex; justify-content: space-between; }
+                .search-bar { display: flex; align-items: center; gap: 12px; background: var(--surface-badge); padding: 12px 20px; border-radius: 14px; width: 400px; }
+                .search-bar input { border: none; background: transparent; outline: none; width: 100%; font-weight: 600; font-size: 0.95rem; color: var(--text-main); }
 
                 .modern-table { width: 100%; border-collapse: collapse; text-align: left; }
-                .modern-table th { padding: 20px 24px; background: #fafbfc; font-size: 0.75rem; font-weight: 800; color: #718096; text-transform: uppercase; border-bottom: 1px solid #edf2f7; }
-                .modern-table td { padding: 20px 24px; border-bottom: 1px solid #f7fafc; }
+                .modern-table th { padding: 20px 24px; background: var(--surface-badge); font-size: 0.75rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; border-bottom: 1px solid var(--surface-border); }
+                .modern-table td { padding: 20px 24px; border-bottom: 1px solid var(--surface-border); }
                 
                 .asset-cell, .user-cell { display: flex; align-items: center; gap: 16px; }
-                .a-preview, .u-avatar { width: 50px; height: 50px; border-radius: 12px; overflow: hidden; background: #edf2f7; display: flex; align-items: center; justify-content: center; }
+                .a-preview, .u-avatar { width: 50px; height: 50px; border-radius: 12px; overflow: hidden; background: var(--surface-badge); display: flex; align-items: center; justify-content: center; }
                 .a-preview img, .u-avatar img { width: 100%; height: 100%; object-fit: cover; }
-                .a-info strong, .u-info strong { display: block; font-size: 1rem; color: #1a1a1a; }
-                .a-info span, .u-info span { font-size: 0.8rem; color: #718096; }
+                .a-info strong, .u-info strong { display: block; font-size: 1rem; color: var(--text-main); }
+                .a-info span, .u-info span { font-size: 0.8rem; color: var(--text-muted); }
 
-                .badge-type, .badge-collection, .badge-role { padding: 6px 14px; border-radius: 8px; font-size: 0.75rem; font-weight: 800; display: inline-flex; align-items: center; gap: 6px; }
-                .badge-role.admin { background: #fff4eb; color: #e67e22; }
-                .badge-role.user { background: #f0fdf4; color: #10b981; }
-                .badge-owner { font-size: 0.75rem; font-weight: 800; color: #5c67ff; background: #f0f1ff; padding: 6px 12px; border-radius: 8px; }
-                .date-cell { font-size: 0.85rem; color: #718096; display: flex; align-items: center; gap: 6px; }
+                .badge-role.admin { background: rgba(230, 126, 34, 0.1); color: #e67e22; }
+                .badge-role.user { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+                .badge-owner { font-size: 0.75rem; font-weight: 800; color: var(--primary); background: var(--surface-badge); padding: 6px 12px; border-radius: 8px; }
+                .date-cell { font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
                 
-                .action-btns { display: flex; gap: 8px; }
-                .btn-icon { width: 36px; height: 36px; border-radius: 10px; border: 1px solid #edf2f7; background: white; cursor: pointer; color: #718096; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
-                .btn-icon:hover { background: #f7fafc; color: #5c67ff; border-color: #5c67ff; }
-                .btn-icon.delete:hover { background: #fff5f5; color: #e53e3e; border-color: #e53e3e; }
+                .btn-icon { width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--surface-border); background: var(--surface); cursor: pointer; color: var(--text-muted); display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+                .btn-icon:hover { background: var(--surface-badge); color: var(--primary); border-color: var(--primary); }
+                .btn-icon.delete:hover { background: rgba(229, 62, 62, 0.1); color: #e53e3e; border-color: #e53e3e; }
                 
-                .role-dropdown { padding: 8px 12px; border-radius: 10px; border: 1px solid #edf2f7; font-weight: 700; color: #4a5568; outline: none; cursor: pointer; }
+                .role-dropdown { padding: 8px 12px; border-radius: 10px; border: 1px solid var(--surface-border); font-weight: 700; color: var(--text-main); background: var(--surface); outline: none; cursor: pointer; }
 
-                .upload-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); z-index: 5000; display: flex; align-items: center; justify-content: center; padding: 40px; }
-                .modal-inner { background: white; border-radius: 40px; width: 100%; max-width: 1000px; position: relative; max-height: 90vh; overflow-y: auto; }
+                .upload-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 5000; display: flex; align-items: center; justify-content: center; padding: 40px; }
+                .modal-inner { background: var(--bg-color); border-radius: 40px; width: 100%; max-width: 1000px; position: relative; max-height: 90vh; overflow-y: auto; border: 1px solid var(--surface-border); }
+
+                .edit-modal-small { max-width: 600px; border-radius: 32px; padding: 32px; }
                 .close-modal { position: absolute; top: 24px; right: 24px; background: white; border: none; cursor: pointer; color: #718096; z-index: 10; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+
+                .edit-modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; padding-bottom: 20px; border-bottom: 1.5px solid #f7fafc; }
+                .edit-modal-header h3 { font-size: 1.3rem; font-weight: 800; display: flex; align-items: center; gap: 12px; color: #1a1a1a; }
+                .close-edit { background: #f7fafc; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; color: #718096; display: flex; align-items: center; justify-content: center; }
+
+                .edit-asset-form { display: flex; flex-direction: column; gap: 24px; }
+                .edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+                .edit-field { display: flex; flex-direction: column; gap: 8px; }
+                .edit-field label { font-size: 0.75rem; font-weight: 800; color: #718096; text-transform: uppercase; letter-spacing: 0.05em; }
+                .edit-field input, .edit-field select { padding: 14px; border-radius: 12px; border: 1.5px solid #edf2f7; font-size: 0.95rem; font-weight: 600; outline: none; transition: 0.3s; }
+                .edit-field input:focus, .edit-field select:focus { border-color: #5c67ff; box-shadow: 0 0 0 3px rgba(92,103,255,0.1); }
+                
+                .edit-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 12px; }
+                .btn-cancel { padding: 12px 24px; border-radius: 12px; border: none; background: #f7fafc; color: #718096; font-weight: 700; cursor: pointer; }
+                .btn-save { padding: 12px 24px; border-radius: 12px; border: none; background: #1a1a1a; color: white; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.3s; }
+                .btn-save:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,0.15); }
 
                 .denied-full { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 24px; background: white; }
                 .denied-full h1 { font-size: 2.5rem; font-weight: 900; }
