@@ -21,15 +21,19 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
     const [autoWebP, setAutoWebP] = useState(true);
 
     const [selectedBucket, setSelectedBucket] = useState(editData?.bucket || 'image');
-    const [selectedCategory, setSelectedCategory] = useState(editData?.collection || 'Chinese New Year');
+    const [selectedCategories, setSelectedCategories] = useState(
+        Array.isArray(editData?.collection) ? editData.collection : 
+        (editData?.collection ? [editData.collection] : ['Chinese New Year'])
+    );
     const [customPublicUrl, setCustomPublicUrl] = useState(ASSETS_PUBLIC_URL);
     const [showAdvanced, setShowAdvanced] = useState(false);
 
     useEffect(() => {
-        if (selectedCategory === 'Chinese New Year') {
-            setTags(prev => prev ? prev : 'Chinese New Year, CNY, 🧧, Red, Gold');
+        if (selectedCategories.includes('Chinese New Year')) {
+            const cnyTags = 'Chinese New Year, CNY, 🧧, Red, Gold';
+            if (!tags.includes('CNY')) setTags(prev => prev ? `${prev}, ${cnyTags}` : cnyTags);
         }
-    }, [selectedCategory]);
+    }, [selectedCategories]);
 
     const mainFileInputRef = useRef(null);
     const coverFileInputRef = useRef(null);
@@ -64,12 +68,40 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
 
     const currentFormat = softwareFormats.find(c => c.id === softwareType);
 
+    const formatFileNameToTitle = (fileName) => {
+        if (!fileName) return '';
+        let name = fileName.split('.')[0];
+        // Replace dashes and underscores with spaces
+        name = name.replace(/[_-]/g, ' ');
+        // Insert space before capital letters (for CamelCase)
+        name = name.replace(/([a-z])([A-Z])/g, '$1 $2');
+        // Capitalize each word properly
+        return name.split(' ')
+                   .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                   .join(' ')
+                   .trim();
+    };
+
     const handleMainFileSelect = (e) => {
         const file = e.target.files[0];
         if (file) {
             setMainFile(file);
-            if (!title) setTitle(file.name.split('.')[0]);
+            // Auto-title if currently empty
+            if (!title) {
+                setTitle(formatFileNameToTitle(file.name));
+            }
             if (file.type.startsWith('image/') && !coverFile) setCoverFile(file);
+        }
+    };
+
+    const handleCoverFileSelect = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setCoverFile(file);
+            // Auto-title if currently empty
+            if (!title) {
+                setTitle(formatFileNameToTitle(file.name));
+            }
         }
     };
 
@@ -108,22 +140,26 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
             }
             setUploadProgress(85);
 
-            // Determine technical 'type' based on category or software selection
-            let technicalType = 'Template'; // Fallback
-            if (softwareType === 'PNG' || selectedCategory === 'Image') technicalType = 'Image';
-            else if (['Frame', 'Illustration', 'Template', 'Luxury', 'Khmer New Year', 'Chinese New Year'].includes(selectedCategory)) {
-                technicalType = selectedCategory;
-            }
+            // Determine technical 'type' (Primary type for filtering)
+            let technicalType = selectedCategories[0] || 'Template';
+            if (softwareType === 'PNG' && !selectedCategories.includes('Frame')) technicalType = 'Image';
+            
+            // Add categories as extra tags for search robustness
+            const expandedTags = [
+                ...tags.split(',').map(tag => tag.trim()).filter(Boolean),
+                ...selectedCategories
+            ];
+            const uniqueTags = [...new Set(expandedTags)];
 
             // 3. Save to Firestore
             const assetData = {
                 title,
-                type: technicalType,
+                type: technicalType, // Primary Display Type
                 category: softwareType,
-                collection: selectedCategory,
+                collection: selectedCategories, // Stored as array
                 url: displayUrl,
                 sourceUrl: sourceUrl,
-                tags: tags.split(',').map(tag => tag.trim()).filter(Boolean),
+                tags: uniqueTags,
                 updatedAt: serverTimestamp()
             };
 
@@ -157,7 +193,7 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
     };
 
     return (
-        <div className={`artistic-upload-container ${selectedCategory === 'Chinese New Year' ? 'cny-theme' : ''}`}>
+        <div className={`artistic-upload-container ${selectedCategories.includes('Chinese New Year') ? 'cny-theme' : ''}`}>
             {/* Artistic Background Elements */}
             <div className="glow-orb" style={{ backgroundColor: currentFormat.accent }} />
             
@@ -169,7 +205,7 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
                         </div>
                         <div className="text-meta">
                             <h2>{isEditMode ? 'Modify Content Identity' : `Publish ${currentFormat.name} Resources`}</h2>
-                            <p> {isEditMode ? `Updating ID: ${editData.id.substring(0,8)}...` : `Premium ${selectedCategory === 'Chinese New Year' ? '🏮 CNY Special 🧧' : 'Assets'}`} &bull; {selectedCategory}</p>
+                            <p> {isEditMode ? `Updating ID: ${editData.id.substring(0,8)}...` : `Premium ${selectedCategories.includes('Chinese New Year') ? '🏮 CNY Special 🧧' : 'Assets'}`} &bull; {selectedCategories.join(', ')}</p>
                         </div>
                     </div>
                     
@@ -203,8 +239,16 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
                         {availableCategories.map(col => (
                             <button 
                                 key={col.id}
-                                className={`col-pill ${selectedCategory === col.id ? 'active' : ''}`}
-                                onClick={() => setSelectedCategory(col.id)}
+                                className={`col-pill ${selectedCategories.includes(col.id) ? 'active' : ''}`}
+                                onClick={() => {
+                                    setSelectedCategories(prev => {
+                                        if (prev.includes(col.id)) {
+                                            if (prev.length === 1) return prev; // Keep at least one
+                                            return prev.filter(id => id !== col.id);
+                                        }
+                                        return [...prev, col.id];
+                                    });
+                                }}
                             >
                                 {col.icon} {col.label}
                             </button>
@@ -261,7 +305,7 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
                             </div>
 
                             <div className={`master-dropzone preview-drop ${coverFile ? 'ready' : ''}`} onClick={() => coverFileInputRef.current.click()}>
-                                <input type="file" ref={coverFileInputRef} accept="image/*" onChange={(e) => setCoverFile(e.target.files[0])} hidden />
+                                <input type="file" ref={coverFileInputRef} accept="image/*" onChange={handleCoverFileSelect} hidden />
                                 <div className="drop-status-icon">
                                     {coverFile ? <Layout className="pulse-emerald" size={28} /> : <Plus size={28} />}
                                 </div>
@@ -296,7 +340,7 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
                             <div className="card-bottom-info">
                                 <div className="badge-row">
                                     <span className="cat-tag" style={{ color: currentFormat.accent }}>{softwareType}</span>
-                                    <span className="coll-tag">{selectedCategory}</span>
+                                    <span className="coll-tag">{selectedCategories.join(' + ')}</span>
                                 </div>
                                 <h4>{title || 'Asset Identity'}</h4>
                                 <div className="meta-footer">
