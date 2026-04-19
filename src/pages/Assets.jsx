@@ -7,6 +7,54 @@ import { useLanguage } from '../LanguageContext';
 
 import { featuredAssets } from '../data/assetsData';
 
+const AssetCard = ({ asset, onClick }) => {
+    const [imgIndex, setImgIndex] = useState(0);
+    const [isHovered, setIsHovered] = useState(false);
+    const gallery = asset.gallery && asset.gallery.length > 0 ? asset.gallery : [asset.url];
+
+    useEffect(() => {
+        let interval;
+        if (isHovered && gallery.length > 1) {
+            interval = setInterval(() => {
+                setImgIndex(prev => (prev + 1) % gallery.length);
+            }, 1000);
+        } else {
+            setImgIndex(0);
+        }
+        return () => clearInterval(interval);
+    }, [isHovered, gallery.length]);
+
+    return (
+        <div 
+            onClick={() => onClick(asset)} 
+            className="asset-card"
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+        >
+            <div className="card-media">
+                <img src={gallery[imgIndex]} alt={asset.title} loading="lazy" />
+                {asset.featured && (
+                    <div className="featured-badge"><Zap size={10} fill="#fff" /> FEATURED</div>
+                )}
+                {gallery.length > 1 && (
+                    <div style={{ position: 'absolute', bottom: '10px', left: '10px', zIndex: 3, display: 'flex', gap: '6px' }}>
+                        {gallery.map((_, i) => (
+                            <div key={i} style={{ width: '8px', height: '8px', borderRadius: '50%', background: i === imgIndex ? '#fff' : 'rgba(255,255,255,0.4)', transition: '0.3s', boxShadow: '0 2px 4px rgba(0,0,0,0.5)' }} />
+                        ))}
+                    </div>
+                )}
+                <div className="card-overlay">
+                    <div className="quick-view-btn">VIEW DETAILS</div>
+                </div>
+            </div>
+            <div className="card-info">
+                <h4>{asset.title}</h4>
+                <span className="type-badge">{asset.type.split(' ')[0]}</span>
+            </div>
+        </div>
+    );
+};
+
 const Assets = () => {
     const { t } = useLanguage();
     const [user, setUser] = useState(null);
@@ -14,6 +62,7 @@ const Assets = () => {
     const [activeTab, setActiveTab] = useState('All');
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedAsset, setSelectedAsset] = useState(null);
+    const [activeModalImageIndex, setActiveModalImageIndex] = useState(0);
     const [isDownloading, setIsDownloading] = useState(false);
 
     const handleDownload = async (asset) => {
@@ -155,21 +204,10 @@ const Assets = () => {
 
                     <div className="asset-grid">
                         {filteredAssets.map(asset => (
-                            <div key={asset.id} onClick={() => setSelectedAsset(asset)} className="asset-card">
-                                <div className="card-media">
-                                    <img src={asset.url} alt={asset.title} loading="lazy" />
-                                    {asset.featured && (
-                                        <div className="featured-badge"><Zap size={10} fill="#fff" /> FEATURED</div>
-                                    )}
-                                    <div className="card-overlay">
-                                        <div className="quick-view-btn">VIEW DETAILS</div>
-                                    </div>
-                                </div>
-                                <div className="card-info">
-                                    <h4>{asset.title}</h4>
-                                    <span className="type-badge">{asset.type.split(' ')[0]}</span>
-                                </div>
-                            </div>
+                            <AssetCard key={asset.id} asset={asset} onClick={(a) => {
+                                setSelectedAsset(a);
+                                setActiveModalImageIndex(0);
+                            }} />
                         ))}
                     </div>
 
@@ -198,8 +236,28 @@ const Assets = () => {
                         </div>
 
                         <div className="modal-content">
-                            <div className="preview-section">
-                                <img src={selectedAsset.url} alt={selectedAsset.title} />
+                            <div className="preview-section" style={{ flexDirection: 'column', gap: '20px' }}>
+                                <div style={{ flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+                                    <img 
+                                        src={selectedAsset.gallery?.length > 0 ? selectedAsset.gallery[activeModalImageIndex] : selectedAsset.url} 
+                                        alt={selectedAsset.title} 
+                                    />
+                                </div>
+                                {selectedAsset.gallery && selectedAsset.gallery.length > 1 && (
+                                    <div style={{ display: 'flex', gap: '12px', overflowX: 'auto', padding: '10px', maxWidth: '100%', justifyContent: 'center' }}>
+                                        {selectedAsset.gallery.map((imgUrl, i) => (
+                                            <div 
+                                                key={i} 
+                                                onClick={() => setActiveModalImageIndex(i)}
+                                                style={{ 
+                                                    width: '60px', height: '60px', borderRadius: '12px', overflow: 'hidden', cursor: 'pointer', border: i === activeModalImageIndex ? '2px solid var(--primary)' : '2px solid transparent', opacity: i === activeModalImageIndex ? 1 : 0.6, transition: '0.3s'
+                                                }}
+                                            >
+                                                <img src={imgUrl} alt="Thumbnail" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
 
                             <div className="details-section">

@@ -13,7 +13,7 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
     const isEditMode = !!editData;
     const [softwareType, setSoftwareType] = useState(editData?.category || 'Photoshop'); 
     const [mainFile, setMainFile] = useState(null);
-    const [coverFile, setCoverFile] = useState(null);
+    const [coverFiles, setCoverFiles] = useState([]);
     const [title, setTitle] = useState(editData?.title || '');
     const [tags, setTags] = useState(editData?.tags?.join(', ') || '');
     const [isUploading, setIsUploading] = useState(false);
@@ -95,12 +95,12 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
     };
 
     const handleCoverFileSelect = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            setCoverFile(file);
+        const files = Array.from(e.target.files).slice(0, 4); // Max 4 images
+        if (files.length > 0) {
+            setCoverFiles(files);
             // Auto-title if currently empty
             if (!title) {
-                setTitle(formatFileNameToTitle(file.name));
+                setTitle(formatFileNameToTitle(files[0].name));
             }
         }
     };
@@ -116,6 +116,7 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
 
         try {
             let displayUrl = editData?.url || '';
+            let galleryUrls = editData?.gallery || (editData?.url ? [editData.url] : []);
             let sourceUrl = editData?.sourceUrl || '';
             
             // 1. Upload Source File (only if new file selected)
@@ -125,18 +126,25 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
             }
             setUploadProgress(55);
 
-            // 2. Upload/Convert Cover Image (only if new file selected)
-            if (coverFile || (mainFile && !isEditMode)) {
-                const fileToCover = coverFile || mainFile;
-                if (autoWebP && fileToCover.type.startsWith('image/')) {
-                    const webpBlob = await convertToWebP(fileToCover, 0.85);
-                    const webpFile = new File([webpBlob], `${title}.webp`, { type: 'image/webp' });
-                    const displayKey = await uploadAssetToR2(webpFile, 'display', selectedBucket);
-                    displayUrl = `${customPublicUrl}/${displayKey}`;
-                } else {
-                    const displayKey = await uploadAssetToR2(fileToCover, 'display', selectedBucket);
-                    displayUrl = `${customPublicUrl}/${displayKey}`;
+            // 2. Upload/Convert Cover Images (only if new files selected)
+            if (coverFiles.length > 0 || (mainFile && !isEditMode && coverFiles.length === 0)) {
+                let displayUrls = [];
+                const filesToUpload = coverFiles.length > 0 ? coverFiles : [mainFile];
+                
+                for (let i = 0; i < filesToUpload.length; i++) {
+                    const fileToCover = filesToUpload[i];
+                    if (autoWebP && fileToCover.type.startsWith('image/')) {
+                        const webpBlob = await convertToWebP(fileToCover, 0.85);
+                        const webpFile = new File([webpBlob], `${title.replace(/[^a-zA-Z0-9]/g, '')}-${i}.webp`, { type: 'image/webp' });
+                        const displayKey = await uploadAssetToR2(webpFile, 'display', selectedBucket);
+                        displayUrls.push(`${customPublicUrl}/${displayKey}`);
+                    } else {
+                        const displayKey = await uploadAssetToR2(fileToCover, 'display', selectedBucket);
+                        displayUrls.push(`${customPublicUrl}/${displayKey}`);
+                    }
                 }
+                displayUrl = displayUrls[0];
+                galleryUrls = displayUrls;
             }
             setUploadProgress(85);
 
@@ -158,6 +166,7 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
                 category: softwareType,
                 collection: selectedCategories, // Stored as array
                 url: displayUrl,
+                gallery: galleryUrls,
                 sourceUrl: sourceUrl,
                 tags: uniqueTags,
                 updatedAt: serverTimestamp()
@@ -304,18 +313,18 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
                                 {mainFile && <CheckCircle2 className="checked-indicator" size={18} />}
                             </div>
 
-                            <div className={`master-dropzone preview-drop ${coverFile ? 'ready' : ''}`} onClick={() => coverFileInputRef.current.click()}>
-                                <input type="file" ref={coverFileInputRef} accept="image/*" onChange={handleCoverFileSelect} hidden />
+                            <div className={`master-dropzone preview-drop ${coverFiles.length > 0 ? 'ready' : ''}`} onClick={() => coverFileInputRef.current.click()}>
+                                <input type="file" ref={coverFileInputRef} accept="image/*" multiple onChange={handleCoverFileSelect} hidden />
                                 <div className="drop-status-icon">
-                                    {coverFile ? <Layout className="pulse-emerald" size={28} /> : <Plus size={28} />}
+                                    {coverFiles.length > 0 ? <Layout className="pulse-emerald" size={28} /> : <Plus size={28} />}
                                 </div>
                                 <div className="drop-labels">
-                                    <strong>{coverFile ? 'Thumbnail Ready' : 'Add Cover Image'}</strong>
-                                    <p>Used for web display and gallery</p>
+                                    <strong>{coverFiles.length > 0 ? `${coverFiles.length}/4 Thumbnails Ready` : 'Add Cover Images'}</strong>
+                                    <p>Select up to 4 images for rotating gallery</p>
                                 </div>
-                                {coverFile && (
+                                {coverFiles.length > 0 && (
                                     <div className="float-preview">
-                                        <img src={URL.createObjectURL(coverFile)} alt="" />
+                                        <img src={URL.createObjectURL(coverFiles[0])} alt="" />
                                     </div>
                                 )}
                             </div>
@@ -334,8 +343,17 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
 
                     <div className="final-actions-sidebar">
                         <div className="live-asset-card glass-panel">
-                            <div className="card-top-preview">
-                                {coverFile ? <img src={URL.createObjectURL(coverFile)} alt="" /> : <ImageIcon size={40} color="#eee" />}
+                            <div className="card-top-preview" style={{ position: 'relative' }}>
+                                {coverFiles.length > 0 ? (
+                                    <>
+                                        <img src={URL.createObjectURL(coverFiles[0])} alt="" />
+                                        {coverFiles.length > 1 && (
+                                            <div style={{ position: 'absolute', bottom: '8px', right: '8px', background: 'rgba(0,0,0,0.6)', color: 'white', padding: '4px 8px', borderRadius: '12px', fontSize: '0.7rem', fontWeight: 'bold' }}>
+                                                +{coverFiles.length - 1} Images
+                                            </div>
+                                        )}
+                                    </>
+                                ) : <ImageIcon size={40} color="#eee" />}
                             </div>
                             <div className="card-bottom-info">
                                 <div className="badge-row">
@@ -390,112 +408,112 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
 
             <style dangerouslySetInnerHTML={{ __html: `
                 .artistic-upload-container { position: relative; padding: 10px; min-height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; transition: background 0.5s ease; }
-                .artistic-upload-container.cny-theme { background: linear-gradient(135deg, #fff5f5 0%, #fff 100%); }
+                .artistic-upload-container.cny-theme { background: linear-gradient(135deg, var(--bg-color) 0%, var(--surface) 100%); }
                 
                 .glow-orb { position: absolute; width: 400px; height: 400px; border-radius: 50%; filter: blur(120px); opacity: 0.15; top: -100px; right: -100px; z-index: 0; transition: 0.8s ease; }
                 .cny-theme .glow-orb { background-color: #ff4d4d !important; opacity: 0.25; }
                 
-                .upload-master-content { position: relative; z-index: 10; width: 100%; max-width: 1000px; border-radius: 40px; padding: 40px; border: 1px solid rgba(255,255,255,0.7); box-shadow: 0 50px 100px -20px rgba(0,0,0,0.1); transition: 0.5s; }
+                .upload-master-content { position: relative; z-index: 10; width: 100%; max-width: 1000px; border-radius: 40px; padding: 40px; border: 1px solid var(--surface-border); box-shadow: 0 50px 100px -20px rgba(0,0,0,0.1); transition: 0.5s; background: var(--surface); }
                 .cny-theme .upload-master-content { border-color: rgba(255, 77, 77, 0.3); box-shadow: 0 50px 100px -20px rgba(255, 77, 77, 0.15); }
-                .glass-morphism { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+                .glass-morphism { backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
                 
                 .upload-master-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; padding-right: 60px; }
                 .header-brand-info { display: flex; align-items: center; gap: 24px; }
                 .artistic-cat-icon { width: 64px; height: 64px; border-radius: 20px; display: flex; align-items: center; justify-content: center; color: white; transition: 0.5s; }
                 .cny-theme .artistic-cat-icon { box-shadow: 0 10px 30px rgba(255, 77, 77, 0.3) !important; }
 
-                .text-meta h2 { font-size: 1.8rem; font-weight: 900; color: #111; margin-bottom: 4px; letter-spacing: -0.02em; }
+                .text-meta h2 { font-size: 1.8rem; font-weight: 900; color: var(--text-main); margin-bottom: 4px; letter-spacing: -0.02em; }
                 .cny-theme .text-meta h2 { color: #d63031; }
-                .text-meta p { color: #666; font-size: 0.95rem; font-weight: 600; }
+                .text-meta p { color: var(--text-muted); font-size: 0.95rem; font-weight: 600; }
 
                 .upload-header-controls { display: flex; align-items: center; gap: 16px; }
-                .cloud-setup-btn { background: #f0f2f5; border: none; padding: 12px 20px; border-radius: 16px; font-weight: 800; font-size: 0.8rem; color: #555; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.3s; }
-                .cloud-setup-btn.active { background: #111; color: white; }
-                .cny-theme .cloud-setup-btn.active { background: #d63031; }
+                .cloud-setup-btn { background: var(--surface-badge); border: none; padding: 12px 20px; border-radius: 16px; font-weight: 800; font-size: 0.8rem; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.3s; }
+                .cloud-setup-btn.active { background: var(--text-main); color: var(--bg-color); }
+                .cny-theme .cloud-setup-btn.active { background: #d63031; color: white; }
                 
-                .category-pill-selector { display: flex; background: #f0f2f5; padding: 6px; border-radius: 18px; gap: 4px; }
-                .pill-tab { width: 44px; height: 44px; border-radius: 14px; border: none; background: transparent; cursor: pointer; color: #999; display: flex; align-items: center; justify-content: center; transition: 0.4s; }
+                .category-pill-selector { display: flex; background: var(--surface-badge); padding: 6px; border-radius: 18px; gap: 4px; }
+                .pill-tab { width: 44px; height: 44px; border-radius: 14px; border: none; background: transparent; cursor: pointer; color: var(--text-muted); display: flex; align-items: center; justify-content: center; transition: 0.4s; }
                 .pill-tab.active { box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
                 
-                .btn-close-dashboard { position: absolute; top: 20px; right: 20px; background: #fff; border: 1.5px solid #eee; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; color: #718096; display: flex; align-items: center; justify-content: center; transition: 0.3s; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+                .btn-close-dashboard { position: absolute; top: 20px; right: 20px; background: var(--surface); border: 1.5px solid var(--surface-border); width: 36px; height: 36px; border-radius: 50%; cursor: pointer; color: var(--text-muted); display: flex; align-items: center; justify-content: center; transition: 0.3s; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
                 .btn-close-dashboard:hover { background: #ff4d4d; color: white; border-color: #ff4d4d; transform: rotate(90deg); box-shadow: 0 10px 25px rgba(255, 77, 77, 0.4); }
 
-                .collection-master-bar { display: flex; align-items: center; gap: 24px; padding: 10px 20px; border-radius: 20px; background: rgba(0,0,0,0.02) !important; margin-bottom: 32px; border: 1px solid #eee; overflow: hidden; height: 60px; }
-                .bar-label { font-size: 0.65rem; font-weight: 900; color: #aaa; text-transform: uppercase; letter-spacing: 0.08em; display: flex; align-items: center; gap: 8px; white-space: nowrap; border-right: 1.5px solid #eee; padding-right: 20px; }
-                .collection-pills-scroll { display: flex; gap: 8px; overflow-x: auto; padding: 4px; scrollbar-width: none; }
+                .collection-master-bar { display: flex; align-items: stretch; gap: 24px; padding: 14px 20px; border-radius: 20px; background: var(--surface-badge) !important; margin-bottom: 32px; border: 1px solid var(--surface-border); overflow: visible; min-height: 60px; flex-wrap: wrap; }
+                .bar-label { font-size: 0.65rem; font-weight: 900; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; display: flex; align-items: center; gap: 8px; white-space: nowrap; border-right: 1.5px solid var(--surface-border); padding-right: 20px; }
+                .collection-pills-scroll { display: flex; gap: 8px; flex-wrap: wrap; flex: 1; min-width: 0; }
                 .collection-pills-scroll::-webkit-scrollbar { display: none; }
-                .col-pill { white-space: nowrap; padding: 10px 18px; border-radius: 14px; border: 1.5px solid #eee; background: white; color: #666; font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 8px; }
-                .col-pill:hover { border-color: #111; color: #111; }
-                .col-pill.active { background: #111; color: white; border-color: #111; box-shadow: 0 8px 16px rgba(0,0,0,0.1); }
+                .col-pill { white-space: nowrap; padding: 10px 18px; border-radius: 14px; border: 1.5px solid var(--surface-border); background: var(--surface); color: var(--text-muted); font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 8px; }
+                .col-pill:hover { border-color: var(--text-main); color: var(--text-main); }
+                .col-pill.active { background: var(--text-main); color: var(--bg-color); border-color: var(--text-main); box-shadow: 0 8px 16px rgba(0,0,0,0.1); }
                 .cny-theme .col-pill.active { background: #d63031; border-color: #d63031; box-shadow: 0 8px 16px rgba(214, 48, 49, 0.2); }
 
-                .advanced-settings-drawer { background: rgba(0,0,0,0.03); border-radius: 24px; padding: 24px; margin-bottom: 40px; border: 1px dashed #ddd; animation: slideDown 0.4s ease; }
+                .advanced-settings-drawer { background: var(--surface-badge); border-radius: 24px; padding: 24px; margin-bottom: 40px; border: 1px dashed var(--surface-border); animation: slideDown 0.4s ease; }
                 .cny-theme .advanced-settings-drawer { background: rgba(214, 48, 49, 0.05); border-color: rgba(214, 48, 49, 0.2); }
                 .drawer-grid { display: grid; grid-template-columns: 1fr 1.5fr 1fr; gap: 24px; }
                 .drawer-field { display: flex; flex-direction: column; gap: 8px; }
-                .drawer-field label { font-size: 0.75rem; font-weight: 800; color: #888; text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 6px; }
-                .drawer-field select, .drawer-field input { background: white; border: 1.5px solid #eee; padding: 12px; border-radius: 12px; font-size: 0.9rem; font-weight: 700; outline: none; transition: 0.3s; }
-                .drawer-field select:focus, .drawer-field input:focus { border-color: #5c67ff; }
+                .drawer-field label { font-size: 0.75rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 6px; }
+                .drawer-field select, .drawer-field input { background: var(--card-dark); border: 1.5px solid var(--surface-border); color: var(--text-main); padding: 12px; border-radius: 12px; font-size: 0.9rem; font-weight: 700; outline: none; transition: 0.3s; }
+                .drawer-field select:focus, .drawer-field input:focus { border-color: var(--primary); }
                 .cny-theme .cny-select { border-color: #ff4d4d; color: #d63031; background: #fff5f5; }
 
                 .upload-body-grid { display: grid; grid-template-columns: 1fr 340px; gap: 48px; }
                 .input-vertical-stack { display: flex; flex-direction: column; gap: 32px; }
                 .master-input-group { display: flex; flex-direction: column; gap: 10px; }
-                .master-input-group label { font-size: 0.85rem; font-weight: 800; color: #444; display: flex; align-items: center; gap: 8px; }
-                .master-input-group input { border: 2.5px solid #f0f2f5; padding: 16px; border-radius: 18px; font-size: 1.05rem; font-weight: 600; outline: none; transition: 0.3s; background: white; }
-                .master-input-group input:focus { border-color: #111; }
+                .master-input-group label { font-size: 0.85rem; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
+                .master-input-group input { border: 2.5px solid var(--surface-border); color: var(--text-main); padding: 16px; border-radius: 18px; font-size: 1.05rem; font-weight: 600; outline: none; transition: 0.3s; background: var(--card-dark); }
+                .master-input-group input:focus { border-color: var(--primary); }
                 .cny-theme .master-input-group input:focus { border-color: #d63031; }
 
                 .dropzone-duo { display: grid; gap: 16px; }
-                .master-dropzone { display: flex; align-items: center; gap: 20px; padding: 20px; border-radius: 24px; border: 2.5px dashed #e2e8f0; cursor: pointer; transition: 0.4s; background: rgba(255,255,255,0.5); position: relative; }
-                .master-dropzone:hover { border-color: #111; background: #fff; transform: scale(1.02); }
+                .master-dropzone { display: flex; align-items: center; gap: 20px; padding: 20px; border-radius: 24px; border: 2.5px dashed var(--surface-border); cursor: pointer; transition: 0.4s; background: var(--surface-badge); position: relative; }
+                .master-dropzone:hover { border-color: var(--primary); background: var(--surface); transform: scale(1.02); }
                 .cny-theme .master-dropzone:hover { border-color: #d63031; }
-                .master-dropzone.ready { border-color: #10b981; background: #f0fdf4; border-style: solid; }
-                .drop-status-icon { width: 56px; height: 56px; background: #f0f2f5; border-radius: 16px; display: flex; align-items: center; justify-content: center; color: #111; }
-                .ready .drop-status-icon { background: white; color: #10b981; }
-                .drop-labels strong { display: block; font-size: 1rem; color: #111; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
-                .drop-labels p { font-size: 0.8rem; color: #888; font-weight: 600; }
+                .master-dropzone.ready { border-color: #10b981; background: rgba(16, 185, 129, 0.1); border-style: solid; }
+                .drop-status-icon { width: 56px; height: 56px; background: var(--surface); border-radius: 16px; display: flex; align-items: center; justify-content: center; color: var(--text-main); }
+                .ready .drop-status-icon { background: var(--surface); color: #10b981; }
+                .drop-labels strong { display: block; font-size: 1rem; color: var(--text-main); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+                .drop-labels p { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; }
                 .checked-indicator { position: absolute; right: 20px; color: #10b981; }
 
                 .preview-drop { }
-                .float-preview { width: 56px; height: 56px; border-radius: 12px; overflow: hidden; margin-left: auto; box-shadow: 0 10px 20px rgba(0,0,0,0.1); border: 2px solid white; }
+                .float-preview { width: 56px; height: 56px; border-radius: 12px; overflow: hidden; margin-left: auto; box-shadow: 0 10px 20px rgba(0,0,0,0.1); border: 2px solid var(--surface-border); }
                 .float-preview img { width: 100%; height: 100%; object-fit: cover; }
 
                 .final-actions-sidebar { display: flex; flex-direction: column; gap: 32px; }
-                .live-asset-card { padding: 0; overflow: hidden; border-radius: 32px; background: white; border: 1px solid #eee; box-shadow: 0 30px 60px -15px rgba(0,0,0,0.08); transition: 0.4s; }
+                .live-asset-card { padding: 0; overflow: hidden; border-radius: 32px; background: var(--card-dark); border: 1px solid var(--surface-border); box-shadow: 0 30px 60px -15px rgba(0,0,0,0.08); transition: 0.4s; }
                 .cny-theme .live-asset-card { border-color: #ffd7d7; }
-                .card-top-preview { height: 180px; background: #f8f9fa; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+                .card-top-preview { height: 180px; background: var(--surface-badge); display: flex; align-items: center; justify-content: center; overflow: hidden; }
                 .card-top-preview img { width: 100%; height: 100%; object-fit: cover; transition: 0.5s; }
                 .card-bottom-info { padding: 24px; }
                 .badge-row { display: flex; gap: 8px; margin-bottom: 12px; }
                 .cat-tag, .coll-tag { font-size: 0.65rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; }
-                .coll-tag { color: #999; }
+                .coll-tag { color: var(--text-muted); }
                 .cny-theme .coll-tag { color: #d63031; }
-                .card-bottom-info h4 { font-size: 1.1rem; font-weight: 800; color: #111; margin-bottom: 8px; }
-                .meta-footer { font-size: 0.75rem; color: #999; font-weight: 700; }
+                .card-bottom-info h4 { font-size: 1.1rem; font-weight: 800; color: var(--text-main); margin-bottom: 8px; }
+                .meta-footer { font-size: 0.75rem; color: var(--text-muted); font-weight: 700; }
 
-                .utility-switch-rack { background: #f8f9fa; border-radius: 24px; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+                .utility-switch-rack { background: var(--surface-badge); border-radius: 24px; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
                 .switch-item { display: flex; justify-content: space-between; align-items: center; }
-                .s-info strong { display: block; font-size: 0.85rem; color: #111; margin-bottom: 2px; }
-                .s-info span { font-size: 0.7rem; color: #888; font-weight: 600; }
-                .art-toggle { width: 44px; height: 24px; border-radius: 12px; background: #e2e8f0; border: none; cursor: pointer; position: relative; transition: 0.3s; }
-                .art-toggle.on { background: #111; }
+                .s-info strong { display: block; font-size: 0.85rem; color: var(--text-main); margin-bottom: 2px; }
+                .s-info span { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; }
+                .art-toggle { width: 44px; height: 24px; border-radius: 12px; background: var(--surface-border); border: none; cursor: pointer; position: relative; transition: 0.3s; }
+                .art-toggle.on { background: var(--primary); }
                 .cny-theme .art-toggle.on { background: #d63031; }
-                .knob { width: 18px; height: 18px; background: white; border-radius: 50%; position: absolute; left: 3px; top: 3px; transition: 0.3s; }
+                .knob { width: 18px; height: 18px; background: var(--bg-color); border-radius: 50%; position: absolute; left: 3px; top: 3px; transition: 0.3s; }
                 .art-toggle.on .knob { left: 23px; }
-                .status-dot-art { width: 10px; height: 10px; border-radius: 50%; background: #ddd; }
+                .status-dot-art { width: 10px; height: 10px; border-radius: 50%; background: var(--surface-border); }
                 .status-dot-art.active { background: #10b981; box-shadow: 0 0 15px #10b981; }
 
                 .action-button-group { display: flex; flex-direction: column; gap: 12px; }
-                .btn-discard { background: #f0f2f5; color: #718096; border: none; padding: 18px; border-radius: 20px; font-weight: 800; font-size: 0.95rem; cursor: pointer; transition: 0.3s; }
-                .btn-discard:hover { background: #e2e8f0; color: #1a1a1a; }
+                .btn-discard { background: var(--surface-badge); color: var(--text-muted); border: none; padding: 18px; border-radius: 20px; font-weight: 800; font-size: 0.95rem; cursor: pointer; transition: 0.3s; }
+                .btn-discard:hover { background: var(--surface-border); color: var(--text-main); }
 
-                .master-publish-btn { background: #111; color: white; border: none; padding: 20px; border-radius: 24px; font-weight: 900; font-size: 1.05rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 12px; transition: 0.4s; box-shadow: 0 20px 40px rgba(0,0,0,0.1); width: 100%; }
+                .master-publish-btn { background: var(--primary); color: white; border: none; padding: 20px; border-radius: 24px; font-weight: 900; font-size: 1.05rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 12px; transition: 0.4s; box-shadow: 0 20px 40px rgba(0,0,0,0.1); width: 100%; }
                 .cny-theme .master-publish-btn { background: #d63031; box-shadow: 0 20px 40px rgba(214, 48, 49, 0.3); }
-                .master-publish-btn:hover { transform: translateY(-3px); box-shadow: 0 30px 60px rgba(0,0,0,0.2); background: #000; }
+                .master-publish-btn:hover { transform: translateY(-3px); box-shadow: 0 30px 60px var(--surface-badge); filter: brightness(1.1); }
                 .cny-theme .master-publish-btn:hover { background: #b33939; box-shadow: 0 30px 60px rgba(214, 48, 49, 0.4); }
                 .master-publish-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
-                .master-security-disclaimer { font-size: 0.65rem; color: #bbb; text-align: center; display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: 600; }
+                .master-security-disclaimer { font-size: 0.65rem; color: var(--text-muted); text-align: center; display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: 600; }
 
                 @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
                 .spinning { animation: spin 1s linear infinite; }
