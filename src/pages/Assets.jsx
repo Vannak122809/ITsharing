@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Search, Download, X, Filter, Image as ImageIcon, Layout, Sparkles, Heart, Share2, MoreHorizontal, Folder, Image, Layers, Zap, Star, ShieldCheck, Maximize, FileText, CheckCircle2, Box, Menu } from 'lucide-react';
 import { auth, db } from '../firebase';
-import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, doc } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useLanguage } from '../LanguageContext';
 
@@ -111,6 +111,7 @@ const Assets = () => {
         { id: 'Illustration', name: 'Illustrations', icon: <ImageIcon size={18} /> },
         { id: 'Image', name: 'Image', icon: <Image size={18} /> }
     ], [t]);
+    const [dynamicCategories, setDynamicCategories] = useState([]);
 
     useEffect(() => {
         const unsubAuth = onAuthStateChanged(auth, (u) => setUser(u));
@@ -119,8 +120,20 @@ const Assets = () => {
             const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             setDbAssets(data);
         });
-        return () => { unsubAuth(); unsubDocs(); };
+
+        // Setup listener for dynamic collections
+        const docRef = doc(db, 'settings', 'assetsConfig');
+        const unsubSettings = onSnapshot(docRef, (docSnap) => {
+            if (docSnap.exists()) {
+                const customCols = docSnap.data().collections || [];
+                setDynamicCategories(customCols.map(name => ({ id: name, name: name, icon: <Folder size={18} /> })));
+            }
+        });
+
+        return () => { unsubAuth(); unsubDocs(); unsubSettings(); };
     }, []);
+
+    const activeCategories = useMemo(() => [...categories, ...dynamicCategories], [categories, dynamicCategories]);
 
     const allAssets = useMemo(() => [...featuredAssets, ...dbAssets], [dbAssets]);
 
@@ -128,9 +141,13 @@ const Assets = () => {
         const queryStr = searchQuery.toLowerCase().trim();
         return allAssets.filter(asset => {
             // Updated filtering logic to support dual categorization (Type or Tag matches)
+            const isCollectionMatch = Array.isArray(asset.collection) 
+                ? asset.collection.includes(activeTab) 
+                : asset.collection === activeTab;
+
             const matchesTab = activeTab === 'All' || 
                              asset.type === activeTab || 
-                             asset.collection === activeTab ||
+                             isCollectionMatch ||
                              (activeTab === 'Khmer New Year' && asset.tags?.some(tag => tag.toLowerCase() === 'khmer new year')) ||
                              (activeTab === 'Chinese New Year' && asset.tags?.some(tag => tag.toLowerCase() === 'chinese new year'));
             
@@ -176,7 +193,7 @@ const Assets = () => {
                             <button className="mobile-only-close" onClick={() => setMobileMenuOpen(false)}><X size={20} /></button>
                         </div>
                         <div className="category-list">
-                            {categories.map(cat => (
+                            {activeCategories.map(cat => (
                                 <button
                                     key={cat.id} onClick={() => { setActiveTab(cat.id); setMobileMenuOpen(false); }}
                                     className={`category-btn ${activeTab === cat.id ? 'active' : ''}`}

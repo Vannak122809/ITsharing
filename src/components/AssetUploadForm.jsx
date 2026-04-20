@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { convertToWebP, uploadAssetToR2, ASSETS_PUBLIC_URL } from '../r2Assets';
 import { db } from '../firebase';
-import { collection, addDoc, serverTimestamp, doc, updateDoc } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, doc, updateDoc, setDoc, arrayUnion, getDoc } from 'firebase/firestore';
 import './AssetUploadForm.css';
 
 const AssetUploadForm = ({ onComplete, editData = null }) => {
@@ -57,6 +57,25 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
     ]);
     const [isCreatingCol, setIsCreatingCol] = useState(false);
     const [newColTitle, setNewColTitle] = useState('');
+
+    useEffect(() => {
+        const fetchCustomCollections = async () => {
+            try {
+                const docRef = doc(db, 'settings', 'assetsConfig');
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const customCols = docSnap.data().collections || [];
+                    const newCols = customCols.map(name => ({ id: name, label: name, icon: <Layout size={14} /> }));
+                    setAvailableCategories(prev => {
+                        const existingIds = new Set(prev.map(c => c.id));
+                        const uniqueNewCols = newCols.filter(c => !existingIds.has(c.id));
+                        return [...prev, ...uniqueNewCols];
+                    });
+                }
+            } catch(err) { console.error('Failed to load custom collections', err); }
+        };
+        fetchCustomCollections();
+    }, []);
 
     useEffect(() => {
         const preset = bucketPresets.find(b => b.id === selectedBucket);
@@ -144,15 +163,24 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
                     
                     for (let i = 0; i < filesToUpload.length; i++) {
                         const fileToCover = filesToUpload[i];
-                        if (autoWebP && fileToCover.type.startsWith('image/')) {
-                            const webpBlob = await convertToWebP(fileToCover, 0.85);
-                            const webpFile = new File([webpBlob], `${title.replace(/[^a-zA-Z0-9]/g, '')}-${i}.webp`, { type: 'image/webp' });
-                            const displayKey = await uploadAssetToR2(webpFile, 'display', selectedBucket);
-                            displayUrls.push(`${customPublicUrl}/${displayKey}`);
-                        } else {
-                            const displayKey = await uploadAssetToR2(fileToCover, 'display', selectedBucket);
-                            displayUrls.push(`${customPublicUrl}/${displayKey}`);
+                        let finalDisplayFile = fileToCover;
+                        
+                        // Only attempt WebP conversion for standard web images (JPG, PNG, WEBP)
+                        const isWebImage = fileToCover.type.match(/^image\/(jpeg|png|webp)$/i) || 
+                                          fileToCover.name.match(/\.(jpg|jpeg|png|webp)$/i);
+
+                        if (autoWebP && isWebImage) {
+                            try {
+                                const webpBlob = await convertToWebP(fileToCover, 0.85);
+                                finalDisplayFile = new File([webpBlob], `${title.replace(/[^a-zA-Z0-9]/g, '')}-${i}.webp`, { type: 'image/webp' });
+                            } catch (webpErr) {
+                                console.warn("WebP Conversion failed, using original file:", webpErr);
+                                finalDisplayFile = fileToCover;
+                            }
                         }
+                        
+                        const displayKey = await uploadAssetToR2(finalDisplayFile, 'display', selectedBucket);
+                        displayUrls.push(`${customPublicUrl}/${displayKey}`);
                     }
                     displayUrl = displayUrls[0];
                     galleryUrls = displayUrls;
@@ -162,6 +190,7 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
                 // Determine technical 'type' (Primary type for filtering)
                 let technicalType = selectedCategories[0] || 'Template';
                 if (softwareType === 'PNG' && !selectedCategories.includes('Frame')) technicalType = 'Image';
+                if (softwareType === 'AI' && !selectedCategories.includes('Chinese New Year') && !selectedCategories.includes('Khmer New Year')) technicalType = 'Illustration';
                 
                 // Add categories as extra tags for search robustness
                 const expandedTags = [
@@ -207,16 +236,25 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
 
                     for (let c = 0; c < filesToUseForCover.length; c++) {
                         const fileToCover = filesToUseForCover[c];
-                        if (autoWebP && fileToCover.type.startsWith('image/')) {
-                            const webpBlob = await convertToWebP(fileToCover, 0.85);
-                            const safeTitle = currentTitle.replace(/[^a-zA-Z0-9]/g, '');
-                            const webpFile = new File([webpBlob], `${safeTitle}-${c}.webp`, { type: 'image/webp' });
-                            const displayKey = await uploadAssetToR2(webpFile, 'display', selectedBucket);
-                            displayUrls.push(`${customPublicUrl}/${displayKey}`);
-                        } else {
-                            const displayKey = await uploadAssetToR2(fileToCover, 'display', selectedBucket);
-                            displayUrls.push(`${customPublicUrl}/${displayKey}`);
+                        let finalDisplayFile = fileToCover;
+
+                        // Only attempt WebP conversion for standard web images
+                        const isWebImage = fileToCover.type.match(/^image\/(jpeg|png|webp)$/i) || 
+                                          fileToCover.name.match(/\.(jpg|jpeg|png|webp)$/i);
+
+                        if (autoWebP && isWebImage) {
+                            try {
+                                const webpBlob = await convertToWebP(fileToCover, 0.85);
+                                const safeTitle = currentTitle.replace(/[^a-zA-Z0-9]/g, '');
+                                finalDisplayFile = new File([webpBlob], `${safeTitle}-${c}.webp`, { type: 'image/webp' });
+                            } catch (webpErr) {
+                                console.warn("Batch WebP Conversion failed, using original:", webpErr);
+                                finalDisplayFile = fileToCover;
+                            }
                         }
+                        
+                        const displayKey = await uploadAssetToR2(finalDisplayFile, 'display', selectedBucket);
+                        displayUrls.push(`${customPublicUrl}/${displayKey}`);
                     }
                     displayUrl = displayUrls[0];
                     galleryUrls = displayUrls;
@@ -225,6 +263,7 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
 
                     let technicalType = selectedCategories[0] || 'Template';
                     if (softwareType === 'PNG' && !selectedCategories.includes('Frame')) technicalType = 'Image';
+                    if (softwareType === 'AI' && !selectedCategories.includes('Chinese New Year') && !selectedCategories.includes('Khmer New Year')) technicalType = 'Illustration';
                     
                     const expandedTags = [
                         ...tags.split(',').map(tag => tag.trim()).filter(Boolean),
@@ -297,7 +336,14 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
                                 <button 
                                     key={cat.id}
                                     className={`pill-tab ${softwareType === cat.id ? 'active' : ''}`}
-                                    onClick={() => setSoftwareType(cat.id)}
+                                    onClick={() => {
+                                        setSoftwareType(cat.id);
+                                        if (cat.id === 'AI' && selectedCategories.length <= 1 && (selectedCategories.includes('General') || selectedCategories.includes('Chinese New Year'))) {
+                                            setSelectedCategories(['Illustration']);
+                                        } else if (cat.id === 'PNG' && selectedCategories.length <= 1) {
+                                            setSelectedCategories(['Image']);
+                                        }
+                                    }}
                                     title={cat.name}
                                     style={softwareType === cat.id ? { backgroundColor: cat.color, color: 'white' } : {}}
                                 >
@@ -346,10 +392,20 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
                                             const name = newColTitle.trim();
                                             if (name) {
                                                 const newCol = { id: name, label: name, icon: <Plus size={14} /> };
-                                                setAvailableCategories(prev => [...prev, newCol]);
-                                                setSelectedCategories(prev => [...prev, name]);
+                                                setAvailableCategories(prev => {
+                                                    if (prev.some(c => c.id === name)) return prev;
+                                                    return [...prev, newCol];
+                                                });
+                                                setSelectedCategories(prev => {
+                                                    if (prev.includes(name)) return prev;
+                                                    return [...prev, name];
+                                                });
                                                 setNewColTitle('');
                                                 setIsCreatingCol(false);
+                                                
+                                                // Save to firestore
+                                                const docRef = doc(db, 'settings', 'assetsConfig');
+                                                setDoc(docRef, { collections: arrayUnion(name) }, { merge: true });
                                             }
                                         } else if (e.key === 'Escape') {
                                             setIsCreatingCol(false);
@@ -360,10 +416,20 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
                                     const name = newColTitle.trim();
                                     if (name) {
                                         const newCol = { id: name, label: name, icon: <Plus size={14} /> };
-                                        setAvailableCategories(prev => [...prev, newCol]);
-                                        setSelectedCategories(prev => [...prev, name]);
+                                        setAvailableCategories(prev => {
+                                            if (prev.some(c => c.id === name)) return prev;
+                                            return [...prev, newCol];
+                                        });
+                                        setSelectedCategories(prev => {
+                                            if (prev.includes(name)) return prev;
+                                            return [...prev, name];
+                                        });
                                         setNewColTitle('');
                                         setIsCreatingCol(false);
+                                        
+                                        // Save to firestore
+                                        const docRef = doc(db, 'settings', 'assetsConfig');
+                                        setDoc(docRef, { collections: arrayUnion(name) }, { merge: true });
                                     }
                                 }}>Add</button>
                             </div>
