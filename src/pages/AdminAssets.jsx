@@ -5,7 +5,7 @@ import {
     Calendar, Tag, Layers, CheckCircle2,
     Clock, TrendingUp, Users, Package,
     Image as ImageIcon, X, FileText, AlertCircle,
-    UserCircle, ShieldCheck, Database, Globe, UserCog, ShieldAlert
+    UserCircle, ShieldCheck, Database, Globe, UserCog, ShieldAlert, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { auth, db } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -163,6 +163,19 @@ const AdminAssets = () => {
     const filteredAssets = assets.filter(a => a.title?.toLowerCase().includes(searchQuery.toLowerCase()));
     const filteredUsers = usersList.filter(u => u.email?.toLowerCase().includes(userSearchQuery.toLowerCase()));
 
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 30;
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchQuery, activeTab, userSearchQuery]);
+
+    const paginatedAssets = filteredAssets.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+    const totalAssetPages = Math.ceil(filteredAssets.length / itemsPerPage) || 1;
+
+    const paginatedUsers = filteredUsers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+    const totalUserPages = Math.ceil(filteredUsers.length / itemsPerPage) || 1;
+
     return (
         <div className="unified-admin-page">
             <aside className="admin-sidebar glass-panel">
@@ -234,7 +247,7 @@ const AdminAssets = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {filteredAssets.map(asset => (
+                                {paginatedAssets.map(asset => (
                                     <tr key={asset.id}>
                                         <td>
                                             <div className="asset-cell">
@@ -260,6 +273,25 @@ const AdminAssets = () => {
                                 ))}
                             </tbody>
                         </table>
+                        {totalAssetPages > 1 && (
+                            <div className="admin-pagination-container">
+                                <button 
+                                    className="btn-admin-pagination" 
+                                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                    disabled={currentPage === 1}
+                                >
+                                    <ChevronLeft size={16} />
+                                </button>
+                                <span>Page {currentPage} of {totalAssetPages}</span>
+                                <button 
+                                    className="btn-admin-pagination" 
+                                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalAssetPages))}
+                                    disabled={currentPage === totalAssetPages}
+                                >
+                                    <ChevronRight size={16} />
+                                </button>
+                            </div>
+                        )}
                     </div>
                 ) : (
                     <div className="table-wrapper glass-panel">
@@ -279,7 +311,7 @@ const AdminAssets = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {filteredUsers.map(user => (
+                                {paginatedUsers.map(user => (
                                     <tr key={user.id} className={user.email === SUPER_ADMIN_EMAIL ? 'highlight-row' : ''}>
                                         <td>
                                             <div className="user-cell">
@@ -313,6 +345,25 @@ const AdminAssets = () => {
                                 ))}
                             </tbody>
                         </table>
+                        {totalUserPages > 1 && (
+                            <div className="admin-pagination-container">
+                                <button 
+                                    className="btn-admin-pagination" 
+                                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                    disabled={currentPage === 1}
+                                >
+                                    <ChevronLeft size={16} />
+                                </button>
+                                <span>Page {currentPage} of {totalUserPages}</span>
+                                <button 
+                                    className="btn-admin-pagination" 
+                                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalUserPages))}
+                                    disabled={currentPage === totalUserPages}
+                                >
+                                    <ChevronRight size={16} />
+                                </button>
+                            </div>
+                        )}
                     </div>
                 )}
             </main>
@@ -418,6 +469,12 @@ const AdminAssets = () => {
                 .denied-full { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 24px; background: white; }
                 .denied-full h1 { font-size: 2.5rem; font-weight: 900; }
                 .denied-full p { color: #718096; max-width: 400px; }
+
+                .admin-pagination-container { display: flex; align-items: center; justify-content: center; gap: 16px; padding: 24px; border-top: 1px solid var(--surface-border); }
+                .admin-pagination-container span { font-weight: 700; font-size: 0.85rem; color: var(--text-muted); }
+                .btn-admin-pagination { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--surface-border); background: var(--surface); color: var(--text-main); cursor: pointer; transition: 0.2s; }
+                .btn-admin-pagination:not(:disabled):hover { background: var(--primary); color: white; border-color: var(--primary); transform: translateY(-2px); }
+                .btn-admin-pagination:disabled { opacity: 0.5; cursor: not-allowed; background: transparent; }
             `}} />
         </div>
     );

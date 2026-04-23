@@ -137,3 +137,4 @@ i no need it i need
 update ui upload form upload by gatagory and upload main file , cover image
 and user can be select buckets for upload image , template , 
 i want to user login in this form for security i need local user example user : seunvannak33047@gmail.com and password : Vannak@123 is super admin
+i want to update ប្រសិនបើ admin create New collection example Water Festival ខ្ញុំចង់អោយវា save ជាប់រហូត ហើយ ខ្ញុំចង់វា sync រាល់ឯកសារ រូបភាព ជាមួយ assets ចូលទៅក្នុង COLLECTIONS "Water Festival"

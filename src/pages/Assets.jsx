@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Search, Download, X, Filter, Image as ImageIcon, Layout, Sparkles, Heart, Share2, MoreHorizontal, Folder, Image, Layers, Zap, Star, ShieldCheck, Maximize, FileText, CheckCircle2, Box, Menu } from 'lucide-react';
+import { Search, Download, X, Filter, Image as ImageIcon, Layout, Sparkles, Heart, Share2, MoreHorizontal, Folder, Image, Layers, Zap, Star, ShieldCheck, Maximize, FileText, CheckCircle2, Box, Menu, ChevronLeft, ChevronRight } from 'lucide-react';
 import { auth, db } from '../firebase';
 import { collection, query, orderBy, onSnapshot, doc } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -157,6 +157,20 @@ const Assets = () => {
         });
     }, [allAssets, activeTab, searchQuery]);
 
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 30;
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [activeTab, searchQuery]);
+
+    const paginatedAssets = useMemo(() => {
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        return filteredAssets.slice(startIndex, startIndex + itemsPerPage);
+    }, [filteredAssets, currentPage]);
+
+    const totalPages = Math.ceil(filteredAssets.length / itemsPerPage);
+
     return (
         <div style={{ minHeight: '100vh', background: 'var(--bg-main)', paddingTop: '80px' }}>
             
@@ -221,7 +235,7 @@ const Assets = () => {
                     </div>
 
                     <div className="asset-grid">
-                        {filteredAssets.map(asset => (
+                        {paginatedAssets.map(asset => (
                             <AssetCard key={asset.id} asset={asset} onClick={(a) => {
                                 setSelectedAsset(a);
                                 setActiveModalImageIndex(0);
@@ -233,6 +247,28 @@ const Assets = () => {
                         <div style={{ textAlign: 'center', padding: '100px 0' }}>
                             <Sparkles size={48} color="var(--primary)" style={{ marginBottom: '24px' }} />
                             <h3 style={{ color: 'var(--text-main)', fontWeight: 900 }}>{t('no_matches_found')}</h3>
+                        </div>
+                    )}
+
+                    {totalPages > 1 && (
+                        <div className="pagination-container">
+                            <button 
+                                className="btn-pagination" 
+                                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                disabled={currentPage === 1}
+                            >
+                                <ChevronLeft size={20} />
+                            </button>
+                            <span className="pagination-info">
+                                Page {currentPage} of {totalPages}
+                            </span>
+                            <button 
+                                className="btn-pagination" 
+                                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                disabled={currentPage === totalPages}
+                            >
+                                <ChevronRight size={20} />
+                            </button>
                         </div>
                     )}
                 </main>
