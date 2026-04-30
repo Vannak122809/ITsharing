@@ -93,18 +93,19 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
     const formatFileNameToTitle = (fileName) => {
         if (!fileName) return '';
         let name = fileName.split('.')[0];
-        // Remove numbers
-        name = name.replace(/[0-9]/g, '');
         // Replace dashes and underscores with spaces
         name = name.replace(/[_-]/g, ' ');
         // Insert space before capital letters (for CamelCase)
         name = name.replace(/([a-z])([A-Z])/g, '$1 $2');
         // Clean up extra spaces
         name = name.replace(/\s+/g, ' ').trim();
-        // Capitalize each word properly
+        // Capitalize each word properly, keeping numbers intact
         return name.split(' ')
                    .filter(word => word.length > 0)
-                   .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                   .map(word => {
+                       // Don't lowercase the whole string if it contains numbers
+                       return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+                   })
                    .join(' ');
     };
 
@@ -122,7 +123,7 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
     };
 
     const handleCoverFileSelect = (e) => {
-        const files = Array.from(e.target.files).slice(0, 4); // Max 4 images
+        const files = Array.from(e.target.files);
         if (files.length > 0) {
             setCoverFiles(files);
             // Auto-title if currently empty
@@ -219,7 +220,25 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
 
                 for (let idx = 0; idx < totalFiles; idx++) {
                     const currentFile = mainFiles[idx];
-                    const currentTitle = totalFiles === 1 ? title : formatFileNameToTitle(currentFile.name);
+                    
+                    // If a specific title was entered in the form, use it and append the number (e.g., "My Template 01")
+                    // If no title was entered, use the formatted file name.
+                    let currentTitle = '';
+                    if (totalFiles === 1) {
+                        currentTitle = title || formatFileNameToTitle(currentFile.name);
+                    } else {
+                        // Batch mode: Use formatted file name, or custom title + sequential number
+                        const baseFileTitle = formatFileNameToTitle(currentFile.name);
+                        const isBatchTitle = title && title.startsWith('Batch Upload:');
+                        
+                        if (title && !isBatchTitle) {
+                            // Format number with leading zero (e.g., 01, 02)
+                            const seqNum = String(idx + 1).padStart(2, '0');
+                            currentTitle = `${title} ${seqNum}`;
+                        } else {
+                            currentTitle = baseFileTitle;
+                        }
+                    }
                     
                     let displayUrl = '';
                     let galleryUrls = [];
@@ -230,8 +249,13 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
                     
                     setUploadProgress(Math.round(((processed + 0.3) / totalFiles) * 100));
 
-                    // Use coverFiles only if 1 main file is uploaded. Otherwise use the currentFile itself implicitly!
-                    const filesToUseForCover = (totalFiles === 1 && coverFiles.length > 0) ? coverFiles : [currentFile];
+                    // Determine cover images: sequentially pair in batch mode, or use gallery for single mode
+                    let filesToUseForCover = [currentFile];
+                    if (totalFiles === 1 && coverFiles.length > 0) {
+                        filesToUseForCover = coverFiles;
+                    } else if (totalFiles > 1 && coverFiles.length > 0) {
+                        filesToUseForCover = coverFiles[idx] ? [coverFiles[idx]] : [currentFile];
+                    }
                     let displayUrls = [];
 
                     for (let c = 0; c < filesToUseForCover.length; c++) {
@@ -495,8 +519,8 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
                                     {coverFiles.length > 0 ? <Layout className="pulse-emerald" size={28} /> : <Plus size={28} />}
                                 </div>
                                 <div className="drop-labels">
-                                    <strong>{coverFiles.length > 0 ? `${coverFiles.length}/4 Thumbnails Ready` : 'Add Cover Images'}</strong>
-                                    <p>Select up to 4 images for rotating gallery</p>
+                                    <strong>{coverFiles.length > 0 ? (mainFiles.length > 1 ? `${coverFiles.length} Preview Images Ready` : `${coverFiles.length} Thumbnails Ready`) : 'Add Cover Images'}</strong>
+                                    <p>{mainFiles.length > 1 ? 'Images will pair sequentially (1 to 1)' : 'Select images for gallery'}</p>
                                 </div>
                                 {coverFiles.length > 0 && (
                                     <div className="float-preview">

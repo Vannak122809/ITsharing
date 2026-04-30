@@ -152,8 +152,8 @@ const Assets = () => {
                              (activeTab === 'Chinese New Year' && asset.tags?.some(tag => tag.toLowerCase() === 'chinese new year'));
             
             if (!matchesTab) return false;
-            return !queryStr || asset.title?.toLowerCase().includes(queryStr) || 
-                   asset.tags?.some(tag => tag.toLowerCase().includes(queryStr));
+            return !queryStr || String(asset.title || '').toLowerCase().includes(queryStr) || 
+                   (Array.isArray(asset.tags) && asset.tags.some(tag => String(tag).toLowerCase().includes(queryStr)));
         });
     }, [allAssets, activeTab, searchQuery]);
 

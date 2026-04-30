@@ -102,6 +102,13 @@ const AdminAssets = () => {
         setIsEditModalOpen(true);
     };
 
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 30;
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchQuery, activeTab, userSearchQuery]);
+
     if (!isAdmin) {
         return (
             <div className="denied-full-premium">
@@ -160,15 +167,8 @@ const AdminAssets = () => {
         );
     }
 
-    const filteredAssets = assets.filter(a => a.title?.toLowerCase().includes(searchQuery.toLowerCase()));
-    const filteredUsers = usersList.filter(u => u.email?.toLowerCase().includes(userSearchQuery.toLowerCase()));
-
-    const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 30;
-
-    useEffect(() => {
-        setCurrentPage(1);
-    }, [searchQuery, activeTab, userSearchQuery]);
+    const filteredAssets = assets.filter(a => String(a.title || '').toLowerCase().includes(String(searchQuery || '').toLowerCase()));
+    const filteredUsers = usersList.filter(u => String(u.email || '').toLowerCase().includes(String(userSearchQuery || '').toLowerCase()));
 
     const paginatedAssets = filteredAssets.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
     const totalAssetPages = Math.ceil(filteredAssets.length / itemsPerPage) || 1;
@@ -262,7 +262,7 @@ const AdminAssets = () => {
                                             <span className={`badge-type ${asset.category}`}>{asset.format} • {asset.category}</span>
                                         </td>
                                         <td><span className="badge-collection">{asset.collection || 'General'}</span></td>
-                                        <td><div className="date-cell"><Calendar size={12} /> {asset.createdAt?.toDate().toLocaleDateString()}</div></td>
+                                        <td><div className="date-cell"><Calendar size={12} /> {asset.createdAt?.toDate ? asset.createdAt.toDate().toLocaleDateString() : 'Recent'}</div></td>
                                         <td>
                                             <div className="action-btns">
                                                 <button className="btn-icon" onClick={() => handleEditAsset(asset)} title="Edit Asset Metadata"><UserCog size={16} /></button>
@@ -331,7 +331,7 @@ const AdminAssets = () => {
                                             </span>
                                         </td>
                                         <td>
-                                            <div className="date-cell"><Clock size={12} /> Seen: {user.lastLoginAt?.toDate().toLocaleDateString() || 'N/A'}</div>
+                                            <div className="date-cell"><Clock size={12} /> Seen: {user.lastLoginAt?.toDate ? user.lastLoginAt.toDate().toLocaleDateString() : 'N/A'}</div>
                                         </td>
                                         <td>
                                             {user.email !== SUPER_ADMIN_EMAIL ? (
