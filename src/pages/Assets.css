@@ -45,10 +45,13 @@
 .close-btn:hover { background: #ff4d4d; color: white; transform: rotate(90deg) scale(1.1); border-color: #ff4d4d; box-shadow: 0 10px 25px rgba(255, 77, 77, 0.4); }
 .header-brand { display: flex; align-items: center; gap: 20px; transition: color 0.5s; }
 .brand-icon { width: 40px; height: 40px; border-radius: 12px; background: var(--primary); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 900; }
-.modal-content { flex-grow: 1; display: flex; overflow: hidden; background: var(--bg-color); transition: background-color 0.5s; }
-.preview-section { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px; background: var(--bg-color); transition: background-color 0.5s; gap: 20px; min-width: 0; min-height: 0; }
-.preview-section img.constrained-img { max-width: 100%; max-height: 75vh; width: auto; height: auto; object-fit: contain; box-shadow: var(--shadow-glass); border-radius: 24px; border: 1px solid var(--surface-border); transition: border-color 0.5s; }
-.details-section { width: 420px; flex-shrink: 0; background: var(--surface); border-left: 1px solid var(--surface-border); padding: 40px; overflow-y: auto; display: flex; flex-direction: column; gap: 32px; transition: background-color 0.5s, border-color 0.5s; }
+.modal-content { flex-grow: 1; display: flex; flex-direction: column; overflow-y: auto; background: var(--bg-color); transition: background-color 0.5s; }
+.modal-top-section { display: flex; flex-direction: row; width: 100%; min-height: 70vh; flex-shrink: 0; }
+.preview-section { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px; background: var(--bg-color); transition: background-color 0.5s; gap: 20px; min-width: 0; }
+.preview-section img.constrained-img { max-width: 100%; max-height: 70vh; width: auto; height: auto; object-fit: contain; box-shadow: var(--shadow-glass); border-radius: 24px; border: 1px solid var(--surface-border); transition: border-color 0.5s; }
+.details-section { width: 420px; flex-shrink: 0; background: var(--surface); border-left: 1px solid var(--surface-border); padding: 40px; display: flex; flex-direction: column; gap: 32px; transition: background-color 0.5s, border-color 0.5s; }
+.modal-bottom-section { padding: 40px 60px; border-top: 1px solid var(--surface-border); background: var(--bg-main); width: 100%; flex-shrink: 0; }
+.modal-bottom-section h3 { font-size: 1.5rem; font-weight: 900; margin-bottom: 24px; color: var(--text-main); }
 .download-cta { padding: 32px; border-radius: 28px; background: var(--bg-color); border: 1px solid var(--surface-border); transition: background-color 0.5s, border-color 0.5s; }
 .cta-label { color: var(--text-main); font-size: 0.95rem; font-weight: 800; margin-bottom: 20px; text-transform: uppercase; transition: color 0.5s; }
 .download-btn { width: 100%; padding: 18px; border-radius: 16px; display: flex; align-items: center; justify-content: center; gap: 12px; font-size: 1.1rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -70,9 +73,10 @@
     .tablet-plus-only { display: none; }
     .mobile-only-close { display: block; }
     .hero-content h1 { font-size: 2.5rem; }
-    .modal-content { flex-direction: column; overflow-y: auto; }
-    .details-section { width: 100%; border-left: none; border-top: 1px solid var(--surface-border); padding: 32px; overflow-y: visible; }
+    .modal-top-section { flex-direction: column; }
+    .details-section { width: 100%; border-left: none; border-top: 1px solid var(--surface-border); padding: 32px; }
     .preview-section { padding: 32px; }
+    .modal-bottom-section { padding: 32px; }
 }
 
 @media (max-width: 600px) {

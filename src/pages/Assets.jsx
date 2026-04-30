@@ -157,6 +157,20 @@ const Assets = () => {
         });
     }, [allAssets, activeTab, searchQuery]);
 
+    const similarAssets = useMemo(() => {
+        if (!selectedAsset) return [];
+        return allAssets
+            .filter(asset => asset.id !== selectedAsset.id)
+            .filter(asset => {
+                const hasSameType = asset.type === selectedAsset.type;
+                const hasSameCollection = asset.collection && selectedAsset.collection && 
+                    (Array.isArray(asset.collection) ? asset.collection.includes(selectedAsset.collection) : asset.collection === selectedAsset.collection);
+                const sharedTags = asset.tags?.filter(tag => selectedAsset.tags?.includes(tag)).length > 0;
+                return hasSameType || hasSameCollection || sharedTags;
+            })
+            .slice(0, 12);
+    }, [selectedAsset, allAssets]);
+
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 30;
 
@@ -290,7 +304,8 @@ const Assets = () => {
                         </div>
 
                         <div className="modal-content">
-                            <div className="preview-section" style={{ flexDirection: 'column', gap: '20px' }}>
+                            <div className="modal-top-section">
+                                <div className="preview-section" style={{ flexDirection: 'column', gap: '20px' }}>
                                 <div style={{ flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', minHeight: 0 }}>
                                     <img 
                                         src={selectedAsset.gallery?.length > 0 ? selectedAsset.gallery[activeModalImageIndex] : selectedAsset.url} 
@@ -350,6 +365,25 @@ const Assets = () => {
                                 </section>
                             </div>
                         </div>
+
+                        {similarAssets.length > 0 && (
+                            <div className="modal-bottom-section">
+                                <h3>Similar Resources</h3>
+                                <div className="asset-grid">
+                                    {similarAssets.map(asset => (
+                                        <AssetCard key={asset.id} asset={asset} onClick={(a) => {
+                                            setSelectedAsset(a);
+                                            setActiveModalImageIndex(0);
+                                            // Scroll back to top of modal when clicking a similar asset
+                                            const modalContent = document.querySelector('.modal-content');
+                                            if (modalContent) {
+                                                modalContent.scrollTo({ top: 0, behavior: 'smooth' });
+                                            }
+                                        }} />
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
