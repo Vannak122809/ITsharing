@@ -6,7 +6,14 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { useLanguage } from '../LanguageContext';
 
 const ModernIsoIcon = ({ size = 42 }) => (
-  <img src="/iso.png" alt="ISO" style={{ width: size, height: size, objectFit: 'contain' }} />
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M8 8C8 5.79086 9.79086 4 12 4H28L40 16V40C40 42.2091 38.2091 44 36 44H12C9.79086 44 8 42.2091 8 40V8Z" fill="#1E293B" stroke="#334155" strokeWidth="2"/>
+    <path d="M28 4V16H40" fill="#334155" stroke="#334155" strokeWidth="2" strokeLinejoin="round"/>
+    <circle cx="24" cy="24" r="8" fill="#0F172A" stroke="#38BDF8" strokeWidth="2"/>
+    <circle cx="24" cy="24" r="2.5" fill="#38BDF8"/>
+    <path d="M24 16C28.4183 16 32 19.5817 32 24" stroke="#38BDF8" strokeWidth="1.5" strokeLinecap="round" opacity="0.6"/>
+    <text x="24" y="39" fill="#E2E8F0" fontSize="9" fontWeight="800" fontFamily="system-ui, -apple-system, sans-serif" textAnchor="middle" letterSpacing="0.5">ISO</text>
+  </svg>
 );
 
 const ModernScriptIcon = ({ size = 42 }) => (
