@@ -265,11 +265,11 @@ const SoftwareViewer = () => {
             {/* Header Content */}
             <div className="software-header-container">
               <div className="software-title-block">
-                <div style={{ background: 'rgba(255, 255, 255, 0.03)', width: '120px', height: '120px', borderRadius: '32px', border: '1px solid var(--surface-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <div style={{ background: 'rgba(255, 255, 255, 0.03)', width: '96px', height: '96px', borderRadius: '24px', border: '1px solid var(--surface-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   {(software.title && (software.title.toLowerCase().includes('iso') || (software.downloadUrl && software.downloadUrl.toLowerCase().includes('.iso')))) ? (
-                    <ModernIsoIcon size={80} />
+                    <ModernIsoIcon size={64} />
                   ) : (
-                    <SoftwareIcon id={id} os={software.os} size={80} iconUrl={software.iconUrl || software.icon} />
+                    <SoftwareIcon id={id} os={software.os} size={64} iconUrl={software.iconUrl || software.icon} />
                   )}
                 </div>
                 <div style={{ flex: 1 }}>
@@ -277,7 +277,7 @@ const SoftwareViewer = () => {
                     {software.os === 'windows' ? <Monitor size={16} /> : <Apple size={16} />}
                     {software.os === 'windows' ? 'Windows Optimized' : 'macOS Application'} • {software.version}
                   </div>
-                  <h1 className="text-gradient" style={{ fontSize: '4rem', lineHeight: 1.1, marginBottom: '16px' }}>{software.title}</h1>
+                  <h1 className="text-gradient software-title">{software.title}</h1>
                   <p style={{ fontSize: '1.25rem', color: 'var(--text-muted)', fontWeight: 500 }}>Published by {software.developer}</p>
                 </div>
               </div>

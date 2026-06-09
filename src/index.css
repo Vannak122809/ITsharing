@@ -972,6 +972,13 @@ main {
   min-width: 320px;
 }
 
+.software-title {
+  font-size: 2.8rem;
+  line-height: 1.2;
+  margin-bottom: 16px;
+  font-weight: 800;
+}
+
 .software-actions-block {
   display: flex;
   flex-direction: column;
@@ -998,7 +1005,7 @@ main {
     min-width: 100% !important;
   }
 
-  .software-title-block h1 {
+  .software-title {
     font-size: 2.2rem !important;
   }
 
@@ -1015,7 +1022,7 @@ main {
 }
 
 @media (max-width: 480px) {
-  .software-title-block h1 {
+  .software-title {
     font-size: 1.8rem !important;
   }
 }
