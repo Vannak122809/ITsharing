@@ -5,6 +5,7 @@ import { softwareData, SoftwareIcon, ModernIsoIcon, ModernScriptIcon } from './S
 import { auth, db } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
+import { useLanguage } from '../LanguageContext';
 
 const mockSoftwareDB = {
   // === WINDOWS SOFTWARE ===
@@ -179,6 +180,7 @@ const SoftwareViewer = () => {
   const [software, setSoftware] = useState(null);
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, setUser);
@@ -197,6 +199,9 @@ const SoftwareViewer = () => {
           const data = docSnap.data();
           setSoftware({
             id: docSnap.id,
+            requirements: data.requirements || ['Compatible Operating System', 'Standard Hardware Specifications'],
+            features: data.features || ['Direct Download', 'Verified Integrity'],
+            description: data.description || data.desc || '',
             ...data
           });
           return;
@@ -297,7 +302,7 @@ const SoftwareViewer = () => {
                   <Zap size={22} /> {t('requirements') || 'Requirements'}
                 </h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                  {software.requirements.map((req, i) => (
+                  {(Array.isArray(software.requirements) ? software.requirements : []).map((req, i) => (
                     <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '1rem', color: 'var(--text-muted)' }}>
                       <CheckCircle size={16} color="var(--primary)" /> {req}
                     </div>
@@ -311,7 +316,7 @@ const SoftwareViewer = () => {
                   <Rocket size={22} /> {t('features') || 'Key Features'}
                 </h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                  {software.features.map((feature, i) => (
+                  {(Array.isArray(software.features) ? software.features : []).map((feature, i) => (
                     <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '1rem', color: 'var(--text-muted)' }}>
                       <CheckCircle size={16} color="#00fa9a" /> {feature}
                     </div>
