@@ -257,15 +257,15 @@ const SoftwareViewer = () => {
           <span style={{ color: 'var(--text-main)', fontWeight: 800 }}>{software.title}</span>
         </nav>
 
-        <div className="glass-panel software-viewer-card">
+        <div className="glass-panel" style={{ padding: '60px', borderRadius: '40px', border: '1px solid var(--surface-border)', position: 'relative', overflow: 'hidden' }}>
           <div style={{ position: 'absolute', top: '-100px', right: '-100px', width: '300px', height: '300px', background: 'var(--primary)', filter: 'blur(150px)', opacity: 0.1, zIndex: 0 }} />
           
           <div style={{ position: 'relative', zIndex: 1 }}>
             
             {/* Header Content */}
-            <div className="software-header-container">
-              <div className="software-title-block">
-                <div style={{ background: 'rgba(255, 255, 255, 0.03)', width: '96px', height: '96px', borderRadius: '24px', border: '1px solid var(--surface-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '40px', marginBottom: '60px' }}>
+              <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start', flex: 1, minWidth: '300px' }}>
+                <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '16px', borderRadius: '24px', border: '1px solid var(--surface-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   {(software.title && (software.title.toLowerCase().includes('iso') || (software.downloadUrl && software.downloadUrl.toLowerCase().includes('.iso')))) ? (
                     <ModernIsoIcon size={64} />
                   ) : (
@@ -277,12 +277,12 @@ const SoftwareViewer = () => {
                     {software.os === 'windows' ? <Monitor size={16} /> : <Apple size={16} />}
                     {software.os === 'windows' ? 'Windows Optimized' : 'macOS Application'} • {software.version}
                   </div>
-                  <h1 className="text-gradient software-title">{software.title}</h1>
+                  <h1 className="text-gradient" style={{ fontSize: '4rem', lineHeight: 1.1, marginBottom: '16px' }}>{software.title}</h1>
                   <p style={{ fontSize: '1.25rem', color: 'var(--text-muted)', fontWeight: 500 }}>Published by {software.developer}</p>
                 </div>
               </div>
 
-              <div className="software-actions-block">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', minWidth: '240px' }}>
                 <a href={software.downloadUrl} target="_blank" rel="noreferrer" onClick={(e) => { if (isGuest) { e.preventDefault(); navigate('/login'); } }} className="btn btn-primary" style={{ padding: '20px 40px', fontSize: '1.2rem', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', boxShadow: '0 15px 40px rgba(37, 99, 235, 0.3)' }}>
                   <Download size={22} /> Download Now
                 </a>
@@ -350,7 +350,7 @@ const SoftwareViewer = () => {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '20px' }}>
                 <div className="glass-panel" style={{ padding: '24px', borderRadius: '20px', background: 'rgba(255,255,255,0.01)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
                     <span style={{ fontWeight: 700 }}>TechStudent99</span>

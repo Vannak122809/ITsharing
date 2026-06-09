@@ -24,8 +24,6 @@ import GiveawayKeys from './pages/GiveawayKeys';
 import ProtectedRoute from './components/ProtectedRoute';
 import CoffeeDonate from './components/CoffeeDonate';
 import { useLanguage } from './LanguageContext';
-import SideDecorations from './components/SideDecorations';
-import WelcomePanda from './components/WelcomePanda';
 
 function App() {
   const location = useLocation();
@@ -132,7 +130,6 @@ function App() {
   ] : [
     { name: t('software'), path: '/software', icon: <DownloadCloud size={18} /> },
     { name: t('documents'), path: '/documents', icon: <FileText size={18} /> },
-    { name: t('assets'), path: '/assets', icon: <ImageIcon size={18} /> },
     { name: t('courses'), path: '/courses', icon: <Video size={18} /> },
   ];
 
@@ -362,9 +359,6 @@ function App() {
         </div>
       </div>
 
-      <SideDecorations />
-      <WelcomePanda />
-
       <main>
         <Routes>
           <Route path="/" element={<Home />} />
@@ -374,7 +368,11 @@ function App() {
           <Route path="/software" element={<Software />} />
           <Route path="/software/:id" element={<SoftwareViewer />} />
           <Route path="/community" element={<Community />} />
-          <Route path="/assets" element={<Assets />} />
+          <Route path="/assets" element={
+            <ProtectedRoute>
+              <Assets />
+            </ProtectedRoute>
+          } />
           <Route path="/giveaway" element={
             <ProtectedRoute>
               <GiveawayKeys />
