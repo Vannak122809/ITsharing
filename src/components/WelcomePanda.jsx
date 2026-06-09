@@ -8,15 +8,15 @@ const WelcomePanda = () => {
   const [fadeOut, setFadeOut] = useState(false);
 
   useEffect(() => {
-    // Start fading out after 4.2 seconds
+    // Start fading out after 14.2 seconds
     const fadeTimer = setTimeout(() => {
       setFadeOut(true);
-    }, 4200);
+    }, 14200);
 
-    // Completely unmount after 5 seconds (matching CSS fade-out duration)
+    // Completely unmount after 15 seconds (matching CSS fade-out duration)
     const removeTimer = setTimeout(() => {
       setVisible(false);
-    }, 5000);
+    }, 15000);
 
     return () => {
       clearTimeout(fadeTimer);
