@@ -24,6 +24,7 @@ import GiveawayKeys from './pages/GiveawayKeys';
 import ProtectedRoute from './components/ProtectedRoute';
 import CoffeeDonate from './components/CoffeeDonate';
 import { useLanguage } from './LanguageContext';
+import SideDecorations from './components/SideDecorations';
 
 function App() {
   const location = useLocation();
@@ -359,6 +360,8 @@ function App() {
           </div>
         </div>
       </div>
+
+      <SideDecorations />
 
       <main>
         <Routes>
