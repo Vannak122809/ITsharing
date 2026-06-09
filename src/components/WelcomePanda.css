@@ -1,0 +1,135 @@
+/* Welcome Panda Styles */
+.welcome-panda-wrapper {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+/* Slide in from bottom with a slight bounce, then fade out after duration */
+.welcome-panda-container {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  pointer-events: auto;
+  opacity: 0;
+  transform: translateY(120px) scale(0.8);
+  animation: pandaEnter 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.welcome-panda-container.fade-out {
+  animation: pandaExit 0.8s ease-in-out forwards;
+}
+
+/* Speech Bubble */
+.panda-speech-bubble {
+  position: relative;
+  background: var(--card-dark);
+  border: 1px solid var(--surface-border);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  padding: 14px 20px;
+  border-radius: 20px;
+  color: var(--text-main);
+  font-family: 'Inter', 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  max-width: 200px;
+  text-align: center;
+  transform-origin: right bottom;
+  opacity: 0;
+  animation: bubbleAppear 0.5s ease-out 0.8s forwards;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Triangle indicator for bubble */
+.panda-speech-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: 15px;
+  right: -8px;
+  width: 0;
+  height: 0;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-left: 8px solid var(--surface-border);
+}
+
+.panda-speech-bubble::before {
+  content: '';
+  position: absolute;
+  bottom: 15px;
+  right: -7px;
+  width: 0;
+  height: 0;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-left: 8px solid var(--card-dark);
+  z-index: 1;
+}
+
+/* Panda Graphic Hover effects */
+.panda-graphic-container {
+  width: 100px;
+  height: 100px;
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.panda-graphic-container:hover {
+  transform: translateY(-8px) scale(1.05) rotate(5deg);
+}
+
+/* Animations */
+@keyframes pandaEnter {
+  0% {
+    opacity: 0;
+    transform: translateY(120px) scale(0.8) rotate(10deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotate(0deg);
+  }
+}
+
+@keyframes pandaExit {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(120px) scale(0.8) rotate(-10deg);
+  }
+}
+
+@keyframes bubbleAppear {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Waving Hand animation */
+.panda-waving-hand {
+  transform-origin: 20px 80px;
+  animation: waveHand 2s ease-in-out infinite;
+}
+
+@keyframes waveHand {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(-25deg);
+  }
+}

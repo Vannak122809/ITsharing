@@ -25,6 +25,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import CoffeeDonate from './components/CoffeeDonate';
 import { useLanguage } from './LanguageContext';
 import SideDecorations from './components/SideDecorations';
+import WelcomePanda from './components/WelcomePanda';
 
 function App() {
   const location = useLocation();
@@ -362,6 +363,7 @@ function App() {
       </div>
 
       <SideDecorations />
+      <WelcomePanda />
 
       <main>
         <Routes>
