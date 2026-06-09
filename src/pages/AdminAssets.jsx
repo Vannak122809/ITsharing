@@ -12,18 +12,26 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { collection, query, orderBy, onSnapshot, deleteDoc, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { useLanguage } from '../LanguageContext';
 import AssetUploadForm from '../components/AssetUploadForm';
+import SoftwareUploadForm from '../components/SoftwareUploadForm';
 
 const AdminAssets = () => {
     const { lang, setLang } = useLanguage();
     const [user, setUser] = useState(null);
     const [userProfile, setUserProfile] = useState(null);
-    const [activeTab, setActiveTab] = useState('assets'); // 'assets' or 'users'
+    const [activeTab, setActiveTab] = useState('assets'); // 'assets' | 'software' | 'users'
     const [assets, setAssets] = useState([]);
+    const [softwareList, setSoftwareList] = useState([]);
     const [usersList, setUsersList] = useState([]);
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editingAsset, setEditingAsset] = useState(null);
+
+    const [isSoftwareUploadOpen, setIsSoftwareUploadOpen] = useState(false);
+    const [isSoftwareEditOpen, setIsSoftwareEditOpen] = useState(false);
+    const [editingSoftware, setEditingSoftware] = useState(null);
+
     const [searchQuery, setSearchQuery] = useState('');
+    const [softwareSearchQuery, setSoftwareSearchQuery] = useState('');
     const [userSearchQuery, setUserSearchQuery] = useState('');
     
     const SUPER_ADMIN_EMAIL = 'seunvannak33047@gmail.com';
@@ -51,6 +59,12 @@ const AdminAssets = () => {
             setAssets(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
         });
 
+        // Sync Software
+        const qSoftware = query(collection(db, 'software'), orderBy('createdAt', 'desc'));
+        const unsubscribeSoftware = onSnapshot(qSoftware, (snapshot) => {
+            setSoftwareList(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        });
+
         // Sync Users (Only if super admin)
         let unsubscribeUsers = () => {};
         if (isSuperAdmin) {
@@ -69,6 +83,7 @@ const AdminAssets = () => {
         return () => {
             unsubscribeAuth();
             unsubscribeAssets();
+            unsubscribeSoftware();
             unsubscribeUsers();
         };
     }, [isSuperAdmin]);
@@ -79,6 +94,16 @@ const AdminAssets = () => {
                 await deleteDoc(doc(db, 'assets', id));
             } catch (error) {
                 console.error('Delete failed:', error);
+            }
+        }
+    };
+
+    const handleDeleteSoftware = async (id) => {
+        if (window.confirm('Are you sure you want to delete this software package?')) {
+            try {
+                await deleteDoc(doc(db, 'software', id));
+            } catch (error) {
+                console.error('Delete software failed:', error);
             }
         }
     };
@@ -102,12 +127,17 @@ const AdminAssets = () => {
         setIsEditModalOpen(true);
     };
 
+    const handleEditSoftware = (software) => {
+        setEditingSoftware({ ...software });
+        setIsSoftwareEditOpen(true);
+    };
+
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 30;
 
     useEffect(() => {
         setCurrentPage(1);
-    }, [searchQuery, activeTab, userSearchQuery]);
+    }, [searchQuery, activeTab, userSearchQuery, softwareSearchQuery]);
 
     if (!isAdmin) {
         return (
@@ -168,10 +198,14 @@ const AdminAssets = () => {
     }
 
     const filteredAssets = assets.filter(a => String(a.title || '').toLowerCase().includes(String(searchQuery || '').toLowerCase()));
+    const filteredSoftwareList = softwareList.filter(s => String(s.title || '').toLowerCase().includes(String(softwareSearchQuery || '').toLowerCase()));
     const filteredUsers = usersList.filter(u => String(u.email || '').toLowerCase().includes(String(userSearchQuery || '').toLowerCase()));
 
     const paginatedAssets = filteredAssets.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
     const totalAssetPages = Math.ceil(filteredAssets.length / itemsPerPage) || 1;
+
+    const paginatedSoftware = filteredSoftwareList.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+    const totalSoftwarePages = Math.ceil(filteredSoftwareList.length / itemsPerPage) || 1;
 
     const paginatedUsers = filteredUsers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
     const totalUserPages = Math.ceil(filteredUsers.length / itemsPerPage) || 1;
@@ -186,6 +220,9 @@ const AdminAssets = () => {
                 <nav className="side-nav">
                     <button className={activeTab === 'assets' ? 'active' : ''} onClick={() => setActiveTab('assets')}>
                         <Package size={20} /> Assets Library
+                    </button>
+                    <button className={activeTab === 'software' ? 'active' : ''} onClick={() => setActiveTab('software')}>
+                        <Database size={20} /> Software Base
                     </button>
                     {isSuperAdmin && (
                         <button className={activeTab === 'users' ? 'active' : ''} onClick={() => setActiveTab('users')}>
@@ -206,12 +243,17 @@ const AdminAssets = () => {
             <main className="admin-content">
                 <header className="content-header">
                     <div className="h-text">
-                        <h1>{activeTab === 'assets' ? 'Assets Management' : 'User Governance'}</h1>
+                        <h1>{activeTab === 'assets' ? 'Assets Management' : activeTab === 'software' ? 'Software Management' : 'User Governance'}</h1>
                         <p>Real-time control center for ITSharing ecosystem</p>
                     </div>
                     {activeTab === 'assets' && (
                         <button className="btn-upload-new" onClick={() => setIsUploadModalOpen(true)}>
                             <Plus size={20} /> Publish New Asset
+                        </button>
+                    )}
+                    {activeTab === 'software' && (
+                        <button className="btn-upload-new" onClick={() => setIsSoftwareUploadOpen(true)}>
+                            <Plus size={20} /> Publish New Software
                         </button>
                     )}
                 </header>
@@ -221,6 +263,9 @@ const AdminAssets = () => {
                         <Package size={16} /> <strong>{assets.length}</strong> Assets
                     </div>
                     <div className="stat-pill">
+                        <Database size={16} /> <strong>{softwareList.length}</strong> Apps
+                    </div>
+                    <div className="stat-pill">
                         <UserCircle size={16} /> <strong>{usersList.length}</strong> Members
                     </div>
                     <div className="stat-pill">
@@ -228,7 +273,7 @@ const AdminAssets = () => {
                     </div>
                 </div>
 
-                {activeTab === 'assets' ? (
+                {activeTab === 'assets' && (
                     <div className="table-wrapper glass-panel">
                         <div className="table-controls">
                             <div className="search-bar">
@@ -293,7 +338,88 @@ const AdminAssets = () => {
                             </div>
                         )}
                     </div>
-                ) : (
+                )}
+
+                {activeTab === 'software' && (
+                    <div className="table-wrapper glass-panel">
+                        <div className="table-controls">
+                            <div className="search-bar">
+                                <Search size={18} />
+                                <input type="text" placeholder="Search software..." value={softwareSearchQuery} onChange={(e) => setSoftwareSearchQuery(e.target.value)} />
+                            </div>
+                        </div>
+                        <table className="modern-table">
+                            <thead>
+                                <tr>
+                                    <th>Software Package</th>
+                                    <th>Platform OS</th>
+                                    <th>Category Folder</th>
+                                    <th>Developer</th>
+                                    <th>Download URL</th>
+                                    <th>Management</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {paginatedSoftware.map(software => (
+                                    <tr key={software.id}>
+                                        <td>
+                                            <div className="asset-cell">
+                                                <div className="a-preview">
+                                                    <Database size={24} color="var(--primary)" />
+                                                </div>
+                                                <div className="a-info">
+                                                    <strong>{software.title}</strong>
+                                                    <span>Version: {software.version} • {software.size}</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span style={{ textTransform: 'capitalize', fontWeight: 'bold', color: software.os === 'windows' ? '#2563eb' : '#a855f7' }}>
+                                                {software.os}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span className="badge-collection">{software.folder} {software.subfolder ? `/ ${software.subfolder}` : ''}</span>
+                                        </td>
+                                        <td>{software.developer}</td>
+                                        <td>
+                                            <a href={software.downloadUrl} target="_blank" rel="noreferrer" style={{ color: 'var(--primary)', textDecoration: 'underline', fontSize: '0.85rem' }}>
+                                                Direct Link
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <div className="action-btns">
+                                                <button className="btn-icon" onClick={() => handleEditSoftware(software)} title="Edit Software Metadata"><UserCog size={16} /></button>
+                                                <button className="btn-icon delete" onClick={() => handleDeleteSoftware(software.id)} title="Delete"><Trash2 size={16} /></button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                        {totalSoftwarePages > 1 && (
+                            <div className="admin-pagination-container">
+                                <button 
+                                    className="btn-admin-pagination" 
+                                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                    disabled={currentPage === 1}
+                                >
+                                    <ChevronLeft size={16} />
+                                </button>
+                                <span>Page {currentPage} of {totalSoftwarePages}</span>
+                                <button 
+                                    className="btn-admin-pagination" 
+                                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalSoftwarePages))}
+                                    disabled={currentPage === totalSoftwarePages}
+                                >
+                                    <ChevronRight size={16} />
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {activeTab === 'users' && (
                     <div className="table-wrapper glass-panel">
                         <div className="table-controls">
                             <div className="search-bar">
@@ -382,6 +508,25 @@ const AdminAssets = () => {
                         <AssetUploadForm 
                             editData={editingAsset} 
                             onComplete={() => setIsEditModalOpen(false)} 
+                        />
+                    </div>
+                </div>
+            )}
+
+            {isSoftwareUploadOpen && (
+                <div className="upload-modal-overlay">
+                    <div className="modal-inner">
+                        <SoftwareUploadForm onComplete={() => setIsSoftwareUploadOpen(false)} />
+                    </div>
+                </div>
+            )}
+
+            {isSoftwareEditOpen && editingSoftware && (
+                <div className="upload-modal-overlay">
+                    <div className="modal-inner">
+                        <SoftwareUploadForm 
+                            editData={editingSoftware} 
+                            onComplete={() => setIsSoftwareEditOpen(false)} 
                         />
                     </div>
                 </div>

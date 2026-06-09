@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Monitor, Apple, ChevronRight, Folder, File, ArrowLeft, Eye, Download as DownloadIcon, PlayCircle, Cpu, Settings, Search, X, Printer, Briefcase, Globe, Code } from 'lucide-react';
-import { auth } from '../firebase';
+import { auth, db } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
+import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { useLanguage } from '../LanguageContext';
 
-const ModernIsoIcon = ({ size = 42 }) => (
+export const ModernIsoIcon = ({ size = 42 }) => (
   <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M8 8C8 5.79086 9.79086 4 12 4H28L40 16V40C40 42.2091 38.2091 44 36 44H12C9.79086 44 8 42.2091 8 40V8Z" fill="#1E293B" stroke="#334155" strokeWidth="2"/>
     <path d="M28 4V16H40" fill="#334155" stroke="#334155" strokeWidth="2" strokeLinejoin="round"/>
@@ -16,7 +17,7 @@ const ModernIsoIcon = ({ size = 42 }) => (
   </svg>
 );
 
-const ModernScriptIcon = ({ size = 42 }) => (
+export const ModernScriptIcon = ({ size = 42 }) => (
   <svg width={size} height={size} viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M8 4C6.89543 4 6 4.89543 6 6V36C6 37.1046 6.89543 38 8 38H34C35.1046 38 36 37.1046 36 36V14L26 4H8Z" fill="#1E293B" stroke="#475569" strokeWidth="1.5"/>
     <path d="M26 4V12C26 13.1046 26.8954 14 28 14H36" fill="#334155" stroke="#475569" strokeWidth="1.5"/>
@@ -56,7 +57,10 @@ const ModernFolderIcon = ({ size = 48, className = '', folderName = '' }) => {
   return <Icon size={size} className={className} color={color} fill={fillColor} strokeWidth={1.5} />;
 };
 
-export const SoftwareIcon = ({ id, os, size = 32 }) => {
+export const SoftwareIcon = ({ id, os, size = 32, iconUrl = null }) => {
+  if (iconUrl) {
+    return <img src={iconUrl} className="software-real-icon" alt={id} style={{ width: size, height: size, objectFit: 'contain' }} />;
+  }
   const iconMap = {
     'chrome-win': 'google.com',
     'chrome-mac': 'google.com',
@@ -352,6 +356,7 @@ const Software = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [dbSoftware, setDbSoftware] = useState([]);
   const navigate = useNavigate();
 
   React.useEffect(() => {
@@ -362,6 +367,16 @@ const Software = () => {
     return () => unsub();
   }, []);
 
+  React.useEffect(() => {
+    const q = query(collection(db, 'software'), orderBy('createdAt', 'desc'));
+    const unsubSoftware = onSnapshot(q, (snapshot) => {
+      setDbSoftware(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    });
+    return () => unsubSoftware();
+  }, []);
+
+  const combinedSoftware = [...dbSoftware, ...softwareData];
+
   const isGuest = !authLoading && (!user || user.isAnonymous);
 
   // Folder Icon color - Bright Orange
@@ -370,7 +385,7 @@ const Software = () => {
 
   const currentFoldersList = activeOS === 'windows' ? windowsFolders : macFolders;
   
-  const filteredSoftware = softwareData.filter(item => {
+  const filteredSoftware = combinedSoftware.filter(item => {
     // If searching, ignore folders and show all matches by OS
     if (searchTerm.trim()) {
       if (item.os !== activeOS) return false;
@@ -392,7 +407,7 @@ const Software = () => {
 
   const availableSubfolders = currentFolder
     ? Array.from(new Set(
-        softwareData
+        combinedSoftware
           .filter(item => item.os === activeOS && item.folder === currentFolder && item.subfolder)
           .map(item => item.subfolder)
       ))
@@ -400,13 +415,13 @@ const Software = () => {
 
   const availableTypes = currentFolder === 'Office' && currentSubfolder
     ? Array.from(new Set(
-        softwareData
+        combinedSoftware
           .filter(item => item.os === activeOS && item.folder === 'Office' && item.subfolder === currentSubfolder && item.version && ['Retail', 'VL'].includes(item.version))
           .map(item => item.version)
       ))
     : currentFolder === 'Driver' && currentSubfolder === 'Printer Driver'
     ? Array.from(new Set(
-        softwareData
+        combinedSoftware
           .filter(item => item.os === activeOS && item.folder === 'Driver' && item.subfolder === 'Printer Driver' && item.brand)
           .map(item => item.brand)
       ))
@@ -505,7 +520,7 @@ const Software = () => {
                         {(software.title.toLowerCase().includes('iso') || (software.url && software.url.toLowerCase().includes('.iso'))) ? (
                           <ModernIsoIcon size={44} />
                         ) : (
-                          <SoftwareIcon id={software.id} os={software.os} size={48} />
+                          <SoftwareIcon id={software.id} os={software.os} size={48} iconUrl={software.iconUrl || software.icon} />
                         )}
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end' }}>
@@ -551,7 +566,7 @@ const Software = () => {
                         {t(folderName.toLowerCase().replace(' ', '_'))}
                       </span>
                       <span className="folder-subtitle-modern">
-                        {softwareData.filter(s => s.os === activeOS && s.folder === folderName).length} Resources
+                        {combinedSoftware.filter(s => s.os === activeOS && s.folder === folderName).length} Resources
                       </span>
                     </div>
                   </div>
@@ -626,7 +641,7 @@ const Software = () => {
                 </div>
               ))}
 
-              {softwareData
+              {combinedSoftware
                 .filter(item => item.os === activeOS && item.folder === currentFolder && !item.subfolder)
                 .map((item) => (
                   <div 
@@ -652,7 +667,7 @@ const Software = () => {
                     }}
                   >
                     <div style={{ background: 'var(--card-dark)', padding: '16px', borderRadius: '20px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-                      <SoftwareIcon id={item.id} os={item.os} size={48} />
+                      <SoftwareIcon id={item.id} os={item.os} size={48} iconUrl={item.iconUrl || item.icon} />
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                       <a 
@@ -819,7 +834,7 @@ const Software = () => {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                       {(software.title.toLowerCase().includes('iso') || (software.url && software.url.toLowerCase().includes('.iso'))) 
                         ? <ModernIsoIcon /> 
-                        : <SoftwareIcon id={software.id} os={software.os} size={32} />}
+                        : <SoftwareIcon id={software.id} os={software.os} size={32} iconUrl={software.iconUrl || software.icon} />}
                       <div style={{ display: 'flex', flexDirection: 'column' }}>
                         <a 
                           href={software.url || `https://files.kichhoat24h.com/download/${encodeURIComponent(software.folder)}/${encodeURIComponent(software.title)}`}
@@ -886,7 +901,7 @@ const Software = () => {
                       {(software.title.toLowerCase().includes('iso') || (software.url && software.url.toLowerCase().includes('.iso'))) ? (
                         <ModernIsoIcon size={32} />
                       ) : (
-                        <SoftwareIcon id={software.id} os={software.os} size={36} />
+                        <SoftwareIcon id={software.id} os={software.os} size={36} iconUrl={software.iconUrl || software.icon} />
                       )}
                     </div>
                     

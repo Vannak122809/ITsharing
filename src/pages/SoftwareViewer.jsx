@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Download, Monitor, Apple, CheckCircle, ShieldAlert, Zap, Box } from 'lucide-react';
-import { softwareData } from './Software';
-import { auth } from '../firebase';
+import { ArrowLeft, Download, Monitor, Apple, CheckCircle, ShieldAlert, Zap, Box, Rocket } from 'lucide-react';
+import { softwareData, SoftwareIcon, ModernIsoIcon, ModernScriptIcon } from './Software';
+import { auth, db } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
 
 const mockSoftwareDB = {
   // === WINDOWS SOFTWARE ===
@@ -187,26 +188,45 @@ const SoftwareViewer = () => {
   const isGuest = !user || user.isAnonymous;
 
   useEffect(() => {
-    // In reality, this would fetch from Firebase or R2 mapping
-    if (mockSoftwareDB[id]) {
-      setSoftware(mockSoftwareDB[id]);
-    } else {
-      // Dynamic fallback for newly added items
-      const fallback = softwareData.find(s => s.id === id);
-      if (fallback) {
-        setSoftware({
-          title: fallback.title,
-          os: fallback.os,
-          version: fallback.version || 'Latest',
-          size: fallback.size || 'Unknown',
-          developer: fallback.folder === 'Mac OS' ? 'Apple' : (['Windows', 'Office', 'Windows Server'].includes(fallback.folder) ? 'Microsoft' : 'Unknown Developer'),
-          downloadUrl: fallback.url || `https://files.kichhoat24h.com/download/${encodeURIComponent(fallback.folder)}/${encodeURIComponent(fallback.title)}`,
-          description: fallback.desc || `Official download for ${fallback.title}. This package is available securely from the IT Sharing repository.`,
-          requirements: ['Standard Specifications', 'Compatible Operating System', `${fallback.size ? fallback.size + ' Free Disk Space' : 'Sufficient Disk Space'}`],
-          features: ['Direct Download', 'Verified Integrity', 'Easy Installation']
-        });
+    const fetchSoftwareDetails = async () => {
+      // 1. Try Firestore first
+      try {
+        const docRef = doc(db, 'software', id);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          setSoftware({
+            id: docSnap.id,
+            ...data
+          });
+          return;
+        }
+      } catch (err) {
+        console.error("Error retrieving software metadata:", err);
       }
-    }
+
+      // 2. Fall back to mockSoftwareDB
+      if (mockSoftwareDB[id]) {
+        setSoftware(mockSoftwareDB[id]);
+      } else {
+        // 3. Fall back to static softwareData list
+        const fallback = softwareData.find(s => s.id === id);
+        if (fallback) {
+          setSoftware({
+            title: fallback.title,
+            os: fallback.os,
+            version: fallback.version || 'Latest',
+            size: fallback.size || 'Unknown',
+            developer: fallback.folder === 'Mac OS' ? 'Apple' : (['Windows', 'Office', 'Windows Server'].includes(fallback.folder) ? 'Microsoft' : 'Unknown Developer'),
+            downloadUrl: fallback.url || `https://files.kichhoat24h.com/download/${encodeURIComponent(fallback.folder)}/${encodeURIComponent(fallback.title)}`,
+            description: fallback.desc || `Official download for ${fallback.title}. This package is available securely from the IT Sharing repository.`,
+            requirements: ['Standard Specifications', 'Compatible Operating System', `${fallback.size ? fallback.size + ' Free Disk Space' : 'Sufficient Disk Space'}`],
+            features: ['Direct Download', 'Verified Integrity', 'Easy Installation']
+          });
+        }
+      }
+    };
+    fetchSoftwareDetails();
   }, [id]);
 
   if (!software) {
@@ -239,13 +259,22 @@ const SoftwareViewer = () => {
             
             {/* Header Content */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '40px', marginBottom: '60px' }}>
-              <div style={{ flex: 1, minWidth: '300px' }}>
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 20px', borderRadius: '14px', background: 'var(--surface-badge)', color: 'var(--primary)', fontSize: '0.85rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '24px' }}>
-                  {software.os === 'windows' ? <Monitor size={16} /> : <Apple size={16} />}
-                  {software.os === 'windows' ? 'Windows Optimized' : 'macOS Application'} • {software.version}
+              <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start', flex: 1, minWidth: '300px' }}>
+                <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '16px', borderRadius: '24px', border: '1px solid var(--surface-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  {(software.title && (software.title.toLowerCase().includes('iso') || (software.downloadUrl && software.downloadUrl.toLowerCase().includes('.iso')))) ? (
+                    <ModernIsoIcon size={64} />
+                  ) : (
+                    <SoftwareIcon id={id} os={software.os} size={64} iconUrl={software.iconUrl || software.icon} />
+                  )}
                 </div>
-                <h1 className="text-gradient" style={{ fontSize: '4rem', lineHeight: 1.1, marginBottom: '16px' }}>{software.title}</h1>
-                <p style={{ fontSize: '1.25rem', color: 'var(--text-muted)', fontWeight: 500 }}>Published by {software.developer}</p>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 20px', borderRadius: '14px', background: 'var(--surface-badge)', color: 'var(--primary)', fontSize: '0.85rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '24px' }}>
+                    {software.os === 'windows' ? <Monitor size={16} /> : <Apple size={16} />}
+                    {software.os === 'windows' ? 'Windows Optimized' : 'macOS Application'} • {software.version}
+                  </div>
+                  <h1 className="text-gradient" style={{ fontSize: '4rem', lineHeight: 1.1, marginBottom: '16px' }}>{software.title}</h1>
+                  <p style={{ fontSize: '1.25rem', color: 'var(--text-muted)', fontWeight: 500 }}>Published by {software.developer}</p>
+                </div>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', minWidth: '240px' }}>

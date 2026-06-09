@@ -3,30 +3,46 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { r2Client, BUCKET_NAME } from "./r2";
 import { db } from "./firebase";
 import { collection, addDoc, getDocs, orderBy, query, serverTimestamp } from "firebase/firestore";
+import { multipartUpload } from "./r2Assets";
 
 // The Cloudflare R2 public URL base you configured in your dashboard
 // Example: "https://pub-xxxxxxxxxxxxx.r2.dev"
 const R2_PUBLIC_URL = import.meta.env.VITE_R2_PUBLIC_URL; // Please replace with your actual R2.dev URL if you have one enabled
 
 /**
- * Uploads a file directly to Cloudflare R2
+ * Uploads a file directly to Cloudflare R2.
+ * Automatically chooses between standard PUT and chunked Multipart upload based on file size.
  * @param {File} file 
  * @param {string} folder 
+ * @param {function} [onProgress]
  * @returns {Promise<string>} The file key/path in R2
  */
-export const uploadFileToR2 = async (file, folder = "documents") => {
+export const uploadFileToR2 = async (file, folder = "documents", onProgress = null) => {
   try {
     const fileExtension = file.name.split('.').pop();
     const fileName = `${folder}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.\-_]/g, '')}`;
 
-    const command = new PutObjectCommand({
-      Bucket: BUCKET_NAME,
-      Key: fileName,
-      Body: file,
-      ContentType: file.type,
-    });
+    const MULTIPART_THRESHOLD = 10 * 1024 * 1024; // 10 MB threshold
 
-    await r2Client.send(command);
+    if (file.size >= MULTIPART_THRESHOLD) {
+      await multipartUpload(r2Client, {
+        Bucket: BUCKET_NAME,
+        Key: fileName,
+        Body: file,
+        ContentType: file.type || 'application/octet-stream',
+        onProgress,
+      });
+    } else {
+      const command = new PutObjectCommand({
+        Bucket: BUCKET_NAME,
+        Key: fileName,
+        Body: file,
+        ContentType: file.type || 'application/octet-stream',
+      });
+
+      await r2Client.send(command);
+      if (onProgress) onProgress(100);
+    }
     return fileName;
   } catch (error) {
     console.error("Error uploading to R2:", error);

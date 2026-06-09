@@ -53,7 +53,8 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
         { id: 'Luxury', label: '💎 Luxury Assets', icon: <Star size={14} /> },
         { id: 'Template', label: '📐 Templates', icon: <Palette size={14} /> },
         { id: 'Illustration', label: '🎨 Illustrations', icon: <Layers size={14} /> },
-        { id: 'Image', label: '📸 Real Images', icon: <ImageIcon size={14} /> }
+        { id: 'Image', label: '📸 Real Images', icon: <ImageIcon size={14} /> },
+        { id: 'Software', label: '💾 Software', icon: <HardDrive size={14} /> }
     ]);
     const [isCreatingCol, setIsCreatingCol] = useState(false);
     const [newColTitle, setNewColTitle] = useState('');
@@ -85,7 +86,8 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
     const softwareFormats = [
         { id: 'Photoshop', name: 'Adobe Photoshop', desc: 'PSD, EPS, TIFF', icon: <Layers size={22} />, color: '#001833', accent: '#00a8ff', folder: 'Photoshop' },
         { id: 'PNG', name: 'Portable Graphics', desc: 'PNG, JPG, WEBP', icon: <ImageIcon size={22} />, color: '#032310', accent: '#00ff88', folder: 'PNG' },
-        { id: 'AI', name: 'Adobe Illustrator', desc: 'AI, EPS, SVG', icon: <Palette size={22} />, color: '#2a0000', accent: '#ff8800', folder: 'AI' }
+        { id: 'AI', name: 'Adobe Illustrator', desc: 'AI, EPS, SVG', icon: <Palette size={22} />, color: '#2a0000', accent: '#ff8800', folder: 'AI' },
+        { id: 'Software', name: 'Software / OS', desc: 'ZIP, RAR, EXE, DMG, ISO', icon: <HardDrive size={22} />, color: '#111827', accent: '#a855f7', folder: 'Software' }
     ];
 
     const currentFormat = softwareFormats.find(c => c.id === softwareType);
@@ -152,7 +154,10 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
                 
                 // 1. Upload Source File (only if new file selected)
                 if (currentFile) {
-                    const sourceKey = await uploadAssetToR2(currentFile, currentFormat.folder, selectedBucket);
+                    const sourceKey = await uploadAssetToR2(currentFile, currentFormat.folder, selectedBucket, (percent) => {
+                        // Source file upload progress counts as 5% to 55% (50% range)
+                        setUploadProgress(5 + Math.round(percent * 0.5));
+                    });
                     sourceUrl = `${customPublicUrl}/${sourceKey}`;
                 }
                 setUploadProgress(55);
@@ -192,6 +197,7 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
                 let technicalType = selectedCategories[0] || 'Template';
                 if (softwareType === 'PNG' && !selectedCategories.includes('Frame')) technicalType = 'Image';
                 if (softwareType === 'AI' && !selectedCategories.includes('Chinese New Year') && !selectedCategories.includes('Khmer New Year')) technicalType = 'Illustration';
+                if (softwareType === 'Software') technicalType = 'Software';
                 
                 // Add categories as extra tags for search robustness
                 const expandedTags = [
@@ -244,7 +250,11 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
                     let galleryUrls = [];
                     let sourceUrl = '';
 
-                    const sourceKey = await uploadAssetToR2(currentFile, currentFormat.folder, selectedBucket);
+                    const sourceKey = await uploadAssetToR2(currentFile, currentFormat.folder, selectedBucket, (percent) => {
+                        const fileProgress = percent / 100;
+                        const overallPercent = Math.round(((processed + 0.3 * fileProgress) / totalFiles) * 100);
+                        setUploadProgress(overallPercent);
+                    });
                     sourceUrl = `${customPublicUrl}/${sourceKey}`;
                     
                     setUploadProgress(Math.round(((processed + 0.3) / totalFiles) * 100));
@@ -288,6 +298,7 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
                     let technicalType = selectedCategories[0] || 'Template';
                     if (softwareType === 'PNG' && !selectedCategories.includes('Frame')) technicalType = 'Image';
                     if (softwareType === 'AI' && !selectedCategories.includes('Chinese New Year') && !selectedCategories.includes('Khmer New Year')) technicalType = 'Illustration';
+                    if (softwareType === 'Software') technicalType = 'Software';
                     
                     const expandedTags = [
                         ...tags.split(',').map(tag => tag.trim()).filter(Boolean),
@@ -366,6 +377,8 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
                                             setSelectedCategories(['Illustration']);
                                         } else if (cat.id === 'PNG' && selectedCategories.length <= 1) {
                                             setSelectedCategories(['Image']);
+                                        } else if (cat.id === 'Software' && selectedCategories.length <= 1) {
+                                            setSelectedCategories(['Software']);
                                         }
                                     }}
                                     title={cat.name}

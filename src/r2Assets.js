@@ -1,4 +1,11 @@
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { 
+    S3Client, 
+    PutObjectCommand, 
+    CreateMultipartUploadCommand, 
+    UploadPartCommand, 
+    CompleteMultipartUploadCommand, 
+    AbortMultipartUploadCommand 
+} from "@aws-sdk/client-s3";
 
 // New API credentials for ASSETS (images bucket)
 const ASSETS_R2_CONFIG = {
@@ -24,26 +31,135 @@ export const ASSETS_BUCKET = ASSETS_R2_CONFIG.bucketName;
 export const ASSETS_PUBLIC_URL = ASSETS_R2_CONFIG.publicUrl;
 
 /**
- * Upload Asset to a specific bucket with progress and binary support
+ * Reusable helper to upload a file in chunks (Multipart Upload) to Cloudflare R2.
+ * This is crucial for files > 100MB (like software, Windows ISOs, zip files, etc.) 
+ * to prevent high RAM usage in browser and bypass Cloudflare edge body limits.
  */
-export const uploadAssetToR2 = async (file, folder = "PNG", customBucket = null) => {
+export const multipartUpload = async (client, { Bucket, Key, Body, ContentType, onProgress }) => {
+    const CHUNK_SIZE = 10 * 1024 * 1024; // 10MB chunk size
+    const fileSize = Body.size;
+    const totalParts = Math.ceil(fileSize / CHUNK_SIZE);
+    let uploadId = null;
+
+    try {
+        console.log(`[R2 Multipart] Initiating upload for key: ${Key} (Size: ${(fileSize / (1024 * 1024)).toFixed(2)} MB, Parts: ${totalParts})`);
+        const initResponse = await client.send(new CreateMultipartUploadCommand({
+            Bucket,
+            Key,
+            ContentType,
+        }));
+        uploadId = initResponse.UploadId;
+
+        const parts = [];
+        let uploadedBytes = 0;
+
+        for (let partNumber = 1; partNumber <= totalParts; partNumber++) {
+            const start = (partNumber - 1) * CHUNK_SIZE;
+            const end = Math.min(start + CHUNK_SIZE, fileSize);
+            
+            // Slice the file/blob. Slice is fast & memory efficient (lazy reading)
+            const chunk = Body.slice(start, end);
+            const chunkBuffer = new Uint8Array(await chunk.arrayBuffer());
+
+            let attempts = 0;
+            const maxAttempts = 3;
+            let success = false;
+            let uploadPartResponse;
+
+            while (attempts < maxAttempts && !success) {
+                try {
+                    attempts++;
+                    uploadPartResponse = await client.send(new UploadPartCommand({
+                        Bucket,
+                        Key,
+                        UploadId: uploadId,
+                        PartNumber: partNumber,
+                        Body: chunkBuffer,
+                    }));
+                    success = true;
+                } catch (err) {
+                    console.warn(`[R2 Multipart] Part #${partNumber} failed (attempt ${attempts}/${maxAttempts}):`, err.message);
+                    if (attempts >= maxAttempts) throw err;
+                    // Wait with exponential backoff: 2s, 4s, 8s...
+                    await new Promise((res) => setTimeout(res, Math.pow(2, attempts) * 1000));
+                }
+            }
+
+            parts.push({
+                ETag: uploadPartResponse.ETag,
+                PartNumber: partNumber,
+            });
+
+            uploadedBytes += (end - start);
+            if (onProgress) {
+                onProgress(Math.round((uploadedBytes / fileSize) * 100));
+            }
+        }
+
+        console.log(`[R2 Multipart] Completing upload for key: ${Key}`);
+        await client.send(new CompleteMultipartUploadCommand({
+            Bucket,
+            Key,
+            UploadId: uploadId,
+            MultipartUpload: {
+                Parts: parts,
+            },
+        }));
+
+        console.log(`[R2 Multipart] Successfully uploaded: ${Key}`);
+    } catch (error) {
+        console.error(`[R2 Multipart] Fatal upload failure for key: ${Key}:`, error);
+        if (uploadId) {
+            try {
+                console.log(`[R2 Multipart] Aborting upload with ID: ${uploadId}`);
+                await client.send(new AbortMultipartUploadCommand({
+                    Bucket,
+                    Key,
+                    UploadId: uploadId,
+                }));
+            } catch (abortError) {
+                console.error("[R2 Multipart] Failed to abort multipart upload:", abortError.message);
+            }
+        }
+        throw error;
+    }
+};
+
+/**
+ * Upload Asset to a specific bucket with progress and binary support.
+ * Automatically chooses between standard PUT and chunked Multipart upload based on file size.
+ */
+export const uploadAssetToR2 = async (file, folder = "PNG", customBucket = null, onProgress = null) => {
     try {
         const bucket = customBucket || ASSETS_BUCKET;
         const fileName = `${folder}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.\-_]/g, '')}`;
 
-        // Convert File to ArrayBuffer for better browser compatibility
-        const arrayBuffer = await file.arrayBuffer();
+        // Threshold for multipart: 10 MB. Files over this threshold use chunked multipart upload.
+        const MULTIPART_THRESHOLD = 10 * 1024 * 1024;
 
-        const command = new PutObjectCommand({
-            Bucket: bucket,
-            Key: fileName,
-            Body: new Uint8Array(arrayBuffer),
-            ContentType: file.type || 'application/octet-stream',
-        });
+        if (file.size >= MULTIPART_THRESHOLD) {
+            await multipartUpload(assetsR2Client, {
+                Bucket: bucket,
+                Key: fileName,
+                Body: file,
+                ContentType: file.type || 'application/octet-stream',
+                onProgress,
+            });
+        } else {
+            console.log(`[R2 Put] Uploading small file: ${fileName} (${(file.size / 1024).toFixed(2)} KB)`);
+            const arrayBuffer = await file.arrayBuffer();
 
-        console.log(`Starting upload to bucket: ${bucket}, folder: ${folder}`);
-        await assetsR2Client.send(command);
-        console.log("Upload successful:", fileName);
+            const command = new PutObjectCommand({
+                Bucket: bucket,
+                Key: fileName,
+                Body: new Uint8Array(arrayBuffer),
+                ContentType: file.type || 'application/octet-stream',
+            });
+
+            await assetsR2Client.send(command);
+            if (onProgress) onProgress(100);
+            console.log("[R2 Put] Upload successful:", fileName);
+        }
         
         return fileName;
     } catch (error) {
