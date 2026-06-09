@@ -265,11 +265,11 @@ const SoftwareViewer = () => {
             {/* Header Content */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '40px', marginBottom: '60px' }}>
               <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start', flex: 1, minWidth: '300px' }}>
-                <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '16px', borderRadius: '24px', border: '1px solid var(--surface-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <div style={{ background: 'rgba(255, 255, 255, 0.03)', width: '120px', height: '120px', borderRadius: '32px', border: '1px solid var(--surface-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   {(software.title && (software.title.toLowerCase().includes('iso') || (software.downloadUrl && software.downloadUrl.toLowerCase().includes('.iso')))) ? (
-                    <ModernIsoIcon size={64} />
+                    <ModernIsoIcon size={80} />
                   ) : (
-                    <SoftwareIcon id={id} os={software.os} size={64} iconUrl={software.iconUrl || software.icon} />
+                    <SoftwareIcon id={id} os={software.os} size={80} iconUrl={software.iconUrl || software.icon} />
                   )}
                 </div>
                 <div style={{ flex: 1 }}>
