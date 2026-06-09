@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Download, Monitor, Apple, CheckCircle, ShieldAlert, Zap, Box, Rocket } from 'lucide-react';
+import { ArrowLeft, Download, Monitor, Apple, CheckCircle, ShieldAlert, Zap, Box, Rocket, Star } from 'lucide-react';
 import { softwareData, SoftwareIcon, ModernIsoIcon, ModernScriptIcon } from './Software';
 import { auth, db } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
