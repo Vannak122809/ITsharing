@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
 import { Terminal, Video, FileText, BookOpen, Layers, User, LogOut, DownloadCloud, Sun, Moon, Users, HelpCircle, Menu, X, Globe, Gift, Image as ImageIcon, LayoutDashboard } from 'lucide-react';
 
@@ -6,20 +6,21 @@ import { auth } from './firebase';
 import { onAuthStateChanged, signOut, sendEmailVerification } from 'firebase/auth';
 import { syncUserToFirestore } from './userService';
 
-import Home from './pages/Home';
-import Courses from './pages/Courses';
-import Documents from './pages/Documents';
-import Experiences from './pages/Experiences';
-import Login from './pages/Login';
-import Software from './pages/Software';
-import SoftwareViewer from './pages/SoftwareViewer';
-import Community from './pages/Community';
-import RequestResource from './pages/RequestResource';
-import Profile from './pages/Profile';
-import Assets from './pages/Assets';
-import AdminAssets from './pages/AdminAssets';
+import CommandPalette from './components/CommandPalette';
 
-import GiveawayKeys from './pages/GiveawayKeys';
+const Home = lazy(() => import('./pages/Home'));
+const Courses = lazy(() => import('./pages/Courses'));
+const Documents = lazy(() => import('./pages/Documents'));
+const Experiences = lazy(() => import('./pages/Experiences'));
+const Login = lazy(() => import('./pages/Login'));
+const Software = lazy(() => import('./pages/Software'));
+const SoftwareViewer = lazy(() => import('./pages/SoftwareViewer'));
+const Community = lazy(() => import('./pages/Community'));
+const RequestResource = lazy(() => import('./pages/RequestResource'));
+const Profile = lazy(() => import('./pages/Profile'));
+const Assets = lazy(() => import('./pages/Assets'));
+const AdminAssets = lazy(() => import('./pages/AdminAssets'));
+const GiveawayKeys = lazy(() => import('./pages/GiveawayKeys'));
 
 import ProtectedRoute from './components/ProtectedRoute';
 import CoffeeDonate from './components/CoffeeDonate';
@@ -359,39 +360,46 @@ function App() {
         </div>
       </div>
 
+      <CommandPalette />
       <main>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/courses" element={<Courses />} />
-          <Route path="/documents" element={<Documents />} />
-          <Route path="/experiences" element={<Experiences />} />
-          <Route path="/software" element={<Software />} />
-          <Route path="/software/:id" element={<SoftwareViewer />} />
-          <Route path="/community" element={<Community />} />
-          <Route path="/assets" element={
-            <ProtectedRoute>
-              <Assets />
-            </ProtectedRoute>
-          } />
-          <Route path="/giveaway" element={
-            <ProtectedRoute>
-              <GiveawayKeys />
-            </ProtectedRoute>
-          } />
-          <Route path="/request" element={<RequestResource />} />
-          <Route path="/profile" element={
-            <ProtectedRoute>
-              <Profile user={user} />
-            </ProtectedRoute>
-          } />
-            <Route path="/admin/assets" element={
-              <ProtectedRoute requiredRole="admin">
-                <AdminAssets />
+        <Suspense fallback={
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
+            <div className="loader-spinner"></div>
+          </div>
+        }>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/courses" element={<Courses />} />
+            <Route path="/documents" element={<Documents />} />
+            <Route path="/experiences" element={<Experiences />} />
+            <Route path="/software" element={<Software />} />
+            <Route path="/software/:id" element={<SoftwareViewer />} />
+            <Route path="/community" element={<Community />} />
+            <Route path="/assets" element={
+              <ProtectedRoute>
+                <Assets />
               </ProtectedRoute>
             } />
+            <Route path="/giveaway" element={
+              <ProtectedRoute>
+                <GiveawayKeys />
+              </ProtectedRoute>
+            } />
+            <Route path="/request" element={<RequestResource />} />
+            <Route path="/profile" element={
+              <ProtectedRoute>
+                <Profile user={user} />
+              </ProtectedRoute>
+            } />
+              <Route path="/admin/assets" element={
+                <ProtectedRoute requiredRole="admin">
+                  <AdminAssets />
+                </ProtectedRoute>
+              } />
 
-          <Route path="/login" element={<Login />} />
-        </Routes>
+            <Route path="/login" element={<Login />} />
+          </Routes>
+        </Suspense>
       </main>
 
       <footer style={{ marginTop: '100px', padding: '40px 0', borderTop: '1px solid var(--surface-border)', textAlign: 'center', background: 'var(--nav-bg)' }}>

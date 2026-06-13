@@ -25,11 +25,9 @@ const Home = () => {
         padding: '120px 0 80px',
         position: 'relative'
       }}>
-        <div style={{ position: 'absolute', top: '15%', left: '50%', transform: 'translateX(-50%)', width: '300px', height: '300px', background: 'var(--primary)', filter: 'blur(150px)', opacity: 0.15, zIndex: -1 }} />
-        <div style={{ position: 'absolute', bottom: '15%', right: '10%', width: '250px', height: '250px', background: 'var(--secondary)', filter: 'blur(150px)', opacity: 0.1, zIndex: -1 }} />
+        <div className="mesh-bg" />
 
-
-        <h1 style={{ filter: 'drop-shadow(0 0 30px rgba(255,255,255,0.1))' }}>
+        <h1 className="text-animated-cyber" style={{ filter: 'drop-shadow(0 0 30px rgba(255,255,255,0.1))' }}>
           {t('home_hero_title')}
         </h1>
         <p style={{ maxWidth: '700px', margin: '0 auto', lineHeight: '1.8' }}>
