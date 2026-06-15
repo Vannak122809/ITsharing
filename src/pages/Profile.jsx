@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { getUserProfile, saveProfileField } from '../userService';
+import { getUserProfile, saveProfileField, getBookmarks } from '../userService';
+import { Link } from 'react-router-dom';
 import {
   Camera, Pencil, Check, X, MapPin, Link as LinkIcon,
   Calendar, BookOpen, DownloadCloud, Heart, MessageSquare,
@@ -119,6 +120,18 @@ const Profile = ({ user }) => {
   const [uploadError, setUploadError]   = useState('');
 
   const [activeTab, setActiveTab] = useState('posts');
+  const [bookmarks, setBookmarks] = useState([]);
+  const [bookmarksLoading, setBookmarksLoading] = useState(false);
+
+  useEffect(() => {
+    if (activeTab === 'saved' && user) {
+      setBookmarksLoading(true);
+      getBookmarks(user.uid).then(data => {
+        setBookmarks(data);
+        setBookmarksLoading(false);
+      });
+    }
+  }, [activeTab, user]);
 
   // ── STEP 3: DISPLAY — load saved URL from Firestore on mount ─────────────
   useEffect(() => {
@@ -433,20 +446,26 @@ const Profile = ({ user }) => {
         )}
 
         {activeTab === 'saved' && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 16 }}>
-            {[
-              { title: 'CCNA Course', type: 'Course', icon: <BookOpen size={18} color="var(--primary)" /> },
-              { title: 'Windows 11 ISO', type: 'Software', icon: <DownloadCloud size={18} color="#00fa9a" /> },
-              { title: 'Python Basics PDF', type: 'Document', icon: <Heart size={18} color="#ff2a7a" /> },
-            ].map((s, i) => (
-              <div key={i} className="glass-panel" style={{ padding: 20, borderRadius: 14, border: '1px solid var(--surface-border)', display: 'flex', gap: 14, alignItems: 'center' }}>
-                {s.icon}
-                <div>
-                  <p style={{ fontWeight: 600, margin: 0, fontSize: '0.92rem', color: 'var(--text-main)' }}>{s.title}</p>
-                  <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--text-muted)' }}>{s.type}</p>
-                </div>
+          <div>
+            {bookmarksLoading ? (
+              <Loader size={24} className="spin" color="var(--primary)" />
+            ) : bookmarks.length === 0 ? (
+              <p style={{ color: 'var(--text-muted)' }}>You haven't saved any resources yet.</p>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 16 }}>
+                {bookmarks.map((b) => (
+                  <Link to={b.path || '#'} key={b.id} style={{ textDecoration: 'none' }}>
+                    <div className="glass-panel" style={{ padding: 20, borderRadius: 14, border: '1px solid var(--surface-border)', display: 'flex', gap: 14, alignItems: 'center', transition: '0.2s' }} onMouseOver={e => e.currentTarget.style.borderColor = 'var(--primary)'} onMouseOut={e => e.currentTarget.style.borderColor = 'var(--surface-border)'}>
+                      <Heart size={18} color="#ff2a7a" />
+                      <div>
+                        <p style={{ fontWeight: 600, margin: 0, fontSize: '0.92rem', color: 'var(--text-main)' }}>{b.title}</p>
+                        <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--text-muted)', textTransform: 'capitalize' }}>{b.type}</p>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
               </div>
-            ))}
+            )}
           </div>
         )}
 

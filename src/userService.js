@@ -9,7 +9,7 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
-import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, serverTimestamp, collection, deleteDoc, getDocs } from 'firebase/firestore';
 import { db } from './firebase';
 
 // ── Collection reference helper ─────────────────────────────────────────────
@@ -133,4 +133,52 @@ export const getUserNickname = async (uid) => {
   const profile = await getUserProfile(uid);
   if (!profile) return 'Unknown';
   return profile.nickname || profile.email?.split('@')[0] || 'User';
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 6. BOOKMARKS (Saved Resources)
+// ─────────────────────────────────────────────────────────────────────────────
+export const toggleBookmark = async (uid, resourceId, resourceData) => {
+  if (!uid || !resourceId) return false;
+  const bookmarkRef = doc(db, 'users', uid, 'bookmarks', resourceId);
+  try {
+    const snap = await getDoc(bookmarkRef);
+    if (snap.exists()) {
+      await deleteDoc(bookmarkRef);
+      return false; // unbookmarked
+    } else {
+      await setDoc(bookmarkRef, {
+        ...resourceData,
+        bookmarkedAt: serverTimestamp()
+      });
+      return true; // bookmarked
+    }
+  } catch (e) {
+    console.error('[userService] toggleBookmark failed:', e);
+    throw e;
+  }
+};
+
+export const getBookmarks = async (uid) => {
+  if (!uid) return [];
+  try {
+    const bookmarksRef = collection(db, 'users', uid, 'bookmarks');
+    const snap = await getDocs(bookmarksRef);
+    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  } catch (e) {
+    console.error('[userService] getBookmarks failed:', e);
+    return [];
+  }
+};
+
+export const checkIsBookmarked = async (uid, resourceId) => {
+  if (!uid || !resourceId) return false;
+  try {
+    const bookmarkRef = doc(db, 'users', uid, 'bookmarks', resourceId);
+    const snap = await getDoc(bookmarkRef);
+    return snap.exists();
+  } catch (e) {
+    console.error('[userService] checkIsBookmarked failed:', e);
+    return false;
+  }
 };
