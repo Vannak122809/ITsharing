@@ -5,6 +5,7 @@ import { auth } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useLanguage } from '../LanguageContext';
 import BookmarkButton from '../components/BookmarkButton';
+import toast from 'react-hot-toast';
 
 const Experiences = () => {
   const { t } = useLanguage();
@@ -28,7 +29,7 @@ const Experiences = () => {
     if (isGuest) {
       navigate('/login');
     } else {
-      alert(t('coming_soon'));
+      toast(t('coming_soon'), { icon: '🚀' });
     }
   };
 

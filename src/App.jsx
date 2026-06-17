@@ -1,6 +1,8 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
 import { Terminal, Video, FileText, BookOpen, Layers, User, LogOut, DownloadCloud, Sun, Moon, Users, HelpCircle, Menu, X, Globe, Gift, Image as ImageIcon, LayoutDashboard } from 'lucide-react';
+import { Toaster, toast } from 'react-hot-toast';
+import { AnimatePresence, motion } from 'framer-motion';
 
 import { auth } from './firebase';
 import { onAuthStateChanged, signOut, sendEmailVerification } from 'firebase/auth';
@@ -282,8 +284,8 @@ function App() {
                 onClick={async () => {
                   try {
                     await sendEmailVerification(user);
-                    alert("Verification link resent! Check your inbox.");
-                  } catch (e) { alert("Error resending email. Please try again later."); }
+                    toast.success('Verification link resent! Check your inbox.', { icon: '📧' });
+                  } catch (e) { toast.error('Error resending email. Please try again later.'); }
                 }}
                 className="btn btn-primary" style={{ width: '100%' }}
               >
@@ -367,38 +369,47 @@ function App() {
             <div className="loader-spinner"></div>
           </div>
         }>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/courses" element={<Courses />} />
-            <Route path="/documents" element={<Documents />} />
-            <Route path="/experiences" element={<Experiences />} />
-            <Route path="/software" element={<Software />} />
-            <Route path="/software/:id" element={<SoftwareViewer />} />
-            <Route path="/community" element={<Community />} />
-            <Route path="/assets" element={
-              <ProtectedRoute>
-                <Assets />
-              </ProtectedRoute>
-            } />
-            <Route path="/giveaway" element={
-              <ProtectedRoute>
-                <GiveawayKeys />
-              </ProtectedRoute>
-            } />
-            <Route path="/request" element={<RequestResource />} />
-            <Route path="/profile" element={
-              <ProtectedRoute>
-                <Profile user={user} />
-              </ProtectedRoute>
-            } />
-              <Route path="/admin/assets" element={
-                <ProtectedRoute requiredRole="admin">
-                  <AdminAssets />
-                </ProtectedRoute>
-              } />
-
-            <Route path="/login" element={<Login />} />
-          </Routes>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={location.pathname}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.25, ease: 'easeInOut' }}
+            >
+              <Routes location={location}>
+                <Route path="/" element={<Home />} />
+                <Route path="/courses" element={<Courses />} />
+                <Route path="/documents" element={<Documents />} />
+                <Route path="/experiences" element={<Experiences />} />
+                <Route path="/software" element={<Software />} />
+                <Route path="/software/:id" element={<SoftwareViewer />} />
+                <Route path="/community" element={<Community />} />
+                <Route path="/assets" element={
+                  <ProtectedRoute>
+                    <Assets />
+                  </ProtectedRoute>
+                } />
+                <Route path="/giveaway" element={
+                  <ProtectedRoute>
+                    <GiveawayKeys />
+                  </ProtectedRoute>
+                } />
+                <Route path="/request" element={<RequestResource />} />
+                <Route path="/profile" element={
+                  <ProtectedRoute>
+                    <Profile user={user} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/assets" element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminAssets />
+                  </ProtectedRoute>
+                } />
+                <Route path="/login" element={<Login />} />
+              </Routes>
+            </motion.div>
+          </AnimatePresence>
         </Suspense>
       </main>
 
@@ -408,6 +419,31 @@ function App() {
 
       {/* Coffee Donate Floating Icon */}
       <CoffeeDonate />
+
+      {/* Toast Notifications */}
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: 'var(--surface, #1a1a2e)',
+            color: 'var(--text-main, #fff)',
+            border: '1px solid var(--surface-border, rgba(255,255,255,0.1))',
+            borderRadius: '16px',
+            backdropFilter: 'blur(12px)',
+            fontWeight: 600,
+            fontSize: '0.9rem',
+            padding: '14px 20px',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
+          },
+          success: {
+            iconTheme: { primary: '#10b981', secondary: '#fff' },
+          },
+          error: {
+            iconTheme: { primary: '#ef4444', secondary: '#fff' },
+          },
+        }}
+      />
     </>
   );
 }

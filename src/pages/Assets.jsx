@@ -4,6 +4,7 @@ import { auth, db } from '../firebase';
 import { collection, query, orderBy, onSnapshot, doc } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useLanguage } from '../LanguageContext';
+import toast from 'react-hot-toast';
 
 import { featuredAssets } from '../data/assetsData';
 import './Assets.css';
@@ -91,7 +92,7 @@ const Assets = () => {
             window.URL.revokeObjectURL(blobUrl);
         } catch (error) {
             console.error('Download failed:', error);
-            alert('ការទាញយកមានបញ្ហា! សូមពិនិត្យមើលការកំណត់ CORS នៅក្នុង Cloudflare R2 ឬប្រើ Right Click -> Save Image As ជំនួសវិញ។');
+            toast.error('ការទាញយកមានបញ្ហា! សូមពិនិត្យមើលការកំណត់ CORS នៅក្នុង Cloudflare R2 ឬប្រើ Right Click -> Save Image As ជំនួសវិញ។');
             // Fallback
             window.open(asset.sourceUrl || asset.url, '_blank');
         } finally {

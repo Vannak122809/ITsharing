@@ -9,6 +9,7 @@ import {
 } from 'firebase/firestore';
 import { getUserNickname } from '../userService';
 import { useLanguage } from '../LanguageContext';
+import toast from 'react-hot-toast';
 
 const Community = () => {
   const { t } = useLanguage();
@@ -70,9 +71,9 @@ const Community = () => {
   const handlePost = async (e) => {
     e.preventDefault();
     if (!newTitle.trim() || !newContent.trim()) return;
-    if (!user) { alert('Please sign in to post a question.'); return; }
+    if (!user) { toast.error('Please sign in to post a question.'); return; }
     if (!nickname) {
-      alert('Please set a nickname in your Profile first!');
+      toast.error('Please set a nickname in your Profile first!');
       return;
     }
 
@@ -106,7 +107,7 @@ const Community = () => {
   };
 
   const handleReaction = async (postId, type) => {
-    if (!user) { alert(`Please sign in to ${type}.`); return; }
+    if (!user) { toast.error(`Please sign in to ${type}.`); return; }
     const postIndex = posts.findIndex(p => p.id === postId);
     if (postIndex === -1) return;
     const post = posts[postIndex];
@@ -145,12 +146,12 @@ const Community = () => {
   const submitReply = async (postId) => {
     if (!replyContent.trim()) return;
     if (!user || (!nickname && user.email)) {
-      alert("Please set a nickname first.");
+      toast.error('Please set a nickname first.');
       return;
     }
     const post = posts.find(p => p.id === postId);
     if ((post?.repliesList || []).some(r => r.authorUid === user.uid)) {
-      alert("You already replied.");
+      toast.error('You already replied.');
       return;
     }
 

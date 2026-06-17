@@ -8,6 +8,7 @@ import { uploadFileToR2 } from '../r2Utils';
 import { db } from '../firebase';
 import { collection, addDoc, serverTimestamp, doc, updateDoc } from 'firebase/firestore';
 import './SoftwareUploadForm.css';
+import toast from 'react-hot-toast';
 
 const SoftwareUploadForm = ({ onComplete, editData = null }) => {
     const isEditMode = !!editData;
@@ -89,7 +90,7 @@ const SoftwareUploadForm = ({ onComplete, editData = null }) => {
             console.log(`[Software Upload] Upload successful. Public URL: ${publicUrl}`);
         } catch (error) {
             console.error('[Software Upload] R2 upload failed:', error);
-            alert(`File upload failed: ${error.message || 'Check R2 CORS/credentials.'}`);
+            toast.error(`File upload failed: ${error.message || 'Check R2 CORS/credentials.'}`);
         } finally {
             setIsUploadingFile(false);
         }
@@ -108,7 +109,7 @@ const SoftwareUploadForm = ({ onComplete, editData = null }) => {
             console.log(`[Icon Upload] Icon uploaded to: ${publicUrl}`);
         } catch (error) {
             console.error('[Icon Upload] Failed:', error);
-            alert(`Icon upload failed: ${error.message}`);
+            toast.error(`Icon upload failed: ${error.message}`);
         } finally {
             setIsUploadingIcon(false);
         }
@@ -117,11 +118,11 @@ const SoftwareUploadForm = ({ onComplete, editData = null }) => {
     const handleSave = async (e) => {
         e.preventDefault();
         if (!title.trim()) {
-            alert('Please specify a software title.');
+            toast.error('Please specify a software title.');
             return;
         }
         if (!downloadUrl.trim()) {
-            alert('Please upload a file or specify a download URL.');
+            toast.error('Please upload a file or specify a download URL.');
             return;
         }
 
@@ -171,7 +172,7 @@ const SoftwareUploadForm = ({ onComplete, editData = null }) => {
             if (onComplete) onComplete();
         } catch (error) {
             console.error('[Software DB] Failed to save software record:', error);
-            alert(`Database save failed: ${error.message}`);
+            toast.error(`Database save failed: ${error.message}`);
         } finally {
             setIsSaving(false);
         }

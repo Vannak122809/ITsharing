@@ -4,6 +4,7 @@ import { PlayCircle, Award, Search, Filter, Clock, BookOpen, ChevronRight, Chevr
 import { auth } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useLanguage } from '../LanguageContext';
+import toast from 'react-hot-toast';
 
 const Courses = () => {
   const { t } = useLanguage();
@@ -202,7 +203,7 @@ const Courses = () => {
       const firstSection = course.lessons[0].day || 'Module 1';
       setExpandedSections({ [firstSection]: true });
     } else {
-      alert(t('coming_soon'));
+      toast(t('coming_soon'), { icon: '🚀' });
     }
   };
 

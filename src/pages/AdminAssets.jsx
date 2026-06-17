@@ -13,6 +13,7 @@ import { collection, query, orderBy, onSnapshot, deleteDoc, doc, updateDoc, serv
 import { useLanguage } from '../LanguageContext';
 import AssetUploadForm from '../components/AssetUploadForm';
 import SoftwareUploadForm from '../components/SoftwareUploadForm';
+import toast from 'react-hot-toast';
 
 const AdminAssets = () => {
     const { lang, setLang } = useLanguage();
@@ -115,10 +116,10 @@ const AdminAssets = () => {
                 role: newRole, 
                 updatedAt: serverTimestamp() 
             });
-            alert(`Success: User role updated to ${newRole}`);
+            toast.success(`User role updated to ${newRole}`, { icon: '🛡️' });
         } catch (error) {
             console.error('Update role failed:', error);
-            alert(`Error: ${error.message}. Please check your Firebase Security Rules.`);
+            toast.error(`Error: ${error.message}. Please check your Firebase Security Rules.`);
         }
     };
 

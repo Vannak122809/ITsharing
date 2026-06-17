@@ -9,6 +9,7 @@ import { convertToWebP, uploadAssetToR2, ASSETS_PUBLIC_URL } from '../r2Assets';
 import { db } from '../firebase';
 import { collection, addDoc, serverTimestamp, doc, updateDoc, setDoc, arrayUnion, getDoc } from 'firebase/firestore';
 import './AssetUploadForm.css';
+import toast from 'react-hot-toast';
 
 const AssetUploadForm = ({ onComplete, editData = null }) => {
     const isEditMode = !!editData;
@@ -137,7 +138,7 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
 
     const handleUpload = async () => {
         if (!isEditMode && mainFiles.length === 0) {
-            alert('Please select files to proceed.');
+            toast.error('Please select files to proceed.');
             return;
         }
 
@@ -340,7 +341,7 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
 
         } catch (error) {
             console.error('Master Process Error:', error);
-            alert(`System Alert: ${error.message}`);
+            toast.error(`System Alert: ${error.message}`);
             setIsUploading(false);
         }
     };
