@@ -30,52 +30,6 @@ const GoogleIcon = () => (
   </svg>
 );
 
-// ── Styles shared ──────────────────────────────────────────────────
-const iconInputStyle = {
-  width: '100%',
-  paddingLeft: '42px',
-  paddingRight: '44px',
-};
-
-const iconInputNoEyeStyle = {
-  width: '100%',
-  paddingLeft: '42px',
-  paddingRight: '16px',
-};
-
-const iconWrapStyle = {
-  position: 'relative',
-  display: 'flex',
-  alignItems: 'center',
-};
-
-const leftIconStyle = {
-  position: 'absolute',
-  left: '14px',
-  color: 'var(--text-muted)',
-  pointerEvents: 'none',
-  zIndex: 1,
-};
-
-const eyeBtnStyle = {
-  position: 'absolute',
-  right: '14px',
-  background: 'none',
-  border: 'none',
-  color: 'var(--text-muted)',
-  cursor: 'pointer',
-  display: 'flex',
-  padding: 0,
-};
-
-const labelStyle = {
-  display: 'block',
-  marginBottom: '8px',
-  fontSize: '0.85rem',
-  fontWeight: 500,
-  color: 'var(--text-muted)',
-};
-
 const Login = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
@@ -198,33 +152,30 @@ const Login = () => {
 
 
   // ── Password strength ──────────────────────────────────────────────
-  const strengthColor = password.length >= 8 ? '#00c97d' : password.length >= 6 ? '#f59e0b' : '#ff2a7a';
-  const strengthText  = password.length >= 8 ? '✓ Strong password'
-    : password.length >= 6 ? '⚠ Acceptable — try making it longer'
+  const pwdLen = password.length;
+  const strengthPct = pwdLen >= 12 ? 100 : pwdLen >= 8 ? 75 : pwdLen >= 6 ? 50 : pwdLen > 0 ? 25 : 0;
+  const strengthColor = pwdLen >= 8 ? '#00c97d' : pwdLen >= 6 ? '#f59e0b' : '#ff2a7a';
+  const strengthText  = pwdLen >= 8 ? '✓ Strong password'
+    : pwdLen >= 6 ? '⚠ Acceptable — try making it longer'
     : '✗ Too short (min 6 characters)';
 
   // ── Shared UI pieces ──────────────────────────────────────────────
   const Divider = () => (
-    <div style={{ display:'flex', alignItems:'center', gap:'12px' }}>
-      <div style={{ flex:1, height:'1px', background:'var(--surface-border)' }} />
-      <span style={{ color:'var(--text-muted)', fontSize:'0.8rem', fontWeight:500 }}>{t('or')}</span>
-      <div style={{ flex:1, height:'1px', background:'var(--surface-border)' }} />
+    <div className="form-divider">
+      <span>{t('or')}</span>
     </div>
   );
 
   const GoogleBtn = ({ label }) => (
-    <button type="button" onClick={handleGoogle} disabled={loading}
-      className="btn btn-outline"
-      style={{ width:'100%', display:'flex', alignItems:'center', justifyContent:'center', gap:'10px' }}>
+    <button type="button" onClick={handleGoogle} disabled={loading} className="form-social-btn">
       <GoogleIcon /> {label}
     </button>
   );
 
   const SwitchRow = ({ text, action, label }) => (
-    <p style={{ textAlign:'center', fontSize:'0.88rem', color:'var(--text-muted)', marginTop:'4px' }}>
+    <p className="form-switch-row">
       {text}{' '}
-      <button type="button" onClick={() => switchView(action)}
-        style={{ background:'none', border:'none', color:'var(--primary)', cursor:'pointer', fontWeight:600, fontFamily:'inherit', fontSize:'inherit' }}>
+      <button type="button" onClick={() => switchView(action)}>
         {label}
       </button>
     </p>
@@ -232,23 +183,22 @@ const Login = () => {
 
   // ── Render ─────────────────────────────────────────────────────────
   return (
-    <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', padding:'80px 16px 40px' }}>
-      <div className="glass-panel" style={{ width:'100%', maxWidth:'420px', padding:'40px 36px', borderRadius:'24px' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '80px 16px 40px' }}>
+      <div className="form-panel" style={{ width: '100%', maxWidth: '440px' }}>
 
         {/* Header */}
-        <div style={{ textAlign:'center', marginBottom:'28px' }}>
+        <div className="form-header">
           {view !== 'login' && (
-            <button onClick={() => switchView('login')}
-              style={{ background:'none', border:'none', color:'var(--text-muted)', cursor:'pointer', display:'flex', alignItems:'center', gap:'6px', fontSize:'0.85rem', marginBottom:'16px' }}>
+            <button onClick={() => switchView('login')} className="form-back-btn">
               <ArrowLeft size={14} /> {t('back_to')} {t('signin')}
             </button>
           )}
-          <h1 className="text-gradient" style={{ fontSize:'2rem', marginBottom:'6px' }}>
+          <h1 className="text-gradient">
             {view === 'login'  && t('welcome_back')}
             {view === 'signup' && t('create_account')}
             {view === 'forgot' && t('reset_password')}
           </h1>
-          <p style={{ color:'var(--text-muted)', fontSize:'0.9rem' }}>
+          <p>
             {view === 'login'  && t('sign_in_desc')}
             {view === 'signup' && t('sign_up_desc')}
             {view === 'forgot' && t('forgot_desc')}
@@ -257,19 +207,19 @@ const Login = () => {
 
         {/* Alerts */}
         {error && (
-          <div style={{ background:'rgba(255,42,122,0.1)', border:'1px solid rgba(255,42,122,0.4)', padding:'12px 16px', borderRadius:'12px', color:'#ff2a7a', display:'flex', alignItems:'center', gap:'10px', fontSize:'0.88rem', marginBottom:'20px' }}>
-            <AlertCircle size={16} style={{ flexShrink:0 }} /> {error}
+          <div className="form-alert form-alert-error">
+            <AlertCircle size={16} /> {error}
           </div>
         )}
         {success && (
-          <div style={{ background:'rgba(0,250,154,0.1)', border:'1px solid rgba(0,250,154,0.4)', padding:'12px 16px', borderRadius:'12px', color:'#00c97d', display:'flex', alignItems:'center', gap:'10px', fontSize:'0.88rem', marginBottom:'20px' }}>
-            <CheckCircle size={16} style={{ flexShrink:0 }} /> {success}
+          <div className="form-alert form-alert-success">
+            <CheckCircle size={16} /> {success}
           </div>
         )}
 
         {/* ════ LOGIN ════ */}
         {view === 'login' && (
-          <form onSubmit={handleLogin} style={{ display:'flex', flexDirection:'column', gap:'16px' }}>
+          <form onSubmit={handleLogin}>
             
             {/* Honeypot Field (Hidden from humans) */}
             <input 
@@ -281,63 +231,58 @@ const Login = () => {
               autoComplete="off" 
             />
 
-            <div>
-              <label htmlFor="l-email" style={labelStyle}>{t('email_address')}</label>
-              <div style={iconWrapStyle}>
-                <Mail size={16} style={leftIconStyle} />
+            <div className="form-group">
+              <label htmlFor="l-email" className="form-label">{t('email_address')}</label>
+              <div className="form-input-wrap">
+                <Mail size={16} className="form-input-icon" />
                 <input
                   id="l-email"
                   type="email"
-                  className="input-field"
+                  className="form-input"
                   placeholder="you@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  style={iconInputNoEyeStyle}
                 />
               </div>
             </div>
 
-            <div>
-              <label htmlFor="l-password" style={labelStyle}>{t('password')}</label>
-              <div style={iconWrapStyle}>
-                <Lock size={16} style={leftIconStyle} />
+            <div className="form-group">
+              <label htmlFor="l-password" className="form-label">{t('password')}</label>
+              <div className="form-input-wrap">
+                <Lock size={16} className="form-input-icon" />
                 <input
                   id="l-password"
                   type={showPwd ? 'text' : 'password'}
-                  className="input-field"
+                  className="form-input has-eye"
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  style={iconInputStyle}
                 />
-                <button type="button" style={eyeBtnStyle} onClick={() => setShowPwd(p => !p)}>
+                <button type="button" className="form-eye-btn" onClick={() => setShowPwd(p => !p)}>
                   {showPwd ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
             </div>
 
             {/* Remember me + Forgot */}
-            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-              <label style={{ display:'flex', alignItems:'center', gap:'8px', cursor:'pointer', fontSize:'0.88rem', color:'var(--text-muted)' }}>
-                <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)}
-                  style={{ accentColor:'var(--primary)', width:'15px', height:'15px', cursor:'pointer' }} />
+            <div className="form-options-row">
+              <label className="form-checkbox">
+                <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} />
                 {t('remember_me')}
               </label>
-              <button type="button" onClick={() => switchView('forgot')}
-                style={{ background:'none', border:'none', color:'var(--primary)', cursor:'pointer', fontSize:'0.88rem', fontWeight:500, fontFamily:'inherit' }}>
+              <button type="button" onClick={() => switchView('forgot')} className="form-link-btn">
                 {t('forgot_password_q')}
               </button>
             </div>
 
-            <button type="submit" className="btn btn-primary" style={{ width:'100%' }} disabled={loading}>
+            <button type="submit" className="form-submit" disabled={loading}>
               {loading ? t('signing_in') : <><LogIn size={16} /> {t('signin')}</>}
             </button>
 
             <Divider />
             <GoogleBtn label={t('continue_with_google')} />
-
 
             <SwitchRow text={t('no_account')} action="signup" label={t('create_account')} />
           </form>
@@ -345,96 +290,96 @@ const Login = () => {
 
         {/* ════ SIGN UP ════ */}
         {view === 'signup' && (
-          <form onSubmit={handleSignup} style={{ display:'flex', flexDirection:'column', gap:'16px' }}>
+          <form onSubmit={handleSignup}>
 
-            <div>
-              <label htmlFor="s-name" style={labelStyle}>{t('full_name')}</label>
-              <div style={iconWrapStyle}>
-                <User size={16} style={leftIconStyle} />
+            <div className="form-group">
+              <label htmlFor="s-name" className="form-label">{t('full_name')}</label>
+              <div className="form-input-wrap">
+                <User size={16} className="form-input-icon" />
                 <input
                   id="s-name"
                   type="text"
-                  className="input-field"
+                  className="form-input"
                   placeholder="Your Name"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   required
-                  style={iconInputNoEyeStyle}
                 />
               </div>
             </div>
 
-            <div>
-              <label htmlFor="s-email" style={labelStyle}>{t('email_address')}</label>
-              <div style={iconWrapStyle}>
-                <Mail size={16} style={leftIconStyle} />
+            <div className="form-group">
+              <label htmlFor="s-email" className="form-label">{t('email_address')}</label>
+              <div className="form-input-wrap">
+                <Mail size={16} className="form-input-icon" />
                 <input
                   id="s-email"
                   type="email"
-                  className="input-field"
+                  className="form-input"
                   placeholder="you@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  style={iconInputNoEyeStyle}
                 />
               </div>
             </div>
 
-            <div>
-              <label htmlFor="s-password" style={labelStyle}>{t('password')}</label>
-              <div style={iconWrapStyle}>
-                <Lock size={16} style={leftIconStyle} />
+            <div className="form-group">
+              <label htmlFor="s-password" className="form-label">{t('password')}</label>
+              <div className="form-input-wrap">
+                <Lock size={16} className="form-input-icon" />
                 <input
                   id="s-password"
                   type={showPwd ? 'text' : 'password'}
-                  className="input-field"
+                  className="form-input has-eye"
                   placeholder="Minimum 6 characters"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  style={iconInputStyle}
                 />
-                <button type="button" style={eyeBtnStyle} onClick={() => setShowPwd(p => !p)}>
+                <button type="button" className="form-eye-btn" onClick={() => setShowPwd(p => !p)}>
                   {showPwd ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
               {password.length > 0 && (
-                <p style={{ marginTop:'6px', fontSize:'0.8rem', color: strengthColor }}>{strengthText}</p>
+                <div className="pwd-strength">
+                  <div className="pwd-strength-bar">
+                    <div className="pwd-strength-fill" style={{ width: `${strengthPct}%`, background: strengthColor }} />
+                  </div>
+                  <span className="pwd-strength-text" style={{ color: strengthColor }}>{strengthText}</span>
+                </div>
               )}
             </div>
 
-            <div>
-              <label htmlFor="s-confirm" style={labelStyle}>{t('confirm_password')}</label>
-              <div style={iconWrapStyle}>
-                <Lock size={16} style={leftIconStyle} />
+            <div className="form-group">
+              <label htmlFor="s-confirm" className="form-label">{t('confirm_password')}</label>
+              <div className="form-input-wrap">
+                <Lock size={16} className="form-input-icon" />
                 <input
                   id="s-confirm"
                   type={showConfirm ? 'text' : 'password'}
-                  className="input-field"
+                  className="form-input has-eye"
                   placeholder="Repeat your password"
                   value={confirmPassword}
                   onChange={(e) => setConfirm(e.target.value)}
                   required
-                  style={iconInputStyle}
                 />
-                <button type="button" style={eyeBtnStyle} onClick={() => setShowConfirm(p => !p)}>
+                <button type="button" className="form-eye-btn" onClick={() => setShowConfirm(p => !p)}>
                   {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
             </div>
 
-            <label style={{ display:'flex', alignItems:'flex-start', gap:'10px', cursor:'pointer', fontSize:'0.85rem', color:'var(--text-muted)', lineHeight:'1.4', marginTop:'8px' }}>
+            <label className="form-checkbox" style={{ marginBottom: '20px' }}>
               <input 
                 type="checkbox" 
                 checked={agreeTerms} 
                 onChange={(e) => setAgreeTerms(e.target.checked)}
-                style={{ accentColor:'var(--primary)', marginTop:'3px', width:'15px', height:'15px', cursor:'pointer' }} 
               />
               <span>{t('agree_terms')}</span>
             </label>
 
-            <button type="submit" className="btn btn-primary" style={{ width:'100%', marginTop:'8px' }} disabled={loading}>
+            <button type="submit" className="form-submit" disabled={loading}>
               {loading ? t('creating_account') : <><UserPlus size={16} /> {t('create_account')}</>}
             </button>
 
@@ -446,26 +391,25 @@ const Login = () => {
 
         {/* ════ FORGOT PASSWORD ════ */}
         {view === 'forgot' && (
-          <form onSubmit={handleForgot} style={{ display:'flex', flexDirection:'column', gap:'16px' }}>
+          <form onSubmit={handleForgot}>
 
-            <div>
-              <label htmlFor="f-email" style={labelStyle}>{t('email_address')}</label>
-              <div style={iconWrapStyle}>
-                <Mail size={16} style={leftIconStyle} />
+            <div className="form-group">
+              <label htmlFor="f-email" className="form-label">{t('email_address')}</label>
+              <div className="form-input-wrap">
+                <Mail size={16} className="form-input-icon" />
                 <input
                   id="f-email"
                   type="email"
-                  className="input-field"
+                  className="form-input"
                   placeholder="you@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  style={iconInputNoEyeStyle}
                 />
               </div>
             </div>
 
-            <button type="submit" className="btn btn-primary" style={{ width:'100%' }} disabled={loading || !!success}>
+            <button type="submit" className="form-submit" disabled={loading || !!success}>
               {loading ? t('sending') : <><Mail size={16} /> {t('send_reset_link')}</>}
             </button>
 

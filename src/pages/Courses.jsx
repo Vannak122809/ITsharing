@@ -232,7 +232,8 @@ const Courses = () => {
                 placeholder="Search for courses or topics..." 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                style={{ background: 'none', border: 'none', color: 'var(--text-main)', fontSize: '1.1rem', width: '100%', outline: 'none', fontWeight: 500 }}
+                className="form-input"
+                style={{ background: 'none', border: 'none', padding: '8px 0', boxShadow: 'none', fontSize: '1.1rem' }}
               />
               {searchQuery && <X size={18} style={{ color: 'var(--text-muted)', cursor: 'pointer' }} onClick={() => setSearchQuery('')} />}
            </div>
@@ -287,7 +288,7 @@ const Courses = () => {
                     <PlayCircle size={64} style={{ color: course.color, opacity: 0.5 }} />
                  </div>
                )}
-               {course.isNew && <div className="new-badge" style={{ position: 'absolute', top: '20px', left: '20px' }}>NEW</div>}
+               {course.isNew && <div className="new-badge">NEW</div>}
                <div style={{ position: 'absolute', bottom: '20px', right: '20px', background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', padding: '6px 16px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 800, color: course.color, border: `1px solid ${course.color}40`, textTransform: 'uppercase' }}>
                  {course.category}
                </div>

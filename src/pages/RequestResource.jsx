@@ -1,9 +1,16 @@
-import { Send, CheckCircle } from 'lucide-react';
+import { Send, CheckCircle, Package, FileText, GraduationCap, HelpCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { auth } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useLanguage } from '../LanguageContext';
+
+const typeIcons = {
+  software: <Package size={18} />,
+  document: <FileText size={18} />,
+  course: <GraduationCap size={18} />,
+  other: <HelpCircle size={18} />,
+};
 
 const RequestResource = () => {
   const { t } = useLanguage();
@@ -26,7 +33,7 @@ const RequestResource = () => {
     e.preventDefault();
     if (!name.trim()) return;
     
-    // In a real app, this would send to Firebase or an API API
+    // In a real app, this would send to Firebase or an API
     setSubmitted(true);
     setTimeout(() => {
       setSubmitted(false);
@@ -37,26 +44,30 @@ const RequestResource = () => {
 
   return (
     <div className="container" style={{ paddingTop: '80px', minHeight: '80vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-      <div className="glass-panel" style={{ padding: '40px', width: '100%', maxWidth: '600px', borderRadius: '16px' }}>
-        <h1 style={{ textAlign: 'center', marginBottom: '16px' }} className="text-gradient">{t('request_resource_title')}</h1>
-        <p style={{ textAlign: 'center', color: 'var(--text-muted)', marginBottom: '32px' }}>
-          {t('request_resource_desc')}
-        </p>
+      <div className="form-panel form-panel-wide">
+        
+        <div className="form-header">
+          <h1 className="text-gradient">{t('request_resource_title')}</h1>
+          <p>{t('request_resource_desc')}</p>
+        </div>
 
         {submitted ? (
-          <div style={{ textAlign: 'center', padding: '40px 0', color: '#00fa9a' }}>
-            <CheckCircle size={64} style={{ margin: '0 auto 16px auto' }} />
+          <div className="form-success-state">
+            <div className="success-icon">
+              <CheckCircle size={36} color="#00c97d" />
+            </div>
             <h3>{t('request_submitted')}</h3>
-            <p style={{ color: 'var(--text-muted)', marginTop: '8px' }}>{t('request_submitted_desc')}</p>
+            <p>{t('request_submitted_desc')}</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit}>
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-main)' }}>{t('resource_type')}</label>
+
+            <div className="form-group">
+              <label className="form-label">{t('resource_type')}</label>
               <select 
                 value={type}
                 onChange={(e) => setType(e.target.value)}
-                style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--surface-border)', background: 'var(--card-dark)', color: 'var(--text-main)', outline: 'none' }}
+                className="form-select"
               >
                 <option value="software">{t('resource_software')}</option>
                 <option value="document">{t('resource_document')}</option>
@@ -65,29 +76,54 @@ const RequestResource = () => {
               </select>
             </div>
 
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-main)' }}>{t('resource_name')} <span style={{ color: '#ff2a7a' }}>*</span></label>
+            {/* Visual indicator of selected type */}
+            <div style={{ 
+              display: 'flex', gap: '10px', marginBottom: '24px', flexWrap: 'wrap' 
+            }}>
+              {Object.entries(typeIcons).map(([key, icon]) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setType(key)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '8px',
+                    padding: '8px 16px', borderRadius: '12px',
+                    border: `1.5px solid ${type === key ? 'var(--primary)' : 'var(--surface-border)'}`,
+                    background: type === key ? 'var(--surface-badge)' : 'transparent',
+                    color: type === key ? 'var(--primary)' : 'var(--text-muted)',
+                    fontWeight: 600, fontSize: '0.82rem', cursor: 'pointer',
+                    fontFamily: 'inherit',
+                    transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+                  }}
+                >
+                  {icon} {t(`resource_${key}`)}
+                </button>
+              ))}
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">{t('resource_name')} <span className="required">*</span></label>
               <input 
                 type="text" 
                 required
                 placeholder="e.g. Adobe Premiere Pro 2024" 
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--surface-border)', background: 'var(--card-dark)', color: 'var(--text-main)', outline: 'none' }}
+                className="form-input"
               />
             </div>
 
-            <div style={{ marginBottom: '24px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-main)' }}>{t('additional_details')}</label>
+            <div className="form-group">
+              <label className="form-label">{t('additional_details')}</label>
               <textarea 
                 placeholder="Specific version, language, or OS requirements..." 
                 value={details}
                 onChange={(e) => setDetails(e.target.value)}
-                style={{ width: '100%', padding: '12px', minHeight: '100px', borderRadius: '8px', border: '1px solid var(--surface-border)', background: 'var(--card-dark)', color: 'var(--text-main)', resize: 'vertical', outline: 'none' }}
+                className="form-textarea"
               />
             </div>
 
-            <button type="submit" className="btn btn-primary" style={{ width: '100%', display: 'flex', justifyContent: 'center', gap: '8px' }}>
+            <button type="submit" className="form-submit">
               <Send size={18} /> {t('submit_request')}
             </button>
           </form>

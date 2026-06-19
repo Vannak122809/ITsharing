@@ -60,10 +60,8 @@ const EditableField = ({ value, onSave, placeholder, multiline = false }) => {
       <span
         onClick={() => setEditing(true)}
         title="Click to edit"
+        className="profile-editable"
         style={{
-          cursor: 'pointer',
-          borderBottom: '1px dashed var(--primary)',
-          paddingBottom: '1px',
           color: value ? 'inherit' : 'var(--text-muted)',
           fontStyle: value ? 'normal' : 'italic',
         }}
@@ -73,7 +71,7 @@ const EditableField = ({ value, onSave, placeholder, multiline = false }) => {
     );
 
   return (
-    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', flexWrap: 'wrap' }}>
+    <div className="profile-edit-actions">
       {multiline ? (
         <textarea
           value={val}
@@ -81,7 +79,8 @@ const EditableField = ({ value, onSave, placeholder, multiline = false }) => {
           autoFocus
           maxLength={160}
           onKeyDown={e => e.key === 'Escape' && cancel()}
-          style={{ flex: 1, minWidth: '200px', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--primary)', background: 'var(--card-dark)', color: 'var(--text-main)', fontFamily: 'inherit', fontSize: 'inherit', resize: 'vertical', outline: 'none' }}
+          className="form-textarea"
+          style={{ minHeight: '80px' }}
         />
       ) : (
         <input
@@ -89,13 +88,13 @@ const EditableField = ({ value, onSave, placeholder, multiline = false }) => {
           onChange={e => setVal(e.target.value)}
           autoFocus
           maxLength={80}
-          className="input-field"
-          style={{ flex: 1, minWidth: '180px', padding: '8px 14px' }}
+          className="form-input"
+          style={{ padding: '10px 16px' }}
           onKeyDown={e => { if (e.key === 'Enter') commit(); if (e.key === 'Escape') cancel(); }}
         />
       )}
-      <button onClick={commit} className="btn btn-primary" style={{ padding: '8px 14px' }}><Check size={14} /></button>
-      <button onClick={cancel} className="btn btn-outline" style={{ padding: '8px 12px' }}><X size={14} /></button>
+      <button onClick={commit} className="btn btn-primary" style={{ padding: '10px 16px' }}><Check size={14} /></button>
+      <button onClick={cancel} className="btn btn-outline" style={{ padding: '10px 14px' }}><X size={14} /></button>
     </div>
   );
 };
@@ -470,15 +469,21 @@ const Profile = ({ user }) => {
         )}
 
         {activeTab === 'settings' && (
-          <div className="glass-panel" style={{ padding: 28, borderRadius: 16, border: '1px solid var(--surface-border)' }}>
-            <h2 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: 20, color: 'var(--text-main)' }}>{t('account_settings')}</h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: 8 }}>
-              {t('email')}: <strong style={{ color: 'var(--text-main)' }}>{user?.email}</strong>
-            </p>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: 8 }}>
-              UID: <code style={{ fontSize: '0.8rem', background: 'var(--surface-badge)', padding: '2px 8px', borderRadius: 6 }}>{user?.uid}</code>
-            </p>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', marginTop: 16, fontStyle: 'italic' }}>
+          <div className="form-panel" style={{ maxWidth: '100%', padding: '32px' }}>
+            <h2 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '24px', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <Settings size={18} color="var(--primary)" /> {t('account_settings')}
+            </h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">{t('email')}</label>
+                <div className="form-input" style={{ cursor: 'default', opacity: 0.8 }}>{user?.email}</div>
+              </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">UID</label>
+                <div className="form-input" style={{ cursor: 'default', opacity: 0.8, fontFamily: 'monospace', fontSize: '0.85rem' }}>{user?.uid}</div>
+              </div>
+            </div>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', marginTop: 20, fontStyle: 'italic' }}>
               💡 To change your password, use <strong>Forgot Password</strong> on the Sign In page.
             </p>
           </div>

@@ -203,7 +203,8 @@ const Community = () => {
             placeholder="Search discussions, topics, or issues..." 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            style={{ width: '100%', padding: '12px 12px 12px 48px', borderRadius: '14px', border: '1px solid var(--surface-border)', background: 'var(--card-dark)', color: 'var(--text-main)', outline: 'none', transition: '0.3s' }}
+            className="form-input"
+            style={{ paddingLeft: '48px' }}
           />
         </div>
         <div style={{ display: 'flex', gap: '10px' }}>
@@ -327,18 +328,18 @@ const Community = () => {
 
                       {/* Reply Form */}
                       <div style={{ display: 'flex', gap: '16px', marginTop: '10px' }}>
-                        <div style={{ width: '32px', height: '32px', borderRadius: '10px', background: 'var(--surface-badge)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <User size={14} color="var(--primary)" />
+                        <div style={{ width: '36px', height: '36px', borderRadius: '12px', background: 'var(--surface-badge)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <User size={15} color="var(--primary)" />
                         </div>
                         <div style={{ flex: 1 }}>
                           <textarea 
                             value={replyContent}
                             onChange={(e) => setReplyContent(e.target.value)}
                             placeholder="Share your thoughts or answer the question..."
-                            style={{ width: '100%', padding: '14px 18px', borderRadius: '16px', border: '1px solid var(--surface-border)', background: 'var(--card-dark)', color: 'var(--text-main)', fontSize: '0.92rem', outline: 'none', minHeight: '80px', resize: 'none' }}
+                            className="reply-textarea"
                           />
-                          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
-                            <button onClick={() => submitReply(post.id)} className="btn btn-primary" style={{ padding: '8px 20px', borderRadius: '12px', fontSize: '0.85rem' }} disabled={!replyContent.trim()}>
+                          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px' }}>
+                            <button onClick={() => submitReply(post.id)} className="form-submit" style={{ width: 'auto', padding: '10px 24px', fontSize: '0.88rem' }} disabled={!replyContent.trim()}>
                               Send Reply <Send size={14} />
                             </button>
                           </div>
@@ -355,8 +356,8 @@ const Community = () => {
         {/* ── Sidebar Column ── */}
         <div style={{ position: 'sticky', top: '100px', height: 'fit-content', display: 'flex', flexDirection: 'column', gap: '24px' }}>
           
-          <div className="glass-panel" style={{ padding: '32px', borderRadius: '24px', background: 'linear-gradient(135deg, var(--surface), rgba(99, 102, 241, 0.05))' }}>
-            <h3 style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '12px', fontSize: '1.25rem' }}>
+          <div className="post-form-card">
+            <h3>
               <Sparkles size={20} color="var(--primary)" /> Start Discussion
             </h3>
             <form onSubmit={handlePost} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -364,17 +365,16 @@ const Community = () => {
                 placeholder="Brief title..." 
                 value={newTitle} 
                 onChange={(e) => setNewTitle(e.target.value)} 
-                className="input-field"
-                style={{ borderRadius: '14px' }}
+                className="form-input"
               />
               <textarea 
                 placeholder="What's on your mind? Describe your issue in detail..." 
                 value={newContent} 
                 onChange={(e) => setNewContent(e.target.value)} 
-                className="input-field"
-                style={{ minHeight: '140px', borderRadius: '14px', resize: 'none' }}
+                className="form-textarea"
+                style={{ minHeight: '140px' }}
               />
-              <button className="btn btn-primary" style={{ width: '100%', height: '50px', borderRadius: '14px' }} disabled={posting || !user}>
+              <button className="form-submit" disabled={posting || !user}>
                 {posting ? 'Publishing...' : 'Post to Community'}
               </button>
             </form>
