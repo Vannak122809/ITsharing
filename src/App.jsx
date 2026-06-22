@@ -26,6 +26,7 @@ const GiveawayKeys = lazy(() => import('./pages/GiveawayKeys'));
 
 import ProtectedRoute from './components/ProtectedRoute';
 import CoffeeDonate from './components/CoffeeDonate';
+import AIAgent from './components/AIAgent';
 import { useLanguage } from './LanguageContext';
 
 function App() {
@@ -419,6 +420,9 @@ function App() {
 
       {/* Coffee Donate Floating Icon */}
       <CoffeeDonate />
+      
+      {/* Floating AI Agent */}
+      <AIAgent />
 
       {/* Toast Notifications */}
       <Toaster

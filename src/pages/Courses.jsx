@@ -12,14 +12,20 @@ const Courses = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [activeLesson, setActiveLesson] = useState(0);
+  const [courseLang, setCourseLang] = useState('km');
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [expandedSections, setExpandedSections] = useState({});
   const navigate = useNavigate();
 
+  const currentLessonsList = useMemo(() => {
+    if (!selectedCourse) return [];
+    if (Array.isArray(selectedCourse.lessons)) return selectedCourse.lessons;
+    return selectedCourse.lessons[courseLang] || selectedCourse.lessons['en'] || [];
+  }, [selectedCourse, courseLang]);
+
   const groupedLessons = useMemo(() => {
-    if (!selectedCourse || !selectedCourse.lessons) return [];
-    return selectedCourse.lessons.reduce((acc, lesson, i) => {
+    return currentLessonsList.reduce((acc, lesson, i) => {
       const gName = lesson.day || `Module ${Math.floor(i/10) + 1}`;
       let group = acc.find(g => g.name === gName);
       if (!group) {
@@ -29,7 +35,7 @@ const Courses = () => {
       group.items.push({ ...lesson, originalIndex: i });
       return acc;
     }, []);
-  }, [selectedCourse]);
+  }, [currentLessonsList]);
 
   const toggleSection = (gName) => {
     setExpandedSections(prev => ({ ...prev, [gName]: !prev[gName] }));
@@ -158,28 +164,467 @@ const Courses = () => {
       id: 1,
       title: 'React Masterclass',
       category: 'Code',
-      lessonsCount: 14,
+      lessonsCount: 3,
       desc: 'Master modern React from Hooks to Server Components. Build real-world apps with professional architecture.',
       color: 'var(--primary)',
-      lessons: []
+      isNew: true,
+      coverImage: 'https://img.youtube.com/vi/bMknfKXIFA8/maxresdefault.jpg',
+      lessons: {
+        en: [
+          { title: 'Chapter 1: React Basics', id: 'bMknfKXIFA8', day: 'Module 1', isYoutube: true },
+          { title: 'Chapter 2: Hooks & State', id: 'w7ejDZ8SWv8', day: 'Module 1', isYoutube: true },
+          { title: 'Chapter 3: Context API', id: 'Ke90Tje7VS0', day: 'Module 2', isYoutube: true }
+        ],
+        km: [
+          { title: 'ជំពូកទី ១: មូលដ្ឋានគ្រឹះ React (reanmore)', id: 'NTYmkUCRlWE', day: 'Module 1', isYoutube: true },
+          { title: 'ជំពូកទី ២: React JS Crash Course (Rorn Tech)', id: 'NTYmkUCRlWE', day: 'Module 1', isYoutube: true },
+          { title: 'ជំពូកទី ៣: React Advanced', id: 'NTYmkUCRlWE', day: 'Module 2', isYoutube: true }
+        ]
+      }
     },
     {
       id: 4,
       title: 'Cisco CCNA Crash Course',
       category: 'Network',
-      lessonsCount: 12,
+      lessonsCount: 3,
       desc: 'Routing, switching, and essential network protocols for the modern administrator.',
       color: '#ff9900',
-      lessons: []
+      isNew: true,
+      coverImage: 'https://img.youtube.com/vi/qiQR5rTSshw/maxresdefault.jpg',
+      lessons: {
+        en: [
+          { title: 'Chapter 1: Networking Fundamentals', id: 'qiQR5rTSshw', day: 'Module 1', isYoutube: true },
+          { title: 'Chapter 2: IP Addressing', id: 'H8W9oMNBvD0', day: 'Module 1', isYoutube: true },
+          { title: 'Chapter 3: Router Configuration', id: 'H8W9oMNBvD0', day: 'Module 2', isYoutube: true }
+        ],
+        km: [
+          { title: 'ជំពូកទី ១: ការណែនាំពីរ Cisco CCNA1', id: 'NTYmkUCRlWE', day: 'Module 1', isYoutube: true },
+          { title: 'ជំពូកទី ២: ស្វែងយល់ពី Mode ផ្សេងៗ', id: 'NTYmkUCRlWE', day: 'Module 1', isYoutube: true },
+          { title: 'ជំពូកទី ៣: Router Configuration', id: 'NTYmkUCRlWE', day: 'Module 2', isYoutube: true }
+        ]
+      }
     },
     {
       id: 5,
       title: 'Ethical Hacking 101',
       category: 'Security',
-      lessonsCount: 15,
+      lessonsCount: 2,
       desc: 'Penetration testing and finding vulnerabilities. Master the tools and mindset of a security pro.',
       color: '#ff2a7a',
-      lessons: []
+      isNew: true,
+      coverImage: 'https://img.youtube.com/vi/3Kq1MIfTWCE/maxresdefault.jpg',
+      lessons: {
+        en: [
+          { title: 'Chapter 1: Info Gathering', id: '3Kq1MIfTWCE', day: 'Module 1', isYoutube: true },
+          { title: 'Chapter 2: Exploitation', id: 'fNzpcB7iRxo', day: 'Module 1', isYoutube: true }
+        ],
+        km: [
+          { title: 'ជំពូកទី ១: ការប្រមូលព័ត៌មាន', id: 'NTYmkUCRlWE', day: 'Module 1', isYoutube: true },
+          { title: 'ជំពូកទី ២: ការវាយប្រហារ', id: 'NTYmkUCRlWE', day: 'Module 1', isYoutube: true }
+        ]
+      }
+    },
+    {
+      id: 6,
+      title: 'Python Data Science',
+      category: 'Code',
+      lessonsCount: 2,
+      desc: 'Learn Python from scratch and dive into Data Science with Pandas, NumPy, and Matplotlib.',
+      color: '#306998',
+      isNew: true,
+      coverImage: 'https://img.youtube.com/vi/rfscVS0vtbw/maxresdefault.jpg',
+      lessons: {
+        en: [
+          { title: 'Chapter 1: Python Basics', id: 'rfscVS0vtbw', day: 'Module 1', isYoutube: true },
+          { title: 'Chapter 2: Data Structures', id: 'rfscVS0vtbw', day: 'Module 2', isYoutube: true }
+        ],
+        km: [
+          { title: 'ជំពូកទី ១: មូលដ្ឋានគ្រឹះ Python (Rorn Tech)', id: 'NTYmkUCRlWE', day: 'Module 1', isYoutube: true },
+          { title: 'ជំពូកទី ២: Data Science (TFD)', id: 'NTYmkUCRlWE', day: 'Module 2', isYoutube: true }
+        ]
+      }
+    },
+    {
+      id: 7,
+      title: 'Java Masterclass',
+      category: 'Code',
+      lessonsCount: 2,
+      desc: 'From basic Java syntax to advanced OOP concepts and database connections.',
+      color: '#e76f00',
+      isNew: true,
+      coverImage: 'https://img.youtube.com/vi/A74TOX803D0/maxresdefault.jpg',
+      lessons: {
+        en: [
+          { title: 'Chapter 1: Java Fundamentals', id: 'A74TOX803D0', day: 'Module 1', isYoutube: true },
+          { title: 'Chapter 2: Object-Oriented Programming', id: 'A74TOX803D0', day: 'Module 2', isYoutube: true }
+        ],
+        km: [
+          { title: 'ជំពូកទី ១: មូលដ្ឋានគ្រឹះ Java (Menghieng)', id: 'NTYmkUCRlWE', day: 'Module 1', isYoutube: true },
+          { title: 'ជំពូកទី ២: OOP ក្នុង Java', id: 'NTYmkUCRlWE', day: 'Module 2', isYoutube: true }
+        ]
+      }
+    },
+    {
+      id: 8,
+      title: 'Node.js Backend Developer',
+      category: 'Web',
+      lessonsCount: 2,
+      desc: 'Build scalable APIs using Node.js, Express, and MongoDB.',
+      color: '#339933',
+      isNew: true,
+      coverImage: 'https://img.youtube.com/vi/f2EqECiTBL8/maxresdefault.jpg',
+      lessons: {
+        en: [
+          { title: 'Chapter 1: Node.js Basics', id: 'f2EqECiTBL8', day: 'Module 1', isYoutube: true },
+          { title: 'Chapter 2: Express & APIs', id: 'f2EqECiTBL8', day: 'Module 2', isYoutube: true }
+        ],
+        km: [
+          { title: 'ជំពូកទី ១: មូលដ្ឋានគ្រឹះ Node.js', id: 'NTYmkUCRlWE', day: 'Module 1', isYoutube: true },
+          { title: 'ជំពូកទី ២: Express & APIs', id: 'NTYmkUCRlWE', day: 'Module 2', isYoutube: true }
+        ]
+      }
+    },
+    {
+      id: 11,
+      title: 'C/C++ Masterclass (Khmer)',
+      category: 'Code',
+      lessonsCount: 2,
+      desc: 'Learn C and C++ from zero to hero. Taught entirely in Khmer by TFDevs.',
+      color: '#00599C',
+      isNew: true,
+      coverImage: 'https://img.youtube.com/vi/m0m5y3bXw_A/maxresdefault.jpg',
+      lessons: {
+        en: [
+          { title: 'Chapter 1: Intro to C++', id: 'm0m5y3bXw_A', day: 'Module 1', isYoutube: true }
+        ],
+        km: [
+          { title: 'ជំពូកទី ១: រៀន C/C++ ជាមួយខ្ញុំ ពីដើមដល់ចប់ (TFDevs)', id: 'NTYmkUCRlWE', day: 'Module 1', isYoutube: true },
+          { title: 'ជំពូកទី ២: OOP ក្នុង C++ (Computer 4 Khmer)', id: 'NTYmkUCRlWE', day: 'Module 2', isYoutube: true }
+        ]
+      }
+    },
+    {
+      id: 12,
+      title: 'Linux Administration (Khmer)',
+      category: 'Network',
+      lessonsCount: 2,
+      desc: 'Essential Linux skills for networking and security professionals. Taught in Khmer.',
+      color: '#FCC624',
+      isNew: true,
+      coverImage: 'https://img.youtube.com/vi/kYv9G4w2-c8/maxresdefault.jpg',
+      lessons: {
+        en: [
+          { title: 'Chapter 1: Linux Basics', id: 'kYv9G4w2-c8', day: 'Module 1', isYoutube: true }
+        ],
+        km: [
+          { title: 'ជំពូកទី ១: ការណែនាំអំពី Linux (Khmer HKimhab)', id: 'NTYmkUCRlWE', day: 'Module 1', isYoutube: true },
+          { title: 'ជំពូកទី ២: Command Line & Networking', id: 'NTYmkUCRlWE', day: 'Module 2', isYoutube: true }
+        ]
+      }
+    },
+    {
+      id: 13,
+      title: 'MikroTik Networking Masterclass',
+      category: 'Network',
+      lessonsCount: 24,
+      desc: 'Complete MikroTik networking playlist. All videos loaded sequentially directly from YouTube.',
+      color: '#00adef',
+      isNew: true,
+      coverImage: 'https://img.youtube.com/vi/NTYmkUCRlWE/maxresdefault.jpg',
+      lessons: {
+        en: [
+          {
+                    "title": "Introduction MikroTik",
+                    "id": "NTYmkUCRlWE",
+                    "day": "Module 1",
+                    "isYoutube": true
+          },
+          {
+                    "title": "How to Install Router Mikrotik OS on VMWare",
+                    "id": "CVsMKFOBUJ8",
+                    "day": "Module 1",
+                    "isYoutube": true
+          },
+          {
+                    "title": "How to Configure Internet On MikroTik",
+                    "id": "CAnBNc8f85U",
+                    "day": "Module 1",
+                    "isYoutube": true
+          },
+          {
+                    "title": "How to Configure Internet Access on Vmware by MikroTik",
+                    "id": "bxpoGPDo7Lk",
+                    "day": "Module 1",
+                    "isYoutube": true
+          },
+          {
+                    "title": "How to login MikroTik",
+                    "id": "P09_KPBFVxI",
+                    "day": "Module 1",
+                    "isYoutube": true
+          },
+          {
+                    "title": "Introduce Port Interface in MikroTik Router Board",
+                    "id": "OHNotFmA7R4",
+                    "day": "Module 2",
+                    "isYoutube": true
+          },
+          {
+                    "title": "Introduction to Diagram Network on MikroTik",
+                    "id": "E7l9mMeMCjo",
+                    "day": "Module 2",
+                    "isYoutube": true
+          },
+          {
+                    "title": "Crate User on MikroTik",
+                    "id": "O2d_JKtMN8U",
+                    "day": "Module 2",
+                    "isYoutube": true
+          },
+          {
+                    "title": "Break Password in MikroTik",
+                    "id": "YvhGP1G0JZs",
+                    "day": "Module 2",
+                    "isYoutube": true
+          },
+          {
+                    "title": "HostName, Show Port Number, Set Clock, Check Clock, Check Package, Backup,Restore, Reset Cofiguratio",
+                    "id": "iwYMWZqOc2k",
+                    "day": "Module 2",
+                    "isYoutube": true
+          },
+          {
+                    "title": "How to Create DNS, Create DHCP Server on MikroTik",
+                    "id": "r1X1IUfuEuk",
+                    "day": "Module 3",
+                    "isYoutube": true
+          },
+          {
+                    "title": "How to change Server Speedtest internet",
+                    "id": "bGCEVaU7GZA",
+                    "day": "Module 3",
+                    "isYoutube": true
+          },
+          {
+                    "title": "How to disable Some IP Sevice List on MikroTik",
+                    "id": "0Q-5o9rGW8k",
+                    "day": "Module 3",
+                    "isYoutube": true
+          },
+          {
+                    "title": "How to block ping icmp on MikroTik",
+                    "id": "98nHLHZ936I",
+                    "day": "Module 3",
+                    "isYoutube": true
+          },
+          {
+                    "title": "How to drop mac address User can't access internet on MikroTik",
+                    "id": "3kwfw0bG4P8",
+                    "day": "Module 3",
+                    "isYoutube": true
+          },
+          {
+                    "title": "Limit 2 LAN on MikroTik",
+                    "id": "V5Ho46jbc6o",
+                    "day": "Module 4",
+                    "isYoutube": true
+          },
+          {
+                    "title": "How to drop on range and accept Specific IP connect internet on MikroTik",
+                    "id": "Wi9ceTOVx4c",
+                    "day": "Module 4",
+                    "isYoutube": true
+          },
+          {
+                    "title": "How to Limit Bandwidth on MikroTik",
+                    "id": "nQGVtW-Dovs",
+                    "day": "Module 4",
+                    "isYoutube": true
+          },
+          {
+                    "title": "How to limit speed the same rank IP but different speed on MikroTik",
+                    "id": "mWyxB_IEpWo",
+                    "day": "Module 4",
+                    "isYoutube": true
+          },
+          {
+                    "title": "Queuse Tree Interface  On MikroTik",
+                    "id": "BdEX3z-EKIY",
+                    "day": "Module 4",
+                    "isYoutube": true
+          },
+          {
+                    "title": "Full Bandwidth Management   Mangle Rules  Queue tree on Mikrotik",
+                    "id": "ylmHmAIysk8",
+                    "day": "Module 5",
+                    "isYoutube": true
+          },
+          {
+                    "title": "How to create simple Queues on MikroTik",
+                    "id": "xULLggUgCWg",
+                    "day": "Module 5",
+                    "isYoutube": true
+          },
+          {
+                    "title": "how to configure Hotspot on mikrotik",
+                    "id": "CvectmFctUk",
+                    "day": "Module 5",
+                    "isYoutube": true
+          },
+          {
+                    "title": "How to Block Website in MikroTik Using Layer 7 Protocols",
+                    "id": "6iufPmDv3rg",
+                    "day": "Module 5",
+                    "isYoutube": true
+          }
+],
+        km: [
+          {
+                    "title": "Introduction MikroTik",
+                    "id": "NTYmkUCRlWE",
+                    "day": "Module 1",
+                    "isYoutube": true
+          },
+          {
+                    "title": "How to Install Router Mikrotik OS on VMWare",
+                    "id": "CVsMKFOBUJ8",
+                    "day": "Module 1",
+                    "isYoutube": true
+          },
+          {
+                    "title": "How to Configure Internet On MikroTik",
+                    "id": "CAnBNc8f85U",
+                    "day": "Module 1",
+                    "isYoutube": true
+          },
+          {
+                    "title": "How to Configure Internet Access on Vmware by MikroTik",
+                    "id": "bxpoGPDo7Lk",
+                    "day": "Module 1",
+                    "isYoutube": true
+          },
+          {
+                    "title": "How to login MikroTik",
+                    "id": "P09_KPBFVxI",
+                    "day": "Module 1",
+                    "isYoutube": true
+          },
+          {
+                    "title": "Introduce Port Interface in MikroTik Router Board",
+                    "id": "OHNotFmA7R4",
+                    "day": "Module 2",
+                    "isYoutube": true
+          },
+          {
+                    "title": "Introduction to Diagram Network on MikroTik",
+                    "id": "E7l9mMeMCjo",
+                    "day": "Module 2",
+                    "isYoutube": true
+          },
+          {
+                    "title": "Crate User on MikroTik",
+                    "id": "O2d_JKtMN8U",
+                    "day": "Module 2",
+                    "isYoutube": true
+          },
+          {
+                    "title": "Break Password in MikroTik",
+                    "id": "YvhGP1G0JZs",
+                    "day": "Module 2",
+                    "isYoutube": true
+          },
+          {
+                    "title": "HostName, Show Port Number, Set Clock, Check Clock, Check Package, Backup,Restore, Reset Cofiguratio",
+                    "id": "iwYMWZqOc2k",
+                    "day": "Module 2",
+                    "isYoutube": true
+          },
+          {
+                    "title": "How to Create DNS, Create DHCP Server on MikroTik",
+                    "id": "r1X1IUfuEuk",
+                    "day": "Module 3",
+                    "isYoutube": true
+          },
+          {
+                    "title": "How to change Server Speedtest internet",
+                    "id": "bGCEVaU7GZA",
+                    "day": "Module 3",
+                    "isYoutube": true
+          },
+          {
+                    "title": "How to disable Some IP Sevice List on MikroTik",
+                    "id": "0Q-5o9rGW8k",
+                    "day": "Module 3",
+                    "isYoutube": true
+          },
+          {
+                    "title": "How to block ping icmp on MikroTik",
+                    "id": "98nHLHZ936I",
+                    "day": "Module 3",
+                    "isYoutube": true
+          },
+          {
+                    "title": "How to drop mac address User can't access internet on MikroTik",
+                    "id": "3kwfw0bG4P8",
+                    "day": "Module 3",
+                    "isYoutube": true
+          },
+          {
+                    "title": "Limit 2 LAN on MikroTik",
+                    "id": "V5Ho46jbc6o",
+                    "day": "Module 4",
+                    "isYoutube": true
+          },
+          {
+                    "title": "How to drop on range and accept Specific IP connect internet on MikroTik",
+                    "id": "Wi9ceTOVx4c",
+                    "day": "Module 4",
+                    "isYoutube": true
+          },
+          {
+                    "title": "How to Limit Bandwidth on MikroTik",
+                    "id": "nQGVtW-Dovs",
+                    "day": "Module 4",
+                    "isYoutube": true
+          },
+          {
+                    "title": "How to limit speed the same rank IP but different speed on MikroTik",
+                    "id": "mWyxB_IEpWo",
+                    "day": "Module 4",
+                    "isYoutube": true
+          },
+          {
+                    "title": "Queuse Tree Interface  On MikroTik",
+                    "id": "BdEX3z-EKIY",
+                    "day": "Module 4",
+                    "isYoutube": true
+          },
+          {
+                    "title": "Full Bandwidth Management   Mangle Rules  Queue tree on Mikrotik",
+                    "id": "ylmHmAIysk8",
+                    "day": "Module 5",
+                    "isYoutube": true
+          },
+          {
+                    "title": "How to create simple Queues on MikroTik",
+                    "id": "xULLggUgCWg",
+                    "day": "Module 5",
+                    "isYoutube": true
+          },
+          {
+                    "title": "how to configure Hotspot on mikrotik",
+                    "id": "CvectmFctUk",
+                    "day": "Module 5",
+                    "isYoutube": true
+          },
+          {
+                    "title": "How to Block Website in MikroTik Using Layer 7 Protocols",
+                    "id": "6iufPmDv3rg",
+                    "day": "Module 5",
+                    "isYoutube": true
+          }
+]
+      }
     }
   ];
 
@@ -197,10 +642,12 @@ const Courses = () => {
       navigate('/login');
       return;
     }
-    if (course.lessons && course.lessons.length > 0) {
+    const lessonsList = Array.isArray(course.lessons) ? course.lessons : (course.lessons['km'] || course.lessons['en'] || []);
+    if (lessonsList && lessonsList.length > 0) {
       setSelectedCourse(course);
       setActiveLesson(0);
-      const firstSection = course.lessons[0].day || 'Module 1';
+      setCourseLang('km');
+      const firstSection = lessonsList[0].day || 'Module 1';
       setExpandedSections({ [firstSection]: true });
     } else {
       toast(t('coming_soon'), { icon: '🚀' });
@@ -332,26 +779,36 @@ const Courses = () => {
               <div style={{ padding: '24px 40px', borderBottom: '1px solid var(--surface-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.02)' }}>
                  <div style={{ display: 'flex', flexDirection: 'column' }}>
                     <span style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--primary)', letterSpacing: '0.1em' }}>{selectedCourse.category} Track</span>
-                    <h2 style={{ fontSize: '1.75rem', fontWeight: 900, marginTop: '4px', color: '#fff' }}>{selectedCourse.lessons[activeLesson].title}</h2>
+                    <h2 style={{ fontSize: '1.75rem', fontWeight: 900, marginTop: '4px', color: '#fff' }}>{currentLessonsList[activeLesson]?.title}</h2>
                  </div>
-                 <button 
-                  onClick={() => setSelectedCourse(null)}
-                  style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: '#fff', width: '54px', height: '54px', borderRadius: '20px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: '0.3s' }}
-                  onMouseOver={(e) => { e.currentTarget.style.background = '#ef4444'; e.currentTarget.style.transform = 'rotate(90deg)'; }}
-                  onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.transform = 'rotate(0deg)'; }}
-                 >
-                    <X size={24} />
-                 </button>
+                 
+                 <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                   {!Array.isArray(selectedCourse.lessons) && (
+                     <div style={{ display: 'flex', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', padding: '4px' }}>
+                       <button onClick={() => { setCourseLang('en'); setActiveLesson(0); }} style={{ background: courseLang === 'en' ? 'var(--primary)' : 'transparent', color: '#fff', border: 'none', padding: '6px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 800, fontSize: '0.85rem', transition: '0.2s' }}>EN</button>
+                       <button onClick={() => { setCourseLang('km'); setActiveLesson(0); }} style={{ background: courseLang === 'km' ? 'var(--primary)' : 'transparent', color: '#fff', border: 'none', padding: '6px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 800, fontSize: '0.85rem', transition: '0.2s' }}>KH</button>
+                     </div>
+                   )}
+                   <button 
+                    onClick={() => setSelectedCourse(null)}
+                    style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: '#fff', width: '54px', height: '54px', borderRadius: '20px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: '0.3s' }}
+                    onMouseOver={(e) => { e.currentTarget.style.background = '#ef4444'; e.currentTarget.style.transform = 'rotate(90deg)'; }}
+                    onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.transform = 'rotate(0deg)'; }}
+                   >
+                      <X size={24} />
+                   </button>
+                 </div>
               </div>
 
               <div style={{ display: 'flex', flexGrow: 1, overflow: 'hidden' }}>
                  <div style={{ flexGrow: 1, background: '#000', position: 'relative' }}>
                     <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 10, pointerEvents: 'none', background: 'radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.2) 100%)' }} />
                     <iframe 
-                       src={`https://drive.google.com/file/d/${selectedCourse.lessons[activeLesson].id}/preview`} 
+                       src={currentLessonsList[activeLesson]?.playlistId ? `https://www.youtube.com/embed/videoseries?list=${currentLessonsList[activeLesson].playlistId}&autoplay=1&rel=0` : (currentLessonsList[activeLesson]?.isYoutube ? `https://www.youtube.com/embed/${currentLessonsList[activeLesson].id}?autoplay=1&rel=0` : `https://drive.google.com/file/d/${currentLessonsList[activeLesson]?.id}/preview`)} 
                        width="100%" 
                        height="100%" 
-                       allow="autoplay" 
+                       allow="autoplay; encrypted-media; fullscreen" 
+                       allowFullScreen
                        frameBorder="0"
                        title="Course Video"
                        style={{ border: 'none' }}
