@@ -172,9 +172,9 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
                         const fileToCover = filesToUpload[i];
                         let finalDisplayFile = fileToCover;
                         
-                        // Only attempt WebP conversion for standard web images (JPG, PNG, WEBP)
-                        const isWebImage = fileToCover.type.match(/^image\/(jpeg|png|webp)$/i) || 
-                                          fileToCover.name.match(/\.(jpg|jpeg|png|webp)$/i);
+                        // Only attempt WebP conversion for standard web images, but SKIP PNGs to preserve transparency
+                        const isWebImage = fileToCover.type.match(/^image\/(jpeg|webp)$/i) || 
+                                          fileToCover.name.match(/\.(jpg|jpeg|webp)$/i);
 
                         if (autoWebP && isWebImage) {
                             try {
@@ -273,9 +273,9 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
                         const fileToCover = filesToUseForCover[c];
                         let finalDisplayFile = fileToCover;
 
-                        // Only attempt WebP conversion for standard web images
-                        const isWebImage = fileToCover.type.match(/^image\/(jpeg|png|webp)$/i) || 
-                                          fileToCover.name.match(/\.(jpg|jpeg|png|webp)$/i);
+                        // Only attempt WebP conversion for standard web images, but SKIP PNGs to preserve transparency
+                        const isWebImage = fileToCover.type.match(/^image\/(jpeg|webp)$/i) || 
+                                          fileToCover.name.match(/\.(jpg|jpeg|webp)$/i);
 
                         if (autoWebP && isWebImage) {
                             try {

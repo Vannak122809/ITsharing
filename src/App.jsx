@@ -18,6 +18,7 @@ const Login = lazy(() => import('./pages/Login'));
 const Software = lazy(() => import('./pages/Software'));
 const SoftwareViewer = lazy(() => import('./pages/SoftwareViewer'));
 const Community = lazy(() => import('./pages/Community'));
+const FrameEditor = lazy(() => import('./pages/FrameEditor'));
 const RequestResource = lazy(() => import('./pages/RequestResource'));
 const Profile = lazy(() => import('./pages/Profile'));
 const Assets = lazy(() => import('./pages/Assets'));
@@ -138,11 +139,13 @@ function App() {
   ];
 
   const moreNavItems = isLoggedIn ? [
+    { name: 'Khmer Frames', path: '/greeting-frames', icon: <ImageIcon size={18} /> },
     { name: t('experiences'), path: '/experiences', icon: <BookOpen size={18} /> },
     { name: 'Admin Dashboard', path: '/admin/assets', icon: <LayoutDashboard size={18} /> },
     { name: t('giveaway'), path: '/giveaway', icon: <Gift size={18} /> },
     { name: t('request'), path: '/request', icon: <HelpCircle size={18} /> },
   ] : [
+    { name: 'Khmer Frames', path: '/greeting-frames', icon: <ImageIcon size={18} /> },
     { name: t('experiences'), path: '/experiences', icon: <BookOpen size={18} /> },
   ];
 
@@ -385,6 +388,7 @@ function App() {
                 <Route path="/experiences" element={<Experiences />} />
                 <Route path="/software" element={<Software />} />
                 <Route path="/software/:id" element={<SoftwareViewer />} />
+                <Route path="/greeting-frames" element={<FrameEditor />} />
                 <Route path="/community" element={<Community />} />
                 <Route path="/assets" element={
                   <ProtectedRoute>
