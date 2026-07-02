@@ -654,6 +654,84 @@ const Courses = () => {
     }
   };
 
+  const handleShare = async () => {
+    if (!selectedCourse) return;
+    const shareUrl = window.location.href; 
+    try {
+        if (navigator.share) {
+            await navigator.share({
+                title: selectedCourse.title,
+                text: `Take the ${selectedCourse.title} course on ITShare`,
+                url: shareUrl,
+            });
+        } else {
+            await navigator.clipboard.writeText(shareUrl);
+            toast.success('Course URL copied to clipboard!');
+        }
+    } catch (error) {
+        console.error('Error sharing', error);
+    }
+  };
+
+  // Handle deep link loading from ?course=...
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const courseId = params.get('course');
+    if (courseId && !selectedCourse) {
+      const courseToOpen = courseData.find(c => String(c.id) === courseId);
+      if (courseToOpen) {
+        handleStartCourse(courseToOpen);
+      }
+    }
+  }, [selectedCourse]);
+
+  // Handle OG Tags and URL update
+  useEffect(() => {
+    if (selectedCourse) {
+        window.history.replaceState(null, '', `?course=${selectedCourse.id}`);
+        
+        document.title = `${selectedCourse.title} - ITShare`;
+        const ogTitle = document.querySelector('meta[property="og:title"]');
+        const ogDesc = document.querySelector('meta[property="og:description"]');
+        const ogImage = document.querySelector('meta[property="og:image"]');
+        const twTitle = document.querySelector('meta[property="twitter:title"]');
+        const twDesc = document.querySelector('meta[property="twitter:description"]');
+        const twImage = document.querySelector('meta[property="twitter:image"]');
+        
+        const descText = selectedCourse.desc || `Take the ${selectedCourse.title} course on ITShare`;
+        
+        if (ogTitle) ogTitle.setAttribute("content", selectedCourse.title);
+        if (ogDesc) ogDesc.setAttribute("content", descText);
+        if (twTitle) twTitle.setAttribute("content", selectedCourse.title);
+        if (twDesc) twDesc.setAttribute("content", descText);
+        
+        const imgUrl = selectedCourse.coverImage || selectedCourse.image;
+        if (ogImage && imgUrl) ogImage.setAttribute("content", imgUrl);
+        if (twImage && imgUrl) twImage.setAttribute("content", imgUrl);
+    } else {
+        window.history.replaceState(null, '', window.location.pathname);
+        
+        document.title = "ITShare — Premium IT Resources";
+        const defaultTitle = "ITShare — Premium IT Resources";
+        const defaultDesc = "ITShare — Free premium IT resources, courses, documents, software, and community for IT professionals in Cambodia and worldwide.";
+        const defaultImg = "/og-image.jpg";
+        
+        const ogTitle = document.querySelector('meta[property="og:title"]');
+        const ogDesc = document.querySelector('meta[property="og:description"]');
+        const ogImage = document.querySelector('meta[property="og:image"]');
+        const twTitle = document.querySelector('meta[property="twitter:title"]');
+        const twDesc = document.querySelector('meta[property="twitter:description"]');
+        const twImage = document.querySelector('meta[property="twitter:image"]');
+        
+        if (ogTitle) ogTitle.setAttribute("content", defaultTitle);
+        if (ogDesc) ogDesc.setAttribute("content", defaultDesc);
+        if (twTitle) twTitle.setAttribute("content", defaultTitle);
+        if (twDesc) twDesc.setAttribute("content", defaultDesc);
+        if (ogImage) ogImage.setAttribute("content", defaultImg);
+        if (twImage) twImage.setAttribute("content", defaultImg);
+    }
+  }, [selectedCourse]);
+
   return (
     <div className="container" style={{ paddingTop: '100px', paddingBottom: '100px', minHeight: '100vh' }}>
       
@@ -789,6 +867,15 @@ const Courses = () => {
                        <button onClick={() => { setCourseLang('km'); setActiveLesson(0); }} style={{ background: courseLang === 'km' ? 'var(--primary)' : 'transparent', color: '#fff', border: 'none', padding: '6px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 800, fontSize: '0.85rem', transition: '0.2s' }}>KH</button>
                      </div>
                    )}
+                   <button 
+                    onClick={handleShare}
+                    title="Share Course"
+                    style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: '#fff', width: '54px', height: '54px', borderRadius: '20px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: '0.3s' }}
+                    onMouseOver={(e) => { e.currentTarget.style.background = 'var(--primary)'; }}
+                    onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
+                   >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                   </button>
                    <button 
                     onClick={() => setSelectedCourse(null)}
                     style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: '#fff', width: '54px', height: '54px', borderRadius: '20px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: '0.3s' }}

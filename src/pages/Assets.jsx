@@ -119,7 +119,7 @@ const Assets = () => {
             if (twTitle) twTitle.setAttribute("content", selectedAsset.title);
             if (twDesc) twDesc.setAttribute("content", descText);
             
-            const imgUrl = selectedAsset.gallery?.[0] || selectedAsset.url;
+            const imgUrl = selectedAsset.coverImage || selectedAsset.gallery?.[0] || selectedAsset.url;
             if (ogImage && imgUrl) ogImage.setAttribute("content", imgUrl);
             if (twImage && imgUrl) twImage.setAttribute("content", imgUrl);
         } else {
