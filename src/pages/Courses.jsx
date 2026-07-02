@@ -685,6 +685,8 @@ const Courses = () => {
     }
   }, [selectedCourse]);
 
+  const initialLoadDone = React.useRef(false);
+
   // Handle OG Tags and URL update
   useEffect(() => {
     if (selectedCourse) {
@@ -709,7 +711,10 @@ const Courses = () => {
         if (ogImage && imgUrl) ogImage.setAttribute("content", imgUrl);
         if (twImage && imgUrl) twImage.setAttribute("content", imgUrl);
     } else {
-        window.history.replaceState(null, '', window.location.pathname);
+        if (initialLoadDone.current) {
+            window.history.replaceState(null, '', window.location.pathname);
+        }
+        initialLoadDone.current = true;
         
         document.title = "ITShare — Premium IT Resources";
         const defaultTitle = "ITShare — Premium IT Resources";
