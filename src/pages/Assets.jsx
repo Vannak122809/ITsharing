@@ -102,6 +102,8 @@ const Assets = () => {
 
     useEffect(() => {
         if (selectedAsset) {
+            window.history.replaceState(null, '', `?id=${selectedAsset.id}`);
+            
             document.title = `${selectedAsset.title} - ITShare`;
             const ogTitle = document.querySelector('meta[property="og:title"]');
             const ogDesc = document.querySelector('meta[property="og:description"]');
@@ -121,6 +123,8 @@ const Assets = () => {
             if (ogImage && imgUrl) ogImage.setAttribute("content", imgUrl);
             if (twImage && imgUrl) twImage.setAttribute("content", imgUrl);
         } else {
+            window.history.replaceState(null, '', window.location.pathname);
+            
             document.title = "ITShare — Premium IT Resources";
             const defaultTitle = "ITShare — Premium IT Resources";
             const defaultDesc = "ITShare — Free premium IT resources, courses, documents, software, and community for IT professionals in Cambodia and worldwide.";
@@ -199,6 +203,20 @@ const Assets = () => {
     const activeCategories = useMemo(() => [...categories, ...dynamicCategories], [categories, dynamicCategories]);
 
     const allAssets = useMemo(() => [...featuredAssets, ...dbAssets], [dbAssets]);
+
+    // Handle deep link loading from ?id=...
+    useEffect(() => {
+        if (allAssets.length > 0 && !selectedAsset) {
+            const params = new URLSearchParams(window.location.search);
+            const assetId = params.get('id');
+            if (assetId) {
+                const assetToOpen = allAssets.find(a => String(a.id) === assetId);
+                if (assetToOpen) {
+                    setSelectedAsset(assetToOpen);
+                }
+            }
+        }
+    }, [allAssets, selectedAsset]);
 
     const filteredAssets = useMemo(() => {
         const queryStr = searchQuery.toLowerCase().trim();
