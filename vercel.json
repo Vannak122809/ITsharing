@@ -1,5 +1,35 @@
 {
   "rewrites": [
+    {
+      "source": "/assets",
+      "has": [
+        {
+          "type": "query",
+          "key": "id"
+        },
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(bot|facebook|whatsapp|telegram|twitter|linkedin|discord|slack|Bot|Facebook|WhatsApp|Telegram|Twitter|LinkedIn|Discord|Slack).*"
+        }
+      ],
+      "destination": "/api/bot-share-asset?id=$id"
+    },
+    {
+      "source": "/courses",
+      "has": [
+        {
+          "type": "query",
+          "key": "course"
+        },
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(bot|facebook|whatsapp|telegram|twitter|linkedin|discord|slack|Bot|Facebook|WhatsApp|Telegram|Twitter|LinkedIn|Discord|Slack).*"
+        }
+      ],
+      "destination": "/api/bot-share-course?course=$course"
+    },
     { "source": "/(.*)", "destination": "/" }
   ]
 }
