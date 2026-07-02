@@ -12,7 +12,7 @@ const CATEGORIES = ['Birthday', 'Graduation', 'Wedding', 'Khmer New Year', 'Pchu
 const DUMMY_FRAMES = [
   { id: 'd1', name: 'Birthday Gold', src: 'https://placehold.co/800x800/png?text=Birthday+Gold+Frame', category: 'Birthday' },
   { id: 'd2', name: 'Graduation Blue', src: 'https://placehold.co/800x800/png?text=Graduation+Blue+Frame', category: 'Graduation' },
-  { id: 'd3', name: 'Khmer Ornament', src: 'https://placehold.co/800x800/png?text=Khmer+Ornament+Frame', category: 'Khmer New Year' }
+  { id: 'd3', name: 'Khmer Portrait Test', src: 'https://placehold.co/1080x1500/001833/FFD700/png?text=Portrait+Khmer+Frame', category: 'Khmer New Year' }
 ];
 
 const MOCK_WISHES = {
@@ -50,6 +50,7 @@ const FrameEditor = () => {
   const [fontSize, setFontSize] = useState(40);
   const [isBold, setIsBold] = useState(false);
   const [hasShadow, setHasShadow] = useState(false);
+  const [textAlign, setTextAlign] = useState('center');
 
   // New Canvas State
   const [canvasBgColor, setCanvasBgColor] = useState('#ffffff');
@@ -94,6 +95,7 @@ const FrameEditor = () => {
         setFontSize(selectedText.fontSize || 40);
         setIsBold(selectedText.fontStyle === 'bold');
         setHasShadow(selectedText.shadowColor === '#000000');
+        setTextAlign(selectedText.align || 'center');
       }
     }
   }, [selectedId, textLayers]);
@@ -115,6 +117,25 @@ const FrameEditor = () => {
     }
   };
 
+  const handleCustomFrameUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const customFrame = {
+          id: `custom_${Date.now()}`,
+          name: 'Custom Upload',
+          src: reader.result,
+          category: 'Custom'
+        };
+        // Prepend the custom frame so it appears first
+        setFrames(prev => [customFrame, ...prev]);
+        setSelectedFrame(customFrame);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const addTextLayer = (textToUse, defaultY) => {
     const newLayer = {
       id: `text_${Date.now()}`,
@@ -125,6 +146,8 @@ const FrameEditor = () => {
       y: defaultY,
       fontSize,
       fontStyle: isBold ? 'bold' : 'normal',
+      align: textAlign,
+      width: 500, // Give it a fixed width by default so centering works well
       shadowColor: hasShadow ? '#000000' : 'transparent',
       shadowBlur: hasShadow ? 5 : 0,
       shadowOffsetX: hasShadow ? 2 : 0,
@@ -336,21 +359,35 @@ const FrameEditor = () => {
                       }} 
                     /> Bold
                   </label>
-                  <label className="flex items-center gap-2 text-sm cursor-pointer ml-4">
-                    <input 
-                      type="checkbox" 
-                      checked={hasShadow} 
-                      onChange={(e) => {
-                        setHasShadow(e.target.checked);
-                        updateSelectedLayer({ 
-                          shadowColor: e.target.checked ? '#000000' : 'transparent',
-                          shadowBlur: e.target.checked ? 5 : 0,
-                          shadowOffsetX: e.target.checked ? 2 : 0,
-                          shadowOffsetY: e.target.checked ? 2 : 0
-                        });
-                      }} 
-                    /> Shadow
+                  <label className="flex items-center gap-1 text-sm cursor-pointer">
+                    <input type="checkbox" checked={hasShadow} onChange={(e) => {
+                      setHasShadow(e.target.checked);
+                      updateSelectedLayer({ 
+                        shadowColor: e.target.checked ? '#000000' : 'transparent',
+                        shadowBlur: e.target.checked ? 5 : 0,
+                        shadowOffsetX: e.target.checked ? 2 : 0,
+                        shadowOffsetY: e.target.checked ? 2 : 0,
+                      });
+                    }} className="accent-blue-500" /> Shadow
                   </label>
+                </div>
+                
+                <div className="col-span-2 pt-2 border-t border-gray-700">
+                  <label className="text-xs text-gray-400 mb-1 block">Alignment</label>
+                  <div className="flex gap-2 bg-gray-800 p-1 rounded-lg">
+                    <button 
+                      className={`flex-1 py-1 rounded text-sm ${textAlign === 'left' ? 'bg-blue-600' : 'hover:bg-gray-700'}`}
+                      onClick={() => { setTextAlign('left'); updateSelectedLayer({ align: 'left' }); }}
+                    >Left</button>
+                    <button 
+                      className={`flex-1 py-1 rounded text-sm ${textAlign === 'center' ? 'bg-blue-600' : 'hover:bg-gray-700'}`}
+                      onClick={() => { setTextAlign('center'); updateSelectedLayer({ align: 'center' }); }}
+                    >Center</button>
+                    <button 
+                      className={`flex-1 py-1 rounded text-sm ${textAlign === 'right' ? 'bg-blue-600' : 'hover:bg-gray-700'}`}
+                      onClick={() => { setTextAlign('right'); updateSelectedLayer({ align: 'right' }); }}
+                    >Right</button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -427,6 +464,7 @@ const FrameEditor = () => {
               <CanvasStage 
                 ref={stageRef}
                 frameUrl={selectedFrame?.src} 
+                frameBgUrl={selectedFrame?.sourceUrl}
                 photoUrl={uploadedPhoto}
                 photoProps={photoProps}
                 setPhotoProps={setPhotoProps}
@@ -448,14 +486,20 @@ const FrameEditor = () => {
           <div className="glass-panel p-5">
             <h3 className="text-lg font-semibold flex items-center justify-between mb-4">
               <span className="flex items-center gap-2"><Layout size={18} /> Select Frame</span>
-              {selectedFrame && (
-                <button 
-                  className="text-xs text-red-400 hover:text-red-300"
-                  onClick={() => setSelectedFrame(null)}
-                >
-                  Clear Frame
-                </button>
-              )}
+              <div className="flex gap-2 items-center">
+                <label className="text-xs bg-gray-800 hover:bg-gray-700 px-2 py-1 rounded cursor-pointer transition-colors border border-gray-600">
+                  + Upload Custom
+                  <input type="file" className="hidden" accept="image/png, image/jpeg" onChange={handleCustomFrameUpload} />
+                </label>
+                {selectedFrame && (
+                  <button 
+                    className="text-xs text-red-400 hover:text-red-300"
+                    onClick={() => setSelectedFrame(null)}
+                  >
+                    Clear Frame
+                  </button>
+                )}
+              </div>
             </h3>
             <div className="grid grid-cols-2 gap-3">
               {loadingFrames ? (

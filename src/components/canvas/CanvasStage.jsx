@@ -6,6 +6,7 @@ import DraggableImage from './DraggableImage';
 
 const CanvasStage = forwardRef(({ 
   frameUrl, 
+  frameBgUrl,
   photoUrl, 
   textLayers, 
   setTextLayers, 
@@ -19,12 +20,12 @@ const CanvasStage = forwardRef(({
 }, ref) => {
   // Load images
   const [frameImage] = useImage(frameUrl);
+  const [bgImage] = useImage(frameBgUrl);
 
   const CANVAS_WIDTH = 800;
   const CANVAS_HEIGHT = frameImage ? (800 / frameImage.width) * frameImage.height : 800;
 
-  // We want the photo to be behind the frame (which usually has a transparent cutout).
-  // So Layer order: Photo -> Frame -> Text
+  // Layer order: Background Color -> Background Image (Cover) -> User Photo -> Foreground Frame -> Text
 
   const containerRef = useRef(null);
   const [containerWidth, setContainerWidth] = useState(800);
@@ -59,10 +60,20 @@ const CanvasStage = forwardRef(({
         scaleY={scale}
       >
       <Layer>
-        {/* Background Color */}
+        {/* 1. Background Color */}
         <Rect width={CANVAS_WIDTH} height={CANVAS_HEIGHT} fill={canvasBgColor} listening={false} />
 
-        {/* User Photo */}
+        {/* 2. Frame Background Image (Cover) */}
+        {bgImage && (
+          <KonvaImage 
+            image={bgImage} 
+            width={CANVAS_WIDTH} 
+            height={CANVAS_HEIGHT} 
+            listening={false} 
+          />
+        )}
+
+        {/* 3. User Photo */}
         {photoUrl && (
           <DraggableImage 
             imageUrl={photoUrl}
@@ -74,7 +85,7 @@ const CanvasStage = forwardRef(({
           />
         )}
 
-        {/* Frame Overlay - Not draggable */}
+        {/* 4. Frame Foreground Overlay - Not draggable */}
         {frameImage && (
           <KonvaImage 
             image={frameImage} 

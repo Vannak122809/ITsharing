@@ -99,6 +99,68 @@ const Assets = () => {
             setIsDownloading(false);
         }
     };
+
+    useEffect(() => {
+        if (selectedAsset) {
+            document.title = `${selectedAsset.title} - ITShare`;
+            const ogTitle = document.querySelector('meta[property="og:title"]');
+            const ogDesc = document.querySelector('meta[property="og:description"]');
+            const ogImage = document.querySelector('meta[property="og:image"]');
+            const twTitle = document.querySelector('meta[property="twitter:title"]');
+            const twDesc = document.querySelector('meta[property="twitter:description"]');
+            const twImage = document.querySelector('meta[property="twitter:image"]');
+            
+            const descText = selectedAsset.description || `Download ${selectedAsset.title} on ITShare`;
+            
+            if (ogTitle) ogTitle.setAttribute("content", selectedAsset.title);
+            if (ogDesc) ogDesc.setAttribute("content", descText);
+            if (twTitle) twTitle.setAttribute("content", selectedAsset.title);
+            if (twDesc) twDesc.setAttribute("content", descText);
+            
+            const imgUrl = selectedAsset.gallery?.[0] || selectedAsset.url;
+            if (ogImage && imgUrl) ogImage.setAttribute("content", imgUrl);
+            if (twImage && imgUrl) twImage.setAttribute("content", imgUrl);
+        } else {
+            document.title = "ITShare — Premium IT Resources";
+            const defaultTitle = "ITShare — Premium IT Resources";
+            const defaultDesc = "ITShare — Free premium IT resources, courses, documents, software, and community for IT professionals in Cambodia and worldwide.";
+            const defaultImg = "/og-image.jpg";
+            
+            const ogTitle = document.querySelector('meta[property="og:title"]');
+            const ogDesc = document.querySelector('meta[property="og:description"]');
+            const ogImage = document.querySelector('meta[property="og:image"]');
+            const twTitle = document.querySelector('meta[property="twitter:title"]');
+            const twDesc = document.querySelector('meta[property="twitter:description"]');
+            const twImage = document.querySelector('meta[property="twitter:image"]');
+            
+            if (ogTitle) ogTitle.setAttribute("content", defaultTitle);
+            if (ogDesc) ogDesc.setAttribute("content", defaultDesc);
+            if (twTitle) twTitle.setAttribute("content", defaultTitle);
+            if (twDesc) twDesc.setAttribute("content", defaultDesc);
+            if (ogImage) ogImage.setAttribute("content", defaultImg);
+            if (twImage) twImage.setAttribute("content", defaultImg);
+        }
+    }, [selectedAsset]);
+
+    const handleShare = async () => {
+        if (!selectedAsset) return;
+        const shareUrl = window.location.href; 
+        try {
+            if (navigator.share) {
+                await navigator.share({
+                    title: selectedAsset.title,
+                    text: `Check out ${selectedAsset.title} on ITShare`,
+                    url: shareUrl,
+                });
+            } else {
+                await navigator.clipboard.writeText(shareUrl);
+                toast.success('URL copied to clipboard!');
+            }
+        } catch (error) {
+            console.error('Error sharing', error);
+        }
+    };
+
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     // Optimized categories memo
@@ -334,14 +396,25 @@ const Assets = () => {
                             <div className="details-section">
                                 <div className="download-cta glass-panel">
                                     <h4 className="cta-label">Download Resource</h4>
-                                    <button 
-                                        onClick={() => handleDownload(selectedAsset)}
-                                        disabled={isDownloading}
-                                        className="btn btn-primary download-btn"
-                                    >
-                                        <Download size={22} /> 
-                                        {isDownloading ? 'Downloading...' : (selectedAsset.format || 'Download Resource')}
-                                    </button>
+                                    <div style={{ display: 'flex', gap: '12px' }}>
+                                        <button 
+                                            onClick={() => handleDownload(selectedAsset)}
+                                            disabled={isDownloading}
+                                            className="btn btn-primary download-btn"
+                                            style={{ flex: 1 }}
+                                        >
+                                            <Download size={22} /> 
+                                            {isDownloading ? 'Downloading...' : (selectedAsset.format || 'Download Resource')}
+                                        </button>
+                                        <button 
+                                            onClick={handleShare}
+                                            className="btn btn-outline"
+                                            title="Share URL"
+                                            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 20px', borderRadius: '14px', border: '1px solid var(--surface-border)' }}
+                                        >
+                                            <Share2 size={22} />
+                                        </button>
+                                    </div>
                                     <div className="cta-meta">
                                         <CheckCircle2 size={14} color="var(--tertiary)" />
                                         <span>High Quality PSD / Vector included</span>
