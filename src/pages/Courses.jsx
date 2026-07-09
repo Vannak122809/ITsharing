@@ -683,7 +683,7 @@ const Courses = () => {
         handleStartCourse(courseToOpen);
       }
     }
-  }, [selectedCourse]);
+  }, []); // Remove selectedCourse to prevent infinite loop
 
   const initialLoadDone = React.useRef(false);
 
@@ -896,7 +896,7 @@ const Courses = () => {
                  <div style={{ flexGrow: 1, background: '#000', position: 'relative' }}>
                     <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 10, pointerEvents: 'none', background: 'radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.2) 100%)' }} />
                     <iframe 
-                       src={currentLessonsList[activeLesson]?.playlistId ? `https://www.youtube.com/embed/videoseries?list=${currentLessonsList[activeLesson].playlistId}&autoplay=1&rel=0` : (currentLessonsList[activeLesson]?.isYoutube ? `https://www.youtube.com/embed/${currentLessonsList[activeLesson].id}?autoplay=1&rel=0` : `https://drive.google.com/file/d/${currentLessonsList[activeLesson]?.id}/preview`)} 
+                       src={currentLessonsList[activeLesson]?.playlistId ? `https://www.youtube.com/embed/videoseries?list=${currentLessonsList[activeLesson].playlistId}&autoplay=1&rel=0&loop=1` : (currentLessonsList[activeLesson]?.isYoutube ? `https://www.youtube.com/embed/${currentLessonsList[activeLesson].id}?autoplay=1&rel=0&loop=1&playlist=${currentLessonsList[activeLesson].id}` : `https://drive.google.com/file/d/${currentLessonsList[activeLesson]?.id}/preview`)} 
                        width="100%" 
                        height="100%" 
                        allow="autoplay; encrypted-media; fullscreen" 

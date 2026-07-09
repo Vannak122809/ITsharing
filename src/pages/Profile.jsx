@@ -105,6 +105,7 @@ const EditableField = ({ value, onSave, placeholder, multiline = false }) => {
 const Profile = ({ user }) => {
   const { t } = useLanguage();
   const avatarInput = useRef(null);
+  const coverInput = useRef(null);
 
   // Profile state
   const [loading, setLoading]     = useState(true);
@@ -113,9 +114,11 @@ const Profile = ({ user }) => {
   const [location, setLocation]   = useState('');
   const [website, setWebsite]     = useState('');
   const [avatarUrl, setAvatarUrl] = useState(''); // URL loaded from Firestore / just uploaded
+  const [coverUrl, setCoverUrl]   = useState('');
 
   // Upload state
   const [avatarStatus, setAvatarStatus] = useState('idle'); // 'idle' | 'uploading' | 'done' | 'error'
+  const [coverStatus, setCoverStatus]   = useState('idle');
   const [uploadError, setUploadError]   = useState('');
 
   const [activeTab, setActiveTab] = useState('posts');
@@ -143,8 +146,9 @@ const Profile = ({ user }) => {
           setLocation(profile.location  || '');
           setWebsite(profile.website    || '');
 
-          // ← display the saved avatar URL
+          // ← display the saved avatar and cover URL
           setAvatarUrl(profile.avatarUrl || '');
+          setCoverUrl(profile.coverUrl || '');
         }
       })
       .catch(err => console.error('[Profile] load failed:', err))
