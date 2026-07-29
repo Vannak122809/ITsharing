@@ -4,8 +4,11 @@ import { Link } from 'react-router-dom';
 import {
   Camera, Pencil, Check, X, MapPin, Link as LinkIcon,
   Calendar, BookOpen, DownloadCloud, Heart, MessageSquare,
-  Loader, Grid, List, Settings, ImageOff
+  Loader, Grid, List, Settings, ImageOff, Moon, Sun, Globe, ShieldAlert, Key, Mail, Trash2
 } from 'lucide-react';
+import { sendPasswordResetEmail, sendEmailVerification, deleteUser } from 'firebase/auth';
+import { auth } from '../firebase';
+import { toast } from 'react-hot-toast';
 import { useLanguage } from '../LanguageContext';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { r2Client, BUCKET_NAME } from '../r2';
@@ -103,7 +106,8 @@ const EditableField = ({ value, onSave, placeholder, multiline = false }) => {
 // PROFILE PAGE
 // ────────────────────────────────────────────────────────────────────────────
 const Profile = ({ user }) => {
-  const { t } = useLanguage();
+  const { lang, setLang, t } = useLanguage();
+  const [localTheme, setLocalTheme] = useState(localStorage.getItem('theme') || 'light');
   const avatarInput = useRef(null);
   const coverInput = useRef(null);
 
@@ -474,22 +478,136 @@ const Profile = ({ user }) => {
 
         {activeTab === 'settings' && (
           <div className="form-panel" style={{ maxWidth: '100%', padding: '32px' }}>
-            <h2 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '24px', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <Settings size={18} color="var(--primary)" /> {t('account_settings')}
+            <h2 style={{ fontSize: '1.3rem', fontWeight: 800, marginBottom: '32px', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <Settings size={22} color="var(--primary)" /> {t('account_settings')}
             </h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">{t('email')}</label>
-                <div className="form-input" style={{ cursor: 'default', opacity: 0.8 }}>{user?.email}</div>
-              </div>
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">UID</label>
-                <div className="form-input" style={{ cursor: 'default', opacity: 0.8, fontFamily: 'monospace', fontSize: '0.85rem' }}>{user?.uid}</div>
+            
+            {/* PREFERENCES */}
+            <div style={{ marginBottom: '32px' }}>
+              <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '1px' }}>Preferences</h3>
+              <div className="glass-panel" style={{ padding: '20px', borderRadius: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    {localTheme === 'dark' ? <Moon size={20} color="var(--primary)" /> : <Sun size={20} color="var(--primary)" />}
+                    <div>
+                      <h4 style={{ margin: 0, fontSize: '0.95rem' }}>Theme Appearance</h4>
+                      <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>Toggle between light and dark mode</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => {
+                      const newTheme = localTheme === 'dark' ? 'light' : 'dark';
+                      setLocalTheme(newTheme);
+                      localStorage.setItem('theme', newTheme);
+                      if (newTheme === 'dark') document.documentElement.classList.add('dark-mode');
+                      else document.documentElement.classList.remove('dark-mode');
+                    }}
+                    className="btn btn-outline" style={{ borderRadius: '12px', padding: '8px 16px' }}
+                  >
+                    Switch to {localTheme === 'dark' ? 'Light' : 'Dark'}
+                  </button>
+                </div>
+                <div style={{ height: '1px', background: 'var(--surface-border)' }} />
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <Globe size={20} color="var(--primary)" />
+                    <div>
+                      <h4 style={{ margin: 0, fontSize: '0.95rem' }}>Language</h4>
+                      <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>Switch between English and Khmer</p>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button onClick={() => setLang('en')} className={`btn ${lang === 'en' ? 'btn-primary' : 'btn-outline'}`} style={{ borderRadius: '12px', padding: '6px 12px' }}>EN</button>
+                    <button onClick={() => setLang('km')} className={`btn ${lang === 'km' ? 'btn-primary' : 'btn-outline'}`} style={{ borderRadius: '12px', padding: '6px 12px' }}>KH</button>
+                  </div>
+                </div>
               </div>
             </div>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', marginTop: 20, fontStyle: 'italic' }}>
-              💡 To change your password, use <strong>Forgot Password</strong> on the Sign In page.
-            </p>
+
+            {/* SECURITY */}
+            <div style={{ marginBottom: '32px' }}>
+              <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '1px' }}>Security</h3>
+              <div className="glass-panel" style={{ padding: '20px', borderRadius: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <Mail size={20} color={user?.emailVerified ? '#10b981' : '#f59e0b'} />
+                    <div>
+                      <h4 style={{ margin: 0, fontSize: '0.95rem' }}>Email Address</h4>
+                      <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>{user?.email} {user?.emailVerified ? '(Verified)' : '(Unverified)'}</p>
+                    </div>
+                  </div>
+                  {!user?.emailVerified && (
+                    <button 
+                      onClick={async () => {
+                        try {
+                          await sendEmailVerification(user);
+                          toast.success('Verification link sent! Check your inbox.');
+                        } catch (e) {
+                          toast.error('Failed to send verification email.');
+                        }
+                      }}
+                      className="btn btn-outline" style={{ borderRadius: '12px', padding: '8px 16px', borderColor: '#f59e0b', color: '#f59e0b' }}
+                    >
+                      Resend Verification
+                    </button>
+                  )}
+                </div>
+                <div style={{ height: '1px', background: 'var(--surface-border)' }} />
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <Key size={20} color="var(--primary)" />
+                    <div>
+                      <h4 style={{ margin: 0, fontSize: '0.95rem' }}>Password</h4>
+                      <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>Reset your account password</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={async () => {
+                      try {
+                        await sendPasswordResetEmail(auth, user.email);
+                        toast.success('Password reset email sent!');
+                      } catch (e) {
+                        toast.error('Failed to send reset email.');
+                      }
+                    }}
+                    className="btn btn-outline" style={{ borderRadius: '12px', padding: '8px 16px' }}
+                  >
+                    Send Reset Link
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* DANGER ZONE */}
+            <div>
+              <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#ef4444', marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '1px' }}>Danger Zone</h3>
+              <div className="glass-panel" style={{ padding: '20px', borderRadius: '16px', border: '1px solid rgba(239, 68, 68, 0.3)', background: 'rgba(239, 68, 68, 0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <Trash2 size={20} color="#ef4444" />
+                  <div>
+                    <h4 style={{ margin: 0, fontSize: '0.95rem', color: '#ef4444' }}>Delete Account</h4>
+                    <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>Permanently delete your account and all data</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={async () => {
+                    if (window.confirm('Are you absolutely sure you want to delete your account? This action cannot be undone!')) {
+                      try {
+                        await deleteUser(user);
+                        toast.success('Account deleted successfully.');
+                        window.location.href = '/';
+                      } catch (e) {
+                        toast.error(e.code === 'auth/requires-recent-login' ? 'Please log out and log back in to delete your account.' : 'Failed to delete account.');
+                      }
+                    }
+                  }}
+                  className="btn" style={{ background: '#ef4444', color: '#fff', borderRadius: '12px', padding: '8px 16px', fontWeight: 700 }}
+                >
+                  Delete Account
+                </button>
+              </div>
+            </div>
+
           </div>
         )}
 

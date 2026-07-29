@@ -4,6 +4,7 @@ import { auth } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useLanguage } from '../LanguageContext';
 import { Download, FileText, Share2, Globe, Filter, Eye, Folder, ChevronRight, ChevronDown, ArrowLeft, Cloud, Network, Terminal, Database, ShieldCheck, ArrowUpDown, LayoutGrid, List, Search, File, Loader2, MoreHorizontal } from 'lucide-react';
+import AuthModal from '../components/AuthModal';
 
 // Custom Folder Icon matching the user's image
 const ModernFolderIcon = ({ size = 64, color = "#3b82f6" }) => (
@@ -28,22 +29,22 @@ const documentStructure = {
   Network: {
     icon: <Network size={18} />,
     color: "#3b82f6",
-    subfolders: ['Cisco', 'Juniper', 'Mikrotik', 'Fortinet', 'Ubiquiti']
+    subfolders: ['Cisco', 'Juniper', 'Mikrotik', 'Fortinet', 'Ubiquiti', 'TP-Link', 'D-Link', 'Netgear', 'Zyxel', 'Huawei']
   },
   Programming: {
     icon: <Terminal size={18} />,
     color: "#10b981",
-    subfolders: ['Python', 'JavaScript', 'Java', 'C++', 'C#']
+    subfolders: ['Python', 'JavaScript', 'Java', 'C++', 'C#', 'PHP', 'Ruby', 'Go', 'Rust', 'Swift', 'Kotlin', 'TypeScript', 'HTML', 'CSS', 'SQL', 'Bash', 'PowerShell']
   },
   Database: {
     icon: <Database size={18} />,
     color: "#f59e0b",
-    subfolders: ['Mysql', 'Postgresql', 'Mongodb', 'Oracle']
+    subfolders: ['Mysql', 'Postgresql', 'Mongodb', 'Sqlserver', 'Oracle']
   },
   Security: {
     icon: <ShieldCheck size={18} />,
     color: "#ef4444",
-    subfolders: ['Firewall', 'Antivirus', 'VPN']
+    subfolders: ['Firewall', 'Antivirus', 'IDS', 'IPS', 'VPN']
   },
   Cloud: {
     icon: <Cloud size={18} />,
@@ -65,6 +66,7 @@ const Documents = () => {
   const [downloadingId, setDownloadingId] = useState(null);
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -92,7 +94,7 @@ const Documents = () => {
   const handleDownloadFile = async (e, url, title, type, docId) => {
     e.preventDefault();
     if (authLoading) return;
-    if (isGuest) { navigate('/login'); return; }
+    if (isGuest) { setAuthModalOpen(true); return; }
     if (!url) return;
     setDownloadingId(docId);
     try {
@@ -149,6 +151,7 @@ const Documents = () => {
 
   return (
     <div style={{ background: 'var(--bg-main)', minHeight: '100vh', paddingTop: '100px' }}>
+      <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} message="You need to be logged in to download or view documents." />
       <div className="container" style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: '32px', maxWidth: '1440px' }}>
         
         {/* SIDEBAR EXPLORER */}

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PlayCircle, Award, Search, Filter, Clock, BookOpen, ChevronRight, ChevronDown, ChevronUp, X, Play, Shield, Star, CheckCircle2, Layout, Code2, Globe2, Sparkles, Brain } from 'lucide-react';
+import AuthModal from '../components/AuthModal';
 import { auth } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useLanguage } from '../LanguageContext';
@@ -16,6 +17,7 @@ const Courses = () => {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [expandedSections, setExpandedSections] = useState({});
+  const [authModalOpen, setAuthModalOpen] = useState(false);
   const navigate = useNavigate();
 
   const currentLessonsList = useMemo(() => {
@@ -64,54 +66,54 @@ const Courses = () => {
       isNew: true,
       coverImage: 'https://pub-4f82c0b8e14544aca1aa8a82ea8d41c1.r2.dev/Cover/ChatGPT%20Image%20Apr%206%2C%202026%2C%2011_40_05%20AM.png',
       lessons: [
-        { title: 'Introduction to Web Dev', id: '1jvLSC9Lo5ty1qBHfNoz9NEJZA9UQwyGn' },
-        { title: 'HTML Boilerplate & Structure', id: '13SXJVETMa0_IgPLZ550zHTeJzfXrH2D_' },
-        { title: 'Headings and Paragraphs', id: '1yMWs24CM-9wU_Z5SoxsVTcFdlv9xi8kL' },
-        { title: 'Links and Navigation', id: '1Z0iwR07Iom3kF3qdiIY3zb8cgYyiP8eV' },
-        { title: 'Images and Alt Text', id: '1YNHOUoYlaQrrH51KghN7XyQc2MZ5lYCO' },
-        { title: 'Lists and Tables', id: '1YctZcG7G7iAa-eXypn9pa0Y2aNdlCv6E' },
-        { title: 'Forms and Inputs', id: '1ODUcD4KEkGXpJ_ZwjI8LET-GEsFzw7hQ' },
-        { title: 'Divs and Spans (The Box Model)', id: '1C8h4MISI98wlDSW7r-zgiQ1fVDFUnXs8' },
-        { title: 'ID vs Class Selectors', id: '1xBGy_VHCLLB4l31M_4Ma28T1Jmbpwcbj' },
-        { title: 'CSS Inline vs Internal vs External', id: '1UbxRoXJJZbPXc9K0fkXmnjk22ws5-9Gu' },
-        { title: 'Colors and Hex Codes', id: '14vr8QpcRgtmAois2eNv16HEMAoPx7N8a' },
-        { title: 'Background Images & Properties', id: '1CbQE7Q0K_2_MU4soi5nepMtNRGsu-XVu' },
-        { title: 'Fonts and Typography', id: '1h-N8sNMhupSH8Slmp1V-qKAIJXMCoWP5' },
-        { title: 'Padding vs Margin', id: '1rxbk_NPFeGHaO8aDb2ZTEVEOrKsO_5R9' },
-        { title: 'Border and Outline', id: '1XT9WOQnKCX4Mjqi0TfkqeNLdIBPKcemd' },
-        { title: 'CSS Units: px, rem, em', id: '1eups_gQxWUwjxUTp1MEYlYtwG1IA-h9R' },
-        { title: 'Position: Static, Relative, Absolute', id: '1gV5huYjHang-p8mPBNthee9ypsuWGisD' },
-        { title: 'Position: Fixed and Sticky', id: '1zYsmV29YouMnprT04f_CjFkCM0xTjjt7' },
-        { title: 'Flexbox: Container Properties', id: '1wyOZQvs3NoyRikVDdSxQE3EwsKfVKn7_' },
-        { title: 'Flexbox: Item Properties', id: '1ux3uvt7bT-v0Vay3yuf1ijAo_xCLTMPm' },
-        { title: 'Flexbox: Practice Project', id: '1ux3uvt7bT-v0Vay3yuf1ijAo_xCLTMPm' },
-        { title: 'Grid: Basics and Fractions', id: '1JnKogi2zM0FVqVqyfOeXYWyM02KVbVoX' },
-        { title: 'Grid: Areas and Gaps', id: '1qG-oeVKIyu6trhaK-mucZdL-niFSwiMO' },
-        { title: 'Media Queries for Mobile', id: '11PtwrivRzXVeb2PRl79V2v1jYXHq8LRG' },
-        { title: 'Pseudo-classes: Hover & Active', id: '1ao9BYxmtzKhHjDU6WkyYozdmSIb4-8S0' },
-        { title: 'Transitions and Animations', id: '1lApcTqJ-YjI6QYEwqXm0ji206RXtzA34' },
-        { title: 'Z-index and Layering', id: '1-vu22HE0FfgFh9k6oM2ICbRBUc46ldjy' },
-        { title: 'Variables in CSS', id: '1_gqx3Xxjucsj-hTaEHgxOqq6yAWUpzRl' },
-        { title: 'Best Practices for Clean Code', id: '1pF3_S58G9ESO7T7uYuy5C-inD6GTIjq5' },
-        { title: 'Debugging with DevTools', id: '1wUQJUworoYMRoFQB-zmtIO6GFNh1G8lO' },
-        { title: 'Semantic HTML5', id: '1JFeqmWkzWNcttQ2WLl03OWlOgU-m1dVb' },
-        { title: 'SVG Icons Integration', id: '1KVMOyhcQOKa7bzEfLQjDfvPn_YoapVyU' },
-        { title: 'Google Fonts Setup', id: '17Us7I001SjbS8IGWxfAFHriGRmFxHuql' },
-        { title: 'Shadows and Blur Effects', id: '1GQfgDLsF3hPDl0bD5QwLQ9pHK_r8bHD5' },
-        { title: 'Gradients and Masks', id: '1JxsBeluIwfvvGw7XqEBhtkyycgm6EHZn' },
-        { title: 'CSS Specificity', id: '17i-wS5jgFDW5Dg-xQSxW5LexQfzVtjfs' },
-        { title: 'Overflow and Visibility', id: '1oIvY0mXQw4IGjlJprRz1mgPPJjmyaDEQ' },
-        { title: 'Responsive Navbar Project', id: '1m-VwggiyJ-We3xtJ6dsMZeQDTAQj42uF' },
-        { title: 'Hero Section Design', id: '1yZDvFaeBLO23miDuUlCEf6VK74ITFtTD' },
-        { title: 'Footer and Layout Finish', id: '1s2CqEvfm7rUzocRf6iYzYHtq77yO3Q-P' },
-        { title: 'Deploying to Netlify', id: '1aShzx-Kv42Sc8AT0UzUnu0I79NCTVjvx' },
-        { title: 'Introduction to SEO', id: '15URULrYDcUQx0xOHbsM9louMn0UB9MI6' },
-        { title: 'Accessibility (A11y)', id: '1cjArhvTIGujzdOfW4jrMLsvXT9dIHAy2' },
-        { title: 'CSS Frameworks Overview', id: '1C5pLLUBxf0IXKLB-ShwqoO2xbgpPqqe6' },
-        { title: 'GitHub for UI Projects', id: '1DEEVDKVrFWNBuB0JOdqM_BfNPJR06hx3' },
-        { title: 'Advanced Flex Inter-layouts', id: '1jOUEN7YaExYKCfl2C0YBfjEBL8I82N3O' },
-        { title: 'Form Verification Styling', id: '1anyrQGg-Tv0u98EMLDqGoCykdmLKUB0L' },
-        { title: 'Course Final Wrap-up', id: '1sxniTAlp2KdxvjyXrCwT3uDxQqFTOSoL' }
+        { title: 'Introduction to Web Dev', id: '1jvLSC9Lo5ty1qBHfNoz9NEJZA9UQwyGn', day: 'Day 1' },
+        { title: 'HTML Boilerplate & Structure', id: '13SXJVETMa0_IgPLZ550zHTeJzfXrH2D_', day: 'Day 1' },
+        { title: 'Headings and Paragraphs', id: '1yMWs24CM-9wU_Z5SoxsVTcFdlv9xi8kL', day: 'Day 1' },
+        { title: 'Links and Navigation', id: '1Z0iwR07Iom3kF3qdiIY3zb8cgYyiP8eV', day: 'Day 1' },
+        { title: 'Images and Alt Text', id: '1YNHOUoYlaQrrH51KghN7XyQc2MZ5lYCO', day: 'Day 1' },
+        { title: 'Lists and Tables', id: '1YctZcG7G7iAa-eXypn9pa0Y2aNdlCv6E', day: 'Day 2' },
+        { title: 'Forms and Inputs', id: '1ODUcD4KEkGXpJ_ZwjI8LET-GEsFzw7hQ', day: 'Day 2' },
+        { title: 'Divs and Spans (The Box Model)', id: '1C8h4MISI98wlDSW7r-zgiQ1fVDFUnXs8', day: 'Day 2' },
+        { title: 'ID vs Class Selectors', id: '1xBGy_VHCLLB4l31M_4Ma28T1Jmbpwcbj', day: 'Day 2' },
+        { title: 'CSS Inline vs Internal vs External', id: '1UbxRoXJJZbPXc9K0fkXmnjk22ws5-9Gu', day: 'Day 2' },
+        { title: 'Colors and Hex Codes', id: '14vr8QpcRgtmAois2eNv16HEMAoPx7N8a', day: 'Day 3' },
+        { title: 'Background Images & Properties', id: '1CbQE7Q0K_2_MU4soi5nepMtNRGsu-XVu', day: 'Day 3' },
+        { title: 'Fonts and Typography', id: '1h-N8sNMhupSH8Slmp1V-qKAIJXMCoWP5', day: 'Day 3' },
+        { title: 'Padding vs Margin', id: '1rxbk_NPFeGHaO8aDb2ZTEVEOrKsO_5R9', day: 'Day 3' },
+        { title: 'Border and Outline', id: '1XT9WOQnKCX4Mjqi0TfkqeNLdIBPKcemd', day: 'Day 3' },
+        { title: 'CSS Units: px, rem, em', id: '1eups_gQxWUwjxUTp1MEYlYtwG1IA-h9R', day: 'Day 4' },
+        { title: 'Position: Static, Relative, Absolute', id: '1gV5huYjHang-p8mPBNthee9ypsuWGisD', day: 'Day 4' },
+        { title: 'Position: Fixed and Sticky', id: '1zYsmV29YouMnprT04f_CjFkCM0xTjjt7', day: 'Day 4' },
+        { title: 'Flexbox: Container Properties', id: '1wyOZQvs3NoyRikVDdSxQE3EwsKfVKn7_', day: 'Day 4' },
+        { title: 'Flexbox: Item Properties', id: '1ux3uvt7bT-v0Vay3yuf1ijAo_xCLTMPm', day: 'Day 4' },
+        { title: 'Flexbox: Practice Project', id: '1ux3uvt7bT-v0Vay3yuf1ijAo_xCLTMPm', day: 'Day 5' },
+        { title: 'Grid: Basics and Fractions', id: '1JnKogi2zM0FVqVqyfOeXYWyM02KVbVoX', day: 'Day 5' },
+        { title: 'Grid: Areas and Gaps', id: '1qG-oeVKIyu6trhaK-mucZdL-niFSwiMO', day: 'Day 5' },
+        { title: 'Media Queries for Mobile', id: '11PtwrivRzXVeb2PRl79V2v1jYXHq8LRG', day: 'Day 5' },
+        { title: 'Pseudo-classes: Hover & Active', id: '1ao9BYxmtzKhHjDU6WkyYozdmSIb4-8S0', day: 'Day 5' },
+        { title: 'Transitions and Animations', id: '1lApcTqJ-YjI6QYEwqXm0ji206RXtzA34', day: 'Day 6' },
+        { title: 'Z-index and Layering', id: '1-vu22HE0FfgFh9k6oM2ICbRBUc46ldjy', day: 'Day 6' },
+        { title: 'Variables in CSS', id: '1_gqx3Xxjucsj-hTaEHgxOqq6yAWUpzRl', day: 'Day 6' },
+        { title: 'Best Practices for Clean Code', id: '1pF3_S58G9ESO7T7uYuy5C-inD6GTIjq5', day: 'Day 6' },
+        { title: 'Debugging with DevTools', id: '1wUQJUworoYMRoFQB-zmtIO6GFNh1G8lO', day: 'Day 6' },
+        { title: 'Semantic HTML5', id: '1JFeqmWkzWNcttQ2WLl03OWlOgU-m1dVb', day: 'Day 7' },
+        { title: 'SVG Icons Integration', id: '1KVMOyhcQOKa7bzEfLQjDfvPn_YoapVyU', day: 'Day 7' },
+        { title: 'Google Fonts Setup', id: '17Us7I001SjbS8IGWxfAFHriGRmFxHuql', day: 'Day 7' },
+        { title: 'Shadows and Blur Effects', id: '1GQfgDLsF3hPDl0bD5QwLQ9pHK_r8bHD5', day: 'Day 7' },
+        { title: 'Gradients and Masks', id: '1JxsBeluIwfvvGw7XqEBhtkyycgm6EHZn', day: 'Day 7' },
+        { title: 'CSS Specificity', id: '17i-wS5jgFDW5Dg-xQSxW5LexQfzVtjfs', day: 'Day 8' },
+        { title: 'Overflow and Visibility', id: '1oIvY0mXQw4IGjlJprRz1mgPPJjmyaDEQ', day: 'Day 8' },
+        { title: 'Responsive Navbar Project', id: '1m-VwggiyJ-We3xtJ6dsMZeQDTAQj42uF', day: 'Day 8' },
+        { title: 'Hero Section Design', id: '1yZDvFaeBLO23miDuUlCEf6VK74ITFtTD', day: 'Day 8' },
+        { title: 'Footer and Layout Finish', id: '1s2CqEvfm7rUzocRf6iYzYHtq77yO3Q-P', day: 'Day 8' },
+        { title: 'Deploying to Netlify', id: '1aShzx-Kv42Sc8AT0UzUnu0I79NCTVjvx', day: 'Day 9' },
+        { title: 'Introduction to SEO', id: '15URULrYDcUQx0xOHbsM9louMn0UB9MI6', day: 'Day 9' },
+        { title: 'Accessibility (A11y)', id: '1cjArhvTIGujzdOfW4jrMLsvXT9dIHAy2', day: 'Day 9' },
+        { title: 'CSS Frameworks Overview', id: '1C5pLLUBxf0IXKLB-ShwqoO2xbgpPqqe6', day: 'Day 9' },
+        { title: 'GitHub for UI Projects', id: '1DEEVDKVrFWNBuB0JOdqM_BfNPJR06hx3', day: 'Day 9' },
+        { title: 'Advanced Flex Inter-layouts', id: '1jOUEN7YaExYKCfl2C0YBfjEBL8I82N3O', day: 'Day 10' },
+        { title: 'Form Verification Styling', id: '1anyrQGg-Tv0u98EMLDqGoCykdmLKUB0L', day: 'Day 10' },
+        { title: 'Course Final Wrap-up', id: '1sxniTAlp2KdxvjyXrCwT3uDxQqFTOSoL', day: 'Day 10' }
       ]
     },
     {
@@ -639,7 +641,7 @@ const Courses = () => {
 
   const handleStartCourse = (course) => {
     if (isGuest) {
-      navigate('/login');
+      setAuthModalOpen(true);
       return;
     }
     const lessonsList = Array.isArray(course.lessons) ? course.lessons : (course.lessons['km'] || course.lessons['en'] || []);
@@ -740,6 +742,8 @@ const Courses = () => {
   return (
     <div className="container" style={{ paddingTop: '100px', paddingBottom: '100px', minHeight: '100vh' }}>
       
+      <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} message="You need to be logged in to view and start courses." />
+
       {/* HERO SECTION */}
       <header style={{ textAlign: 'center', marginBottom: '80px', position: 'relative' }}>
         <div style={{ position: 'absolute', top: '-150px', left: '50%', transform: 'translateX(-50%)', width: '600px', height: '600px', background: 'var(--primary)', filter: 'blur(200px)', opacity: 0.1, zIndex: -1 }} />
