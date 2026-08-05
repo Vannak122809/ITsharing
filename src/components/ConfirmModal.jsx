@@ -56,8 +56,8 @@ const ConfirmModal = ({
                 backdropFilter: 'var(--blur)',
                 WebkitBackdropFilter: 'var(--blur)',
                 border: '1px solid var(--surface-border)',
-                borderRadius: '24px',
-                padding: '32px 28px',
+                borderRadius: '28px',
+                padding: '36px 32px 32px 32px',
                 position: 'relative',
                 textAlign: 'center',
                 boxShadow: isDanger
@@ -71,19 +71,19 @@ const ConfirmModal = ({
                 onClick={onClose}
                 style={{
                   position: 'absolute',
-                  top: '18px',
-                  right: '18px',
+                  top: '20px',
+                  right: '20px',
                   background: 'var(--surface-badge)',
                   border: '1px solid var(--surface-border)',
                   borderRadius: '50%',
                   width: '32px',
                   height: '32px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justify: 'center',
+                  display: 'grid',
+                  placeItems: 'center',
                   color: 'var(--text-muted)',
                   cursor: isLoading ? 'not-allowed' : 'pointer',
                   transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                  padding: 0,
                 }}
                 onMouseOver={(e) => {
                   e.currentTarget.style.color = 'var(--text-main)';
@@ -94,39 +94,38 @@ const ConfirmModal = ({
                   e.currentTarget.style.transform = 'scale(1)';
                 }}
               >
-                <X size={15} />
+                <X size={16} style={{ display: 'block' }} />
               </button>
 
-              {/* Icon Badge */}
+              {/* Perfectly Centered Icon Badge */}
               <div
                 style={{
-                  width: '72px',
-                  height: '72px',
+                  width: '68px',
+                  height: '68px',
                   borderRadius: '50%',
                   background: isDanger
-                    ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.18), rgba(220, 38, 38, 0.08))'
-                    : 'linear-gradient(135deg, rgba(59, 130, 246, 0.18), rgba(37, 99, 235, 0.08))',
-                  border: isDanger ? '1px solid rgba(239, 68, 68, 0.35)' : '1px solid rgba(59, 130, 246, 0.35)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justify: 'center',
-                  margin: '0 auto 20px auto',
-                  boxShadow: isDanger ? '0 10px 30px rgba(239, 68, 68, 0.25)' : '0 10px 30px rgba(59, 130, 246, 0.25)',
+                    ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.16), rgba(220, 38, 38, 0.06))'
+                    : 'linear-gradient(135deg, rgba(59, 130, 246, 0.16), rgba(37, 99, 235, 0.06))',
+                  border: isDanger ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid rgba(59, 130, 246, 0.3)',
+                  display: 'grid',
+                  placeItems: 'center',
+                  margin: '0 auto 22px auto',
+                  boxShadow: isDanger ? '0 8px 25px rgba(239, 68, 68, 0.2)' : '0 8px 25px rgba(59, 130, 246, 0.2)',
                 }}
               >
                 {isDanger ? (
-                  <ShieldAlert size={34} color="#ef4444" />
+                  <ShieldAlert size={32} color="#ef4444" style={{ display: 'block' }} />
                 ) : (
-                  <AlertTriangle size={34} color="#3b82f6" />
+                  <AlertTriangle size={32} color="#3b82f6" style={{ display: 'block' }} />
                 )}
               </div>
 
               {/* Title */}
               <h3
                 style={{
-                  fontSize: '1.35rem',
+                  fontSize: '1.4rem',
                   fontWeight: 800,
-                  marginBottom: '12px',
+                  marginBottom: '10px',
                   color: 'var(--text-main)',
                   letterSpacing: '-0.02em',
                 }}
@@ -138,10 +137,10 @@ const ConfirmModal = ({
               <div
                 style={{
                   color: 'var(--text-muted)',
-                  fontSize: '0.92rem',
+                  fontSize: '0.94rem',
                   lineHeight: '1.6',
-                  marginBottom: '28px',
-                  padding: '0 8px',
+                  marginBottom: '30px',
+                  padding: '0 4px',
                 }}
               >
                 {typeof message === 'string' ? (
@@ -154,9 +153,12 @@ const ConfirmModal = ({
                           fontWeight: 700,
                           fontFamily: 'monospace',
                           background: 'rgba(239, 68, 68, 0.1)',
-                          padding: '2px 6px',
+                          padding: '2px 8px',
                           borderRadius: '6px',
-                          border: '1px solid rgba(239, 68, 68, 0.2)',
+                          border: '1px solid rgba(239, 68, 68, 0.25)',
+                          display: 'inline-block',
+                          margin: '0 4px',
+                          verticalAlign: 'baseline',
                         }}
                       >
                         {part}
@@ -176,9 +178,9 @@ const ConfirmModal = ({
                   disabled={isLoading}
                   onClick={onClose}
                   style={{
-                    padding: '12px 18px',
-                    borderRadius: '14px',
-                    fontSize: '0.92rem',
+                    padding: '13px 18px',
+                    borderRadius: '16px',
+                    fontSize: '0.94rem',
                     fontWeight: 700,
                     background: 'var(--surface-badge)',
                     border: '1px solid var(--surface-border)',
@@ -200,9 +202,9 @@ const ConfirmModal = ({
                   disabled={isLoading}
                   onClick={onConfirm}
                   style={{
-                    padding: '12px 18px',
-                    borderRadius: '14px',
-                    fontSize: '0.92rem',
+                    padding: '13px 18px',
+                    borderRadius: '16px',
+                    fontSize: '0.94rem',
                     fontWeight: 700,
                     border: 'none',
                     background: isDanger
