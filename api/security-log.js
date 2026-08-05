@@ -61,6 +61,33 @@ async function geolocate(ip) {
   return { country: 'Unknown', city: 'Unknown', region: '' };
 }
 
+// ── Check if email is a real registered Firebase account ─────────────────────
+// Uses Firebase Auth REST API (sign-in-with-email-exists endpoint)
+// Returns true if the account exists in your Firebase project.
+async function checkAccountExists(email) {
+  if (!email) return false;
+  try {
+    const apiKey = process.env.VITE_FIREBASE_API_KEY || process.env.FIREBASE_API_KEY;
+    if (!apiKey) return false;
+
+    // fetchSignInMethodsForEmail — returns [] if no account, ['password'] if exists
+    const res = await fetch(
+      `https://identitytoolkit.googleapis.com/v1/accounts:createAuthUri?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier: email, continueUri: 'https://itsharing.vercel.app' }),
+        signal: AbortSignal.timeout(3000),
+      }
+    );
+    const data = await res.json();
+    // If allProviders or signinMethods has entries, the account exists
+    return Array.isArray(data.allProviders) && data.allProviders.length > 0;
+  } catch {
+    return false;
+  }
+}
+
 // ── Write a document to Firestore via REST API (no SDK needed server-side) ───
 async function writeToFirestore(data) {
   const fields = {};
@@ -126,6 +153,15 @@ export default async function handler(req, res) {
   if (eventType === 'rate_limit_hit')       threatScore += 10;
   if (eventType === 'failed_login')         threatScore += 15;
 
+  // Check if the targeted email is a real account (for login events)
+  let accountExists = false;
+  const targetEmail = metadata.email || '';
+  if (targetEmail && ['failed_login', 'brute_force_detected'].includes(eventType)) {
+    accountExists = await checkAccountExists(targetEmail);
+    // Being targeted with a real account email is higher threat
+    if (accountExists) threatScore += 20;
+  }
+
   const logEntry = {
     eventType,
     ip,
@@ -144,10 +180,11 @@ export default async function handler(req, res) {
     isHosting:   geo.isHosting   || false,
     // Threat
     threatScore,
-    // Metadata from the client (email attempted, page, etc.)
-    metaEmail:   metadata.email   || '',
-    metaPage:    metadata.page    || '',
-    metaNote:    metadata.note    || '',
+    // Account info
+    metaEmail:      metadata.email   || '',
+    metaPage:       metadata.page    || '',
+    metaNote:       metadata.note    || '',
+    accountExists,  // true = attacker targeted a real registered account
   };
 
   try {

@@ -80,7 +80,7 @@ function LogRow({ log, expanded, onToggle }) {
       <div
         onClick={onToggle}
         style={{
-          display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr auto',
+          display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr 1.2fr 1fr auto',
           gap: '16px', padding: '16px 20px', alignItems: 'center', cursor: 'pointer',
         }}
       >
@@ -114,6 +114,33 @@ function LogRow({ log, expanded, onToggle }) {
           <div>
             <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-main)' }}>{log.city || '—'}</div>
             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{log.country || '—'}</div>
+          </div>
+        </div>
+
+        {/* Target User (email attempted) */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden' }}>
+          <User size={14} color="var(--text-muted)" style={{ flexShrink: 0 }} />
+          <div style={{ overflow: 'hidden' }}>
+            {log.metaEmail ? (
+              <>
+                <div style={{
+                  fontSize: '0.82rem', fontWeight: 700,
+                  color: log.accountExists ? '#ef4444' : '#f59e0b',
+                  fontFamily: 'monospace', whiteSpace: 'nowrap',
+                  overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '180px'
+                }}>
+                  {log.metaEmail}
+                </div>
+                <div style={{ fontSize: '0.7rem', marginTop: '2px' }}>
+                  {log.accountExists
+                    ? <span style={{ color: '#ef4444', fontWeight: 700 }}>⚠ Real account</span>
+                    : <span style={{ color: '#94a3b8' }}>Unknown email</span>
+                  }
+                </div>
+              </>
+            ) : (
+              <span style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>—</span>
+            )}
           </div>
         </div>
 
@@ -324,12 +351,12 @@ const SecurityDashboard = ({ user }) => {
 
         {/* Column Headers */}
         <div style={{
-          display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr auto',
+          display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr 1.2fr 1fr auto',
           gap: '16px', padding: '10px 20px', marginBottom: '8px',
           color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 700,
           textTransform: 'uppercase', letterSpacing: '0.08em',
         }}>
-          <span>Event</span><span>IP Address</span><span>Location</span><span>Threat Level</span><span />
+          <span>Event</span><span>IP Address</span><span>Location</span><span>Target User</span><span>Threat Level</span><span />
         </div>
 
         {/* Log Rows */}
