@@ -100,7 +100,11 @@ const Login = () => {
 
     setLoading(true);
     try {
-      await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence);
+      try {
+        await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence);
+      } catch (pErr) {
+        console.warn('[Auth] Persistence warning:', pErr);
+      }
       const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password);
       
       // Enforce email verification
