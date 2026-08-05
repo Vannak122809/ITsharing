@@ -9,6 +9,7 @@ import {
   XCircle, ChevronDown, ChevronUp, Activity, Lock, Zap
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import AttackMap from '../components/AttackMap';
 
 const THREAT_COLORS = {
   high:   { bg: 'rgba(239,68,68,0.12)',   border: '#ef4444', text: '#ef4444',   label: 'HIGH'   },
@@ -233,11 +234,12 @@ function LogRow({ log, expanded, onToggle }) {
 }
 
 const SecurityDashboard = ({ user }) => {
-  const [logs, setLogs]             = useState([]);
-  const [loading, setLoading]       = useState(true);
-  const [expandedId, setExpandedId] = useState(null);
-  const [filterEvent, setFilterEvent] = useState('all');
-  const [filterLevel, setFilterLevel] = useState('all');
+  const [logs, setLogs]               = useState([]);
+  const [loading, setLoading]          = useState(true);
+  const [expandedId, setExpandedId]    = useState(null);
+  const [filterEvent, setFilterEvent]  = useState('all');
+  const [filterLevel, setFilterLevel]  = useState('all');
+  const [activeView, setActiveView]    = useState('logs'); // 'logs' | 'map' | 'brute'
 
   useEffect(() => {
     const q = query(
@@ -258,6 +260,24 @@ const SecurityDashboard = ({ user }) => {
   const vpnCount    = logs.filter(l => l.isProxy).length;
   const bruteForces = logs.filter(l => l.eventType === 'brute_force_detected').length;
   const uniqueIPs   = new Set(logs.map(l => l.ip)).size;
+
+  // Brute force grouped by IP — show distinct attacker IPs with 3+ fails
+  const bruteByIP = Object.values(
+    logs
+      .filter(l => ['failed_login','brute_force_detected'].includes(l.eventType) && l.ip)
+      .reduce((acc, l) => {
+        const key = l.ip;
+        if (!acc[key]) acc[key] = { ...l, count: 0, emails: new Set() };
+        acc[key].count++;
+        if (l.metaEmail) acc[key].emails.add(l.metaEmail);
+        // Keep highest threat score
+        if ((l.threatScore || 0) > (acc[key].threatScore || 0)) {
+          Object.assign(acc[key], l);
+        }
+        acc[key].count = acc[key].count; // keep count
+        return acc;
+      }, {})
+  ).filter(g => g.count >= 3).sort((a, b) => b.count - a.count);
 
   // Filter
   const filtered = logs.filter(l => {
@@ -322,7 +342,104 @@ const SecurityDashboard = ({ user }) => {
           <StatCard icon={Lock}          label="Brute Forces"    value={bruteForces} color="#ef4444" sub="3+ failed logins" />
         </div>
 
-        {/* Filters */}
+        {/* Tabs */}
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '32px', background: 'var(--surface)', padding: '6px', borderRadius: '16px', border: '1px solid var(--surface-border)', width: 'fit-content' }}>
+          {[
+            { id: 'logs',  label: '📋 Event Logs' },
+            { id: 'map',   label: '🗺️ Attack Map' },
+            { id: 'brute', label: `⚠️ Brute Force (${bruteByIP.length})` },
+          ].map(tab => (
+            <button key={tab.id} onClick={() => setActiveView(tab.id)}
+              style={{
+                padding: '10px 20px', borderRadius: '12px', border: 'none', cursor: 'pointer',
+                fontWeight: 700, fontSize: '0.9rem', transition: 'all 0.2s',
+                background: activeView === tab.id ? 'linear-gradient(135deg, var(--primary), var(--secondary))' : 'transparent',
+                color: activeView === tab.id ? '#fff' : 'var(--text-muted)',
+              }}
+            >{tab.label}</button>
+          ))}
+        </div>
+        {/* ── MAP TAB ─────────────────────────────────────────────────── */}
+        {activeView === 'map' && (
+          <AttackMap logs={logs} />
+        )}
+
+        {/* ── BRUTE FORCE TAB ─────────────────────────────────────────── */}
+        {activeView === 'brute' && (
+          <div>
+            <p style={{ color: 'var(--text-muted)', marginBottom: '20px', fontSize: '0.9rem' }}>
+              IPs with <strong>3 or more failed login attempts</strong> — these are active credential-stuffing or brute force attackers.
+            </p>
+            {bruteByIP.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '60px', color: 'var(--text-muted)', background: 'var(--surface)', borderRadius: '20px', border: '1px solid var(--surface-border)' }}>
+                <Shield size={48} style={{ opacity: 0.3, marginBottom: '16px' }} />
+                <p>No brute force attackers detected yet.</p>
+              </div>
+            ) : bruteByIP.map((g, i) => {
+              const flagUrl = g.countryCode ? `https://flagcdn.com/20x15/${g.countryCode.toLowerCase()}.png` : null;
+              return (
+                <div key={g.ip} style={{
+                  background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)',
+                  borderRadius: '16px', padding: '20px 24px', marginBottom: '12px',
+                  display: 'grid', gridTemplateColumns: 'auto 1fr 1fr 1fr auto',
+                  gap: '20px', alignItems: 'center',
+                }}>
+                  {/* Rank */}
+                  <div style={{ fontWeight: 900, fontSize: '1.4rem', color: i === 0 ? '#ef4444' : i === 1 ? '#f59e0b' : 'var(--text-muted)', width: '32px', textAlign: 'center' }}>
+                    #{i + 1}
+                  </div>
+                  {/* IP + ISP */}
+                  <div>
+                    <div style={{ fontFamily: 'monospace', fontWeight: 800, fontSize: '1rem', color: '#ef4444' }}>{g.ip}</div>
+                    <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '2px' }}>{g.isp || '—'}</div>
+                    <div style={{ display: 'flex', gap: '6px', marginTop: '6px', flexWrap: 'wrap' }}>
+                      {g.isProxy && <span style={{ background: '#ef444420', color: '#ef4444', fontSize: '0.65rem', fontWeight: 800, padding: '2px 8px', borderRadius: '6px', border: '1px solid #ef444440' }}>VPN</span>}
+                      {g.isHosting && <span style={{ background: '#ef444420', color: '#ef4444', fontSize: '0.65rem', fontWeight: 800, padding: '2px 8px', borderRadius: '6px', border: '1px solid #ef444440' }}>BOT</span>}
+                    </div>
+                  </div>
+                  {/* Location + Coords */}
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, color: 'var(--text-main)' }}>
+                      {flagUrl && <img src={flagUrl} alt={g.country} style={{ borderRadius: '2px' }} />}
+                      {g.city || '—'}, {g.country || '—'}
+                    </div>
+                    <div style={{ fontFamily: 'monospace', fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                      {g.lat?.toFixed(5)}, {g.lon?.toFixed(5)}
+                    </div>
+                    {g.lat && g.lon && (
+                      <a href={`https://www.openstreetmap.org/?mlat=${g.lat}&mlon=${g.lon}&zoom=12`}
+                        target="_blank" rel="noopener noreferrer"
+                        style={{ fontSize: '0.75rem', color: 'var(--primary)', marginTop: '4px', display: 'inline-block' }}>
+                        📍 View on Map
+                      </a>
+                    )}
+                  </div>
+                  {/* Emails tried */}
+                  <div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '4px' }}>Emails Tried</div>
+                    {[...g.emails].slice(0, 3).map(em => (
+                      <div key={em} style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: g.accountExists ? '#ef4444' : '#f59e0b', fontWeight: 600 }}>
+                        {em} {g.accountExists ? '⚠' : ''}
+                      </div>
+                    ))}
+                    {g.emails.size > 3 && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>+{g.emails.size - 3} more</div>}
+                  </div>
+                  {/* Attempts count */}
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '2rem', fontWeight: 900, color: '#ef4444', lineHeight: 1 }}>{g.count}</div>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 700 }}>ATTEMPTS</div>
+                    <div style={{ marginTop: '8px', fontSize: '0.75rem', background: 'rgba(239,68,68,0.15)', color: '#ef4444', padding: '4px 10px', borderRadius: '8px', fontWeight: 700 }}>
+                      Score: {g.threatScore}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* ── LOGS TAB ────────────────────────────────────────────────── */}
+        {activeView === 'logs' && (<>
         <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', flexWrap: 'wrap', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--surface)', padding: '10px 16px', borderRadius: '12px', border: '1px solid var(--surface-border)' }}>
             <Filter size={14} color="var(--text-muted)" />
@@ -380,6 +497,7 @@ const SecurityDashboard = ({ user }) => {
             />
           ))
         )}
+        </>)}
       </div>
     </div>
   );
