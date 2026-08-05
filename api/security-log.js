@@ -1,0 +1,161 @@
+/**
+ * api/security-log.js — Server-side security event logger
+ *
+ * Receives security events from the app (failed logins, rate limit hits,
+ * suspicious requests) and logs them to Firestore with:
+ *   - Real client IP address (from request headers)
+ *   - Geolocation (country, city, region) via ip-api.com (free, no key needed)
+ *   - User-Agent / browser fingerprint
+ *   - Timestamp
+ *   - Event type and metadata
+ *
+ * This API endpoint is the ONLY way to write to the security_logs Firestore
+ * collection. The client never writes directly — all writes are server-validated.
+ */
+
+const FIRESTORE_URL = `https://firestore.googleapis.com/v1/projects/${process.env.VITE_FIREBASE_PROJECT_ID || 'login-form-49609'}/databases/(default)/documents/security_logs`;
+
+// ── IP extraction (handles proxies, Cloudflare, Vercel edge) ─────────────────
+function getClientIP(req) {
+  return (
+    req.headers['cf-connecting-ip'] ||          // Cloudflare real IP
+    req.headers['x-real-ip'] ||                  // Nginx proxy
+    (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || // Load balancer chain
+    req.socket?.remoteAddress ||
+    'unknown'
+  );
+}
+
+// ── Geolocate an IP using ip-api.com (free, 45 req/min, no API key needed) ───
+async function geolocate(ip) {
+  // Skip private/loopback IPs
+  if (!ip || ip === 'unknown' || ip.startsWith('127.') || ip.startsWith('192.168.') || ip === '::1') {
+    return { country: 'Local', city: 'Localhost', region: '', isp: 'Local Network', lat: 0, lon: 0 };
+  }
+
+  try {
+    const res = await fetch(
+      `http://ip-api.com/json/${ip}?fields=status,country,countryCode,region,regionName,city,isp,org,lat,lon,timezone,mobile,proxy,hosting`,
+      { signal: AbortSignal.timeout(3000) }
+    );
+    const data = await res.json();
+    if (data.status === 'success') {
+      return {
+        country:     data.country,
+        countryCode: data.countryCode,
+        city:        data.city,
+        region:      data.regionName,
+        isp:         data.isp,
+        org:         data.org,
+        lat:         data.lat,
+        lon:         data.lon,
+        timezone:    data.timezone,
+        isMobile:    data.mobile,
+        isProxy:     data.proxy,       // True if known VPN/proxy/Tor
+        isHosting:   data.hosting,     // True if datacenter IP (bot signal)
+      };
+    }
+  } catch {
+    // Geolocation failed — don't block the log
+  }
+  return { country: 'Unknown', city: 'Unknown', region: '' };
+}
+
+// ── Write a document to Firestore via REST API (no SDK needed server-side) ───
+async function writeToFirestore(data) {
+  const fields = {};
+  for (const [key, val] of Object.entries(data)) {
+    if (typeof val === 'string')  fields[key] = { stringValue: val };
+    else if (typeof val === 'number') fields[key] = { doubleValue: val };
+    else if (typeof val === 'boolean') fields[key] = { booleanValue: val };
+    else if (val === null || val === undefined) fields[key] = { nullValue: null };
+    else fields[key] = { stringValue: String(val) };
+  }
+
+  await fetch(FIRESTORE_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ fields }),
+  });
+}
+
+// ── Main handler ──────────────────────────────────────────────────────────────
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  // Allow only from your own domain
+  const origin = req.headers['origin'] || '';
+  const allowedOrigins = [
+    'https://itsharing.vercel.app',
+    'http://localhost:5173',
+    'http://localhost:3000',
+  ];
+  if (origin && !allowedOrigins.some(o => origin.startsWith(o))) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+
+  const { eventType, metadata = {} } = req.body || {};
+
+  const VALID_EVENTS = [
+    'failed_login',
+    'rate_limit_hit',
+    'unauthorized_access',
+    'suspicious_request',
+    'brute_force_detected',
+    'blocked_download',
+    'admin_access_denied',
+  ];
+
+  if (!VALID_EVENTS.includes(eventType)) {
+    return res.status(400).json({ error: 'Invalid event type' });
+  }
+
+  // Gather data
+  const ip        = getClientIP(req);
+  const userAgent = req.headers['user-agent'] || 'unknown';
+  const geo       = await geolocate(ip);
+  const timestamp = new Date().toISOString();
+
+  // Threat scoring
+  let threatScore = 0;
+  if (geo.isProxy)   threatScore += 40;  // VPN/Tor usage
+  if (geo.isHosting) threatScore += 30;  // Datacenter IP = likely bot
+  if (eventType === 'brute_force_detected') threatScore += 30;
+  if (eventType === 'rate_limit_hit')       threatScore += 10;
+  if (eventType === 'failed_login')         threatScore += 15;
+
+  const logEntry = {
+    eventType,
+    ip,
+    userAgent,
+    timestamp,
+    // Geo
+    country:     geo.country     || 'Unknown',
+    countryCode: geo.countryCode || '',
+    city:        geo.city        || 'Unknown',
+    region:      geo.region      || '',
+    isp:         geo.isp         || '',
+    lat:         geo.lat         || 0,
+    lon:         geo.lon         || 0,
+    timezone:    geo.timezone    || '',
+    isProxy:     geo.isProxy     || false,
+    isHosting:   geo.isHosting   || false,
+    // Threat
+    threatScore,
+    // Metadata from the client (email attempted, page, etc.)
+    metaEmail:   metadata.email   || '',
+    metaPage:    metadata.page    || '',
+    metaNote:    metadata.note    || '',
+  };
+
+  try {
+    await writeToFirestore(logEntry);
+    return res.status(200).json({ ok: true });
+  } catch (err) {
+    console.error('[security-log] Firestore write failed:', err);
+    // Don't expose internal error details
+    return res.status(500).json({ error: 'Log write failed' });
+  }
+}

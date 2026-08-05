@@ -24,6 +24,7 @@ const Profile = lazy(() => import('./pages/Profile'));
 const Assets = lazy(() => import('./pages/Assets'));
 const AdminAssets = lazy(() => import('./pages/AdminAssets'));
 const GiveawayKeys = lazy(() => import('./pages/GiveawayKeys'));
+const SecurityDashboard = lazy(() => import('./pages/SecurityDashboard'));
 
 import ProtectedRoute from './components/ProtectedRoute';
 import CoffeeDonate from './components/CoffeeDonate';
@@ -409,6 +410,11 @@ function App() {
                 <Route path="/admin/assets" element={
                   <ProtectedRoute requiredRole="admin">
                     <AdminAssets />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/security" element={
+                  <ProtectedRoute requiredRole="admin">
+                    <SecurityDashboard user={user} />
                   </ProtectedRoute>
                 } />
                 <Route path="/login" element={<Login />} />

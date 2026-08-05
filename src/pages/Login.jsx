@@ -18,6 +18,7 @@ import {
   Mail, Lock, ArrowLeft, CheckCircle, Ghost, User,
 } from 'lucide-react';
 import { useLanguage } from '../LanguageContext';
+import { logFailedLogin, logBruteForce } from '../utils/securityLogger';
 
 const googleProvider = new GoogleAuthProvider();
 
@@ -101,9 +102,13 @@ const Login = () => {
       if (rememberMe) localStorage.setItem('itshare_remembered_email', email.trim());
       else localStorage.removeItem('itshare_remembered_email');
       navigate('/');
-    } catch (err) { 
-      setAttempts(prev => prev + 1);
-      setError(friendlyError(err.code)); 
+    } catch (err) {
+      const newAttempts = attempts + 1;
+      setAttempts(newAttempts);
+      setError(friendlyError(err.code));
+      // Log to security dashboard
+      logFailedLogin(email.trim());
+      if (newAttempts >= 3) logBruteForce(email.trim());
     }
     finally { setLoading(false); }
   };

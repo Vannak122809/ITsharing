@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import AuthModal from '../components/AuthModal';
 import { checkDownloadLimit, formatRetryTime } from '../utils/rateLimiter';
+import { logRateLimit } from '../utils/securityLogger';
 
 // Custom Animated Folder Icon
 const ModernFolderIcon = ({ size = 64, color = "#3b82f6" }) => (
@@ -117,6 +118,7 @@ const Documents = () => {
     if (!allowed) {
       const { toast } = await import('react-hot-toast');
       toast.error(`Slow down! Try again in ${formatRetryTime(retryAfterMs)}`);
+      logRateLimit('/documents');
       return;
     }
     setDownloadingId(docId);

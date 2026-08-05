@@ -1,0 +1,361 @@
+import React, { useState, useEffect } from 'react';
+import { db } from '../firebase';
+import {
+  collection, query, orderBy, limit, onSnapshot, where, getDocs
+} from 'firebase/firestore';
+import {
+  Shield, AlertTriangle, Globe, MapPin, Monitor, Clock,
+  User, Wifi, TrendingUp, Eye, Filter, RefreshCw, Download,
+  XCircle, ChevronDown, ChevronUp, Activity, Lock, Zap
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const THREAT_COLORS = {
+  high:   { bg: 'rgba(239,68,68,0.12)',   border: '#ef4444', text: '#ef4444',   label: 'HIGH'   },
+  medium: { bg: 'rgba(245,158,11,0.12)',  border: '#f59e0b', text: '#f59e0b',   label: 'MEDIUM' },
+  low:    { bg: 'rgba(34,197,94,0.12)',   border: '#22c55e', text: '#22c55e',   label: 'LOW'    },
+};
+
+const EVENT_META = {
+  failed_login:         { icon: Lock,          label: 'Failed Login',          color: '#f59e0b' },
+  brute_force_detected: { icon: AlertTriangle, label: 'Brute Force',           color: '#ef4444' },
+  rate_limit_hit:       { icon: Zap,           label: 'Rate Limit',            color: '#8b5cf6' },
+  unauthorized_access:  { icon: XCircle,       label: 'Unauthorized',          color: '#ef4444' },
+  suspicious_request:   { icon: Eye,           label: 'Suspicious',            color: '#f59e0b' },
+  blocked_download:     { icon: Download,      label: 'Blocked Download',      color: '#3b82f6' },
+  admin_access_denied:  { icon: Shield,        label: 'Admin Denied',          color: '#ef4444' },
+};
+
+function getThreatLevel(score) {
+  if (score >= 50) return 'high';
+  if (score >= 20) return 'medium';
+  return 'low';
+}
+
+function timeAgo(isoStr) {
+  const diff = Date.now() - new Date(isoStr).getTime();
+  const s = Math.floor(diff / 1000);
+  if (s < 60)  return `${s}s ago`;
+  if (s < 3600) return `${Math.floor(s / 60)}m ago`;
+  if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
+  return `${Math.floor(s / 86400)}d ago`;
+}
+
+function StatCard({ icon: Icon, label, value, color, sub }) {
+  return (
+    <div style={{
+      background: 'var(--surface)', border: '1px solid var(--surface-border)',
+      borderRadius: '20px', padding: '24px', display: 'flex', flexDirection: 'column', gap: '8px'
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: 600 }}>{label}</span>
+        <div style={{ background: `${color}20`, padding: '8px', borderRadius: '12px' }}>
+          <Icon size={18} color={color} />
+        </div>
+      </div>
+      <span style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--text-main)', lineHeight: 1 }}>{value}</span>
+      {sub && <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{sub}</span>}
+    </div>
+  );
+}
+
+function LogRow({ log, expanded, onToggle }) {
+  const level   = getThreatLevel(log.threatScore || 0);
+  const colors  = THREAT_COLORS[level];
+  const evMeta  = EVENT_META[log.eventType] || { icon: Shield, label: log.eventType, color: '#64748b' };
+  const EvIcon  = evMeta.icon;
+  const flagUrl = log.countryCode ? `https://flagcdn.com/24x18/${log.countryCode.toLowerCase()}.png` : null;
+
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      style={{
+        background: colors.bg, border: `1px solid ${colors.border}30`,
+        borderRadius: '16px', overflow: 'hidden', marginBottom: '8px',
+      }}
+    >
+      {/* Summary Row */}
+      <div
+        onClick={onToggle}
+        style={{
+          display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr auto',
+          gap: '16px', padding: '16px 20px', alignItems: 'center', cursor: 'pointer',
+        }}
+      >
+        {/* Event type */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ background: `${evMeta.color}20`, padding: '8px', borderRadius: '10px' }}>
+            <EvIcon size={16} color={evMeta.color} />
+          </div>
+          <div>
+            <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-main)' }}>{evMeta.label}</div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{timeAgo(log.timestamp)}</div>
+          </div>
+        </div>
+
+        {/* IP */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Monitor size={14} color="var(--text-muted)" />
+          <span style={{ fontFamily: 'monospace', fontSize: '0.85rem', color: 'var(--text-main)', fontWeight: 600 }}>
+            {log.ip || 'Unknown'}
+          </span>
+          {(log.isProxy || log.isHosting) && (
+            <span style={{ background: '#ef444420', color: '#ef4444', fontSize: '0.65rem', fontWeight: 800, padding: '2px 6px', borderRadius: '6px' }}>
+              {log.isProxy ? 'VPN' : 'BOT'}
+            </span>
+          )}
+        </div>
+
+        {/* Location */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {flagUrl && <img src={flagUrl} alt={log.country} style={{ borderRadius: '3px' }} />}
+          <div>
+            <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-main)' }}>{log.city || '—'}</div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{log.country || '—'}</div>
+          </div>
+        </div>
+
+        {/* Threat Score */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{
+            padding: '6px 14px', borderRadius: '20px',
+            background: colors.bg, border: `1px solid ${colors.border}`,
+            color: colors.text, fontSize: '0.8rem', fontWeight: 800,
+          }}>
+            {colors.label} · {log.threatScore || 0}
+          </div>
+        </div>
+
+        {/* Expand toggle */}
+        <div style={{ color: 'var(--text-muted)' }}>
+          {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+        </div>
+      </div>
+
+      {/* Expanded Details */}
+      <AnimatePresence>
+        {expanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            style={{ overflow: 'hidden' }}
+          >
+            <div style={{
+              padding: '0 20px 20px', display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '12px',
+              borderTop: `1px solid ${colors.border}20`,
+              marginTop: '0', paddingTop: '16px',
+            }}>
+              {[
+                { label: 'Full IP',     value: log.ip },
+                { label: 'ISP',        value: log.isp },
+                { label: 'Region',     value: `${log.region}, ${log.country}` },
+                { label: 'Timezone',   value: log.timezone },
+                { label: 'Coords',     value: log.lat && log.lon ? `${log.lat}, ${log.lon}` : '—' },
+                { label: 'VPN/Proxy',  value: log.isProxy ? '⚠ Yes' : 'No' },
+                { label: 'Datacenter', value: log.isHosting ? '⚠ Yes (Bot)' : 'No' },
+                { label: 'Target Email', value: log.metaEmail || '—' },
+                { label: 'Page',       value: log.metaPage || '—' },
+                { label: 'Timestamp',  value: new Date(log.timestamp).toLocaleString() },
+              ].map(({ label, value }) => (
+                <div key={label} style={{
+                  background: 'var(--card-dark)', borderRadius: '12px', padding: '12px',
+                  border: '1px solid var(--surface-border)'
+                }}>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>{label}</div>
+                  <div style={{ fontSize: '0.9rem', color: 'var(--text-main)', fontWeight: 600, wordBreak: 'break-all' }}>{value || '—'}</div>
+                </div>
+              ))}
+
+              {/* User Agent — full width */}
+              <div style={{
+                gridColumn: '1 / -1', background: 'var(--card-dark)', borderRadius: '12px', padding: '12px',
+                border: '1px solid var(--surface-border)'
+              }}>
+                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>Browser / User-Agent</div>
+                <div style={{ fontSize: '0.82rem', color: 'var(--text-main)', fontFamily: 'monospace', wordBreak: 'break-all' }}>{log.userAgent || '—'}</div>
+              </div>
+
+              {/* Map link */}
+              {log.lat && log.lon && (
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <a
+                    href={`https://www.openstreetmap.org/?mlat=${log.lat}&mlon=${log.lon}&zoom=10`}
+                    target="_blank" rel="noopener noreferrer"
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: '8px',
+                      background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
+                      color: '#fff', padding: '10px 20px', borderRadius: '12px',
+                      fontWeight: 700, fontSize: '0.85rem', textDecoration: 'none',
+                    }}
+                  >
+                    <MapPin size={14} /> View Location on Map
+                  </a>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+}
+
+const SecurityDashboard = ({ user }) => {
+  const [logs, setLogs]             = useState([]);
+  const [loading, setLoading]       = useState(true);
+  const [expandedId, setExpandedId] = useState(null);
+  const [filterEvent, setFilterEvent] = useState('all');
+  const [filterLevel, setFilterLevel] = useState('all');
+
+  useEffect(() => {
+    const q = query(
+      collection(db, 'security_logs'),
+      orderBy('timestamp', 'desc'),
+      limit(200)
+    );
+    const unsub = onSnapshot(q, (snap) => {
+      setLogs(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      setLoading(false);
+    });
+    return () => unsub();
+  }, []);
+
+  // Stats
+  const total       = logs.length;
+  const highThreats = logs.filter(l => (l.threatScore || 0) >= 50).length;
+  const vpnCount    = logs.filter(l => l.isProxy).length;
+  const bruteForces = logs.filter(l => l.eventType === 'brute_force_detected').length;
+  const uniqueIPs   = new Set(logs.map(l => l.ip)).size;
+
+  // Filter
+  const filtered = logs.filter(l => {
+    const levelMatch = filterLevel === 'all' || getThreatLevel(l.threatScore || 0) === filterLevel;
+    const eventMatch = filterEvent === 'all' || l.eventType === filterEvent;
+    return levelMatch && eventMatch;
+  });
+
+  // Export to CSV
+  const exportCSV = () => {
+    const headers = ['Timestamp', 'Event', 'IP', 'Country', 'City', 'ISP', 'VPN', 'ThreatScore', 'Email', 'UserAgent'];
+    const rows = logs.map(l => [
+      l.timestamp, l.eventType, l.ip, l.country, l.city, l.isp,
+      l.isProxy ? 'Yes' : 'No', l.threatScore, l.metaEmail, `"${(l.userAgent || '').replace(/"/g, "'")}"`
+    ]);
+    const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `security_logs_${Date.now()}.csv`;
+    link.click();
+  };
+
+  return (
+    <div style={{ paddingTop: '90px', minHeight: '100vh' }}>
+      <div className="container" style={{ maxWidth: '1400px', paddingBottom: '60px' }}>
+
+        {/* Header */}
+        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} style={{ marginBottom: '40px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+            <div>
+              <h1 style={{ fontSize: '2rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ background: 'linear-gradient(135deg, #ef4444, #f59e0b)', padding: '10px', borderRadius: '16px', display: 'flex' }}>
+                  <Shield size={24} color="#fff" />
+                </span>
+                Security Dashboard
+              </h1>
+              <p style={{ color: 'var(--text-muted)', marginTop: '6px' }}>
+                Real-time attack monitor · Last {total} events
+              </p>
+            </div>
+            <button
+              onClick={exportCSV}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '8px',
+                background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
+                color: '#fff', border: 'none', padding: '12px 24px',
+                borderRadius: '14px', fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem',
+              }}
+            >
+              <Download size={16} /> Export CSV
+            </button>
+          </div>
+        </motion.div>
+
+        {/* Stats Grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px', marginBottom: '32px' }}>
+          <StatCard icon={Activity}      label="Total Events"    value={total}       color="#3b82f6" sub="All time" />
+          <StatCard icon={AlertTriangle} label="High Threats"    value={highThreats} color="#ef4444" sub="Score ≥ 50" />
+          <StatCard icon={Wifi}          label="VPN / Proxy IPs" value={vpnCount}    color="#f59e0b" sub="Suspicious origin" />
+          <StatCard icon={Globe}         label="Unique IPs"      value={uniqueIPs}   color="#10b981" sub="Distinct attackers" />
+          <StatCard icon={Lock}          label="Brute Forces"    value={bruteForces} color="#ef4444" sub="3+ failed logins" />
+        </div>
+
+        {/* Filters */}
+        <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', flexWrap: 'wrap', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--surface)', padding: '10px 16px', borderRadius: '12px', border: '1px solid var(--surface-border)' }}>
+            <Filter size={14} color="var(--text-muted)" />
+            <select value={filterEvent} onChange={e => setFilterEvent(e.target.value)}
+              style={{ border: 'none', background: 'transparent', color: 'var(--text-main)', fontWeight: 600, outline: 'none', cursor: 'pointer' }}>
+              <option value="all">All Events</option>
+              {Object.entries(EVENT_META).map(([key, meta]) => (
+                <option key={key} value={key}>{meta.label}</option>
+              ))}
+            </select>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--surface)', padding: '10px 16px', borderRadius: '12px', border: '1px solid var(--surface-border)' }}>
+            <AlertTriangle size={14} color="var(--text-muted)" />
+            <select value={filterLevel} onChange={e => setFilterLevel(e.target.value)}
+              style={{ border: 'none', background: 'transparent', color: 'var(--text-main)', fontWeight: 600, outline: 'none', cursor: 'pointer' }}>
+              <option value="all">All Levels</option>
+              <option value="high">High Threat</option>
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+            </select>
+          </div>
+          <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginLeft: 'auto' }}>
+            Showing {filtered.length} of {total} events
+          </span>
+        </div>
+
+        {/* Column Headers */}
+        <div style={{
+          display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr auto',
+          gap: '16px', padding: '10px 20px', marginBottom: '8px',
+          color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 700,
+          textTransform: 'uppercase', letterSpacing: '0.08em',
+        }}>
+          <span>Event</span><span>IP Address</span><span>Location</span><span>Threat Level</span><span />
+        </div>
+
+        {/* Log Rows */}
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: '60px', color: 'var(--text-muted)' }}>
+            <RefreshCw size={32} className="spin" />
+            <p style={{ marginTop: '16px' }}>Loading security events...</p>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '60px', color: 'var(--text-muted)' }}>
+            <Shield size={48} style={{ opacity: 0.3, marginBottom: '16px' }} />
+            <p>No security events match your filters.</p>
+          </div>
+        ) : (
+          filtered.map(log => (
+            <LogRow
+              key={log.id}
+              log={log}
+              expanded={expandedId === log.id}
+              onToggle={() => setExpandedId(expandedId === log.id ? null : log.id)}
+            />
+          ))
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default SecurityDashboard;
