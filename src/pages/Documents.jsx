@@ -11,6 +11,7 @@ import {
   List, Search, File, Loader2, MoreHorizontal 
 } from 'lucide-react';
 import AuthModal from '../components/AuthModal';
+import { checkDownloadLimit, formatRetryTime } from '../utils/rateLimiter';
 
 // Custom Animated Folder Icon
 const ModernFolderIcon = ({ size = 64, color = "#3b82f6" }) => (
@@ -109,6 +110,15 @@ const Documents = () => {
     if (authLoading) return;
     if (isGuest) { setAuthModalOpen(true); return; }
     if (!url) return;
+
+    // Rate limiting — max 20 downloads per 60s
+    const uid = user?.uid || 'anon';
+    const { allowed, retryAfterMs } = checkDownloadLimit(uid);
+    if (!allowed) {
+      const { toast } = await import('react-hot-toast');
+      toast.error(`Slow down! Try again in ${formatRetryTime(retryAfterMs)}`);
+      return;
+    }
     setDownloadingId(docId);
     try {
       const response = await fetch(url + '?t=' + Date.now());
@@ -135,6 +145,17 @@ const Documents = () => {
   const handleViewFile = (url) => {
     if (authLoading) return;
     if (isGuest) { setAuthModalOpen(true); return; }
+
+    // Rate limiting — shares download budget
+    const uid = user?.uid || 'anon';
+    const { allowed, retryAfterMs } = checkDownloadLimit(uid);
+    if (!allowed) {
+      import('react-hot-toast').then(({ toast }) =>
+        toast.error(`Slow down! Try again in ${formatRetryTime(retryAfterMs)}`)
+      );
+      return;
+    }
+
     if (url) window.open(url, '_blank');
   };
 

@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 import { db } from '../firebase';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { checkAILimit, formatRetryTime } from '../utils/rateLimiter';
 
 const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY || '');
 
@@ -169,6 +170,14 @@ const FrameEditor = () => {
 
   const generateAIWish = async () => {
     const currentCat = selectedFrame?.category || 'Birthday';
+
+    // Rate limiting — max 3 AI generations per 30s
+    const { allowed, retryAfterMs } = checkAILimit('global');
+    if (!allowed) {
+      toast.error(`AI cooldown. Try again in ${formatRetryTime(retryAfterMs)}`);
+      return;
+    }
+
     setIsGeneratingAI(true);
     setAiRecommendations([]);
     const toastId = toast.loading('AIកំពុងរៀបចំពាក្យជូនពរ... (AI is thinking)');

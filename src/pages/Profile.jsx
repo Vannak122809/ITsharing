@@ -10,8 +10,7 @@ import { sendPasswordResetEmail, sendEmailVerification, deleteUser } from 'fireb
 import { auth } from '../firebase';
 import { toast } from 'react-hot-toast';
 import { useLanguage } from '../LanguageContext';
-import { PutObjectCommand } from '@aws-sdk/client-s3';
-import { r2Client, BUCKET_NAME } from '../r2';
+import { uploadToR2 } from '../r2Upload';
 
 // ────────────────────────────────────────────────────────────────────────────
 // CONSTANTS
@@ -24,27 +23,6 @@ const MAX_COVER_MB  = 4;
 // ────────────────────────────────────────────────────────────────────────────
 // UPLOAD FUNCTION (Upload → R2 → return public URL)
 // ────────────────────────────────────────────────────────────────────────────
-/**
- * Upload image to R2 and return its public URL.
- * @param {File}   file  - image selected by user
- * @param {string} path  - R2 key, e.g. "images/avatars/uid123.jpg"
- * @returns {Promise<string>} full public CDN URL
- */
-const uploadImageAndGetUrl = async (file, path) => {
-  // Step 1: read file as binary
-  const buffer = await file.arrayBuffer();
-
-  // Step 2: upload to R2 bucket
-  await r2Client.send(new PutObjectCommand({
-    Bucket:      BUCKET_NAME,
-    Key:         path,
-    Body:        new Uint8Array(buffer),
-    ContentType: file.type,
-  }));
-
-  // Step 3: build public URL (cache-busted so browser always fetches fresh)
-  return `${PUBLIC_CDN}/${path}?v=${Date.now()}`;
-};
 
 // ────────────────────────────────────────────────────────────────────────────
 // INLINE-EDITABLE FIELD COMPONENT
@@ -196,8 +174,8 @@ const Profile = ({ user }) => {
       if (type === 'avatar') setAvatarUrl(localPreview);
       else                   setCoverUrl(localPreview);
 
-      // Upload to R2 → get public URL
-      const publicUrl = await uploadImageAndGetUrl(file, path);
+      // Upload to R2 via secure server-side signed URL → get public URL
+      const publicUrl = await uploadToR2(file, path, type === 'avatar' ? 'image' : 'image');
 
       // ── STEP 2: SAVE URL to Firestore ──────────────────────────────────
       const field = type === 'avatar' ? 'avatarUrl' : 'coverUrl';

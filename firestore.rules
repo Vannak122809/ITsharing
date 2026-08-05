@@ -1,0 +1,102 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helper functions ────────────────────────────────────────────────────
+
+    // Check if the requester is logged in (not anonymous)
+    function isLoggedIn() {
+      return request.auth != null && !request.auth.token.firebase.sign_in_provider.matches('anonymous');
+    }
+
+    // Check if the requester owns the resource
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    // Check if the requester has admin custom claim
+    function isAdmin() {
+      return request.auth != null && request.auth.token.admin == true;
+    }
+
+    // Validate string field — not empty, not too long
+    function isValidString(val, maxLen) {
+      return val is string && val.size() > 0 && val.size() <= maxLen;
+    }
+
+    // ── User Profiles (/users/{userId}) ────────────────────────────────────
+    match /users/{userId} {
+      // Any logged-in user can read profiles (for community features)
+      allow read: if isLoggedIn();
+
+      // Users can only write their own profile
+      allow create: if isOwner(userId)
+        && isValidString(request.resource.data.nickname, 80);
+
+      allow update: if isOwner(userId)
+        // Prevent users from granting themselves admin
+        && !('admin' in request.resource.data)
+        && !('role' in request.resource.data);
+
+      allow delete: if isOwner(userId) || isAdmin();
+    }
+
+    // ── Assets (documents, software, frames) (/assets/{assetId}) ───────────
+    match /assets/{assetId} {
+      // Any logged-in user can read assets
+      allow read: if isLoggedIn();
+
+      // Only admins can create/update/delete assets
+      allow write: if isAdmin();
+    }
+
+    // ── Courses (/courses/{courseId}) ───────────────────────────────────────
+    match /courses/{courseId} {
+      allow read: if isLoggedIn();
+      allow write: if isAdmin();
+    }
+
+    // ── Community Posts (/posts/{postId}) ───────────────────────────────────
+    match /posts/{postId} {
+      allow read: if isLoggedIn();
+
+      // Logged-in users can create posts
+      allow create: if isLoggedIn()
+        && isValidString(request.resource.data.title, 200)
+        && isValidString(request.resource.data.content, 5000)
+        // Enforce the author UID matches the real user
+        && request.resource.data.authorId == request.auth.uid;
+
+      // Users can only update/delete their own posts; admins can delete any
+      allow update: if isOwner(resource.data.authorId);
+      allow delete: if isOwner(resource.data.authorId) || isAdmin();
+    }
+
+    // ── Community Comments (/posts/{postId}/comments/{commentId}) ───────────
+    match /posts/{postId}/comments/{commentId} {
+      allow read: if isLoggedIn();
+
+      allow create: if isLoggedIn()
+        && isValidString(request.resource.data.text, 1000)
+        && request.resource.data.authorId == request.auth.uid;
+
+      allow update: if isOwner(resource.data.authorId);
+      allow delete: if isOwner(resource.data.authorId) || isAdmin();
+    }
+
+    // ── Bookmarks (/bookmarks/{userId}) ─────────────────────────────────────
+    match /bookmarks/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // ── Bookmarks sub-collection ─────────────────────────────────────────────
+    match /bookmarks/{userId}/{document=**} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // ── Deny everything else by default ─────────────────────────────────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
