@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AttackMap from '../components/AttackMap';
+import ConfirmModal from '../components/ConfirmModal';
 
 const THREAT_COLORS = {
   high:   { bg: 'rgba(239,68,68,0.12)',   border: '#ef4444', text: '#ef4444',   label: 'HIGH'   },
@@ -243,6 +244,7 @@ const SecurityDashboard = ({ user }) => {
   const [activeView, setActiveView]    = useState('logs');
   const [blockedEntities, setBlocked]  = useState([]);
   const [actionLoading, setActLoad]    = useState({}); // { [key]: true }
+  const [modalConfig, setModalConfig]  = useState({ isOpen: false, title: '', message: '', confirmText: 'Confirm', onConfirm: null, type: 'danger' });
 
   // ── Helper: manage user action with API + Firestore Fallback ────────────
   const safeDocId = (str) => (str || '').replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 100);
@@ -581,8 +583,19 @@ const SecurityDashboard = ({ user }) => {
                       {/* Clear logs */}
                       <button
                         disabled={actionLoading[`clear_${g.ip}`]}
-                        onClick={() => window.confirm(`Clear all security logs for IP ${g.ip}?`) &&
-                          manageUser('clear_logs', { ip: g.ip }, `clear_${g.ip}`)}
+                        onClick={() =>
+                          setModalConfig({
+                            isOpen: true,
+                            title: 'Clear Security Logs',
+                            message: `Are you sure you want to clear all security logs for IP ${g.ip}? This action cannot be undone.`,
+                            confirmText: 'Yes, Clear Logs',
+                            type: 'danger',
+                            onConfirm: async () => {
+                              await manageUser('clear_logs', { ip: g.ip }, `clear_${g.ip}`);
+                              setModalConfig(prev => ({ ...prev, isOpen: false }));
+                            },
+                          })
+                        }
                         style={{
                           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px',
                           padding: '7px 12px', borderRadius: '10px', border: '1px solid var(--surface-border)',
@@ -722,6 +735,17 @@ const SecurityDashboard = ({ user }) => {
         )}
         </>)}
       </div>
+
+      {/* Custom Confirmation Modal */}
+      <ConfirmModal
+        isOpen={modalConfig.isOpen}
+        onClose={() => setModalConfig(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={modalConfig.onConfirm}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        confirmText={modalConfig.confirmText}
+        type={modalConfig.type}
+      />
     </div>
   );
 };
