@@ -63,16 +63,27 @@ const Login = () => {
     setView(v);
   };
 
-  const friendlyError = (code) => ({
-    'auth/invalid-email':       'Invalid email format.',
-    'auth/user-not-found':      'Incorrect email or password.', // Unified for security
-    'auth/wrong-password':      'Incorrect email or password.', // Unified for security
-    'auth/invalid-credential':  'Incorrect email or password.',
-    'auth/email-already-in-use':'This email is already registered.',
-    'auth/weak-password':       'Password must be at least 6 characters.',
-    'auth/popup-closed-by-user':'Google sign-in was cancelled.',
-    'auth/too-many-requests':   'Too many attempts. Please try again later.',
-  }[code] || 'Something went wrong. Please try again.');
+  const friendlyError = (code, rawMsg) => {
+    console.error('[FirebaseAuthError]', { code, rawMsg });
+    const mapped = {
+      'auth/invalid-email':        'Invalid email format.',
+      'auth/user-not-found':       'Incorrect email or password.', // Unified for security
+      'auth/wrong-password':       'Incorrect email or password.', // Unified for security
+      'auth/invalid-credential':   'Incorrect email or password.',
+      'auth/email-already-in-use': 'This email is already registered.',
+      'auth/weak-password':        'Password must be at least 6 characters.',
+      'auth/popup-closed-by-user': 'Google sign-in was cancelled.',
+      'auth/too-many-requests':    'Too many attempts. Please try again later.',
+      'auth/unauthorized-domain':  'Domain not authorized in Firebase Console (Go to Firebase Console -> Auth -> Settings -> Authorized Domains).',
+      'auth/operation-not-allowed':'Email/Password sign-in is disabled in Firebase Console.',
+      'auth/network-request-failed':'Network request failed. Please check your internet connection or CORS rules.',
+      'auth/internal-error':       'Firebase internal error. Please check your configuration.',
+    }[code];
+
+    if (mapped) return mapped;
+    if (rawMsg) return `${rawMsg} (${code || 'error'})`;
+    return 'Something went wrong. Please try again.';
+  };
 
   // ── Handlers ──────────────────────────────────────────────────────
   const handleLogin = async (e) => {
@@ -105,7 +116,7 @@ const Login = () => {
     } catch (err) {
       const newAttempts = attempts + 1;
       setAttempts(newAttempts);
-      setError(friendlyError(err.code));
+      setError(friendlyError(err.code, err.message));
       // Log to security dashboard
       logFailedLogin(email.trim());
       if (newAttempts >= 3) logBruteForce(email.trim());
@@ -134,7 +145,7 @@ const Login = () => {
       setFullName('');
       setPassword('');
       setConfirm('');
-    } catch (err) { setError(friendlyError(err.code)); }
+    } catch (err) { setError(friendlyError(err.code, err.message)); }
     finally { setLoading(false); }
   };
 
@@ -143,7 +154,7 @@ const Login = () => {
     try {
       await sendPasswordResetEmail(auth, email);
       setSuccess('Reset link sent! Check your email inbox.');
-    } catch (err) { setError(friendlyError(err.code)); }
+    } catch (err) { setError(friendlyError(err.code, err.message)); }
     finally { setLoading(false); }
   };
 
@@ -151,7 +162,7 @@ const Login = () => {
     if (botField) return;
     setError(''); setLoading(true);
     try { await signInWithPopup(auth, googleProvider); navigate('/'); }
-    catch (err) { setError(friendlyError(err.code)); }
+    catch (err) { setError(friendlyError(err.code, err.message)); }
     finally { setLoading(false); }
   };
 
