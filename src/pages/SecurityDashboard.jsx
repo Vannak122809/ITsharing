@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../firebase';
 import {
-  collection, query, orderBy, limit, onSnapshot, where, getDocs
+  collection, query, orderBy, limit, onSnapshot, doc, setDoc, deleteDoc
 } from 'firebase/firestore';
 import {
   Shield, AlertTriangle, Globe, MapPin, Monitor, Clock,
   User, Wifi, TrendingUp, Eye, Filter, RefreshCw, Download,
-  XCircle, ChevronDown, ChevronUp, Activity, Lock, Zap
+  XCircle, ChevronDown, ChevronUp, Activity, Lock, Zap,
+  Unlock, Ban, Trash2, CheckCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AttackMap from '../components/AttackMap';
@@ -239,8 +240,38 @@ const SecurityDashboard = ({ user }) => {
   const [expandedId, setExpandedId]    = useState(null);
   const [filterEvent, setFilterEvent]  = useState('all');
   const [filterLevel, setFilterLevel]  = useState('all');
-  const [activeView, setActiveView]    = useState('logs'); // 'logs' | 'map' | 'brute'
+  const [activeView, setActiveView]    = useState('logs');
+  const [blockedEntities, setBlocked]  = useState([]);
+  const [actionLoading, setActLoad]    = useState({}); // { [key]: true }
 
+  // ── Helper: call manage-user API ──────────────────────────────────────────
+  const API_BASE = import.meta.env.DEV ? 'http://localhost:3000' : '';
+
+  const manageUser = async (action, payload, key) => {
+    setActLoad(p => ({ ...p, [key]: true }));
+    try {
+      const res = await fetch(`${API_BASE}/api/manage-user`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action, ...payload }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        const { toast } = await import('react-hot-toast');
+        toast.success(data.message || 'Done');
+      } else {
+        const { toast } = await import('react-hot-toast');
+        toast.error(data.error || 'Failed');
+      }
+    } catch {
+      const { toast } = await import('react-hot-toast');
+      toast.error('Network error');
+    } finally {
+      setActLoad(p => ({ ...p, [key]: false }));
+    }
+  };
+
+  // Listen for security logs
   useEffect(() => {
     const q = query(
       collection(db, 'security_logs'),
@@ -250,6 +281,15 @@ const SecurityDashboard = ({ user }) => {
     const unsub = onSnapshot(q, (snap) => {
       setLogs(snap.docs.map(d => ({ id: d.id, ...d.data() })));
       setLoading(false);
+    });
+    return () => unsub();
+  }, []);
+
+  // Listen for blocked entities (live)
+  useEffect(() => {
+    const q = query(collection(db, 'blocked_entities'), limit(200));
+    const unsub = onSnapshot(q, snap => {
+      setBlocked(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     });
     return () => unsub();
   }, []);
@@ -345,9 +385,10 @@ const SecurityDashboard = ({ user }) => {
         {/* Tabs */}
         <div style={{ display: 'flex', gap: '8px', marginBottom: '32px', background: 'var(--surface)', padding: '6px', borderRadius: '16px', border: '1px solid var(--surface-border)', width: 'fit-content' }}>
           {[
-            { id: 'logs',  label: '📋 Event Logs' },
-            { id: 'map',   label: '🗺️ Attack Map' },
-            { id: 'brute', label: `⚠️ Brute Force (${bruteByIP.length})` },
+            { id: 'logs',    label: '📋 Event Logs' },
+            { id: 'map',     label: '🗺️ Attack Map' },
+            { id: 'brute',   label: `⚠️ Brute Force (${bruteByIP.length})` },
+            { id: 'blocked', label: `🚫 Blocked (${blockedEntities.length})` },
           ].map(tab => (
             <button key={tab.id} onClick={() => setActiveView(tab.id)}
               style={{
@@ -424,17 +465,149 @@ const SecurityDashboard = ({ user }) => {
                     ))}
                     {g.emails.size > 3 && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>+{g.emails.size - 3} more</div>}
                   </div>
-                  {/* Attempts count */}
+                  {/* Attempts count + Actions */}
                   <div style={{ textAlign: 'center' }}>
                     <div style={{ fontSize: '2rem', fontWeight: 900, color: '#ef4444', lineHeight: 1 }}>{g.count}</div>
-                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 700 }}>ATTEMPTS</div>
-                    <div style={{ marginTop: '8px', fontSize: '0.75rem', background: 'rgba(239,68,68,0.15)', color: '#ef4444', padding: '4px 10px', borderRadius: '8px', fontWeight: 700 }}>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 700, marginBottom: '10px' }}>ATTEMPTS</div>
+                    <div style={{ marginBottom: '8px', fontSize: '0.75rem', background: 'rgba(239,68,68,0.15)', color: '#ef4444', padding: '4px 10px', borderRadius: '8px', fontWeight: 700 }}>
                       Score: {g.threatScore}
+                    </div>
+                    {/* Action Buttons */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '10px' }}>
+                      {/* Block / Unblock IP */}
+                      {blockedEntities.some(b => b.ip === g.ip) ? (
+                        <button
+                          disabled={actionLoading[`unblock_${g.ip}`]}
+                          onClick={() => manageUser('unblock_ip', { ip: g.ip }, `unblock_${g.ip}`)}
+                          style={{
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px',
+                            padding: '7px 12px', borderRadius: '10px', border: '1px solid #22c55e',
+                            background: 'rgba(34,197,94,0.12)', color: '#22c55e',
+                            fontWeight: 700, fontSize: '0.75rem', cursor: 'pointer',
+                          }}>
+                          <Unlock size={13} /> {actionLoading[`unblock_${g.ip}`] ? '...' : 'Unblock IP'}
+                        </button>
+                      ) : (
+                        <button
+                          disabled={actionLoading[`block_${g.ip}`]}
+                          onClick={() => manageUser('block_ip', { ip: g.ip, note: `Brute force — ${g.count} attempts` }, `block_${g.ip}`)}
+                          style={{
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px',
+                            padding: '7px 12px', borderRadius: '10px', border: '1px solid #ef4444',
+                            background: 'rgba(239,68,68,0.12)', color: '#ef4444',
+                            fontWeight: 700, fontSize: '0.75rem', cursor: 'pointer',
+                          }}>
+                          <Ban size={13} /> {actionLoading[`block_${g.ip}`] ? '...' : 'Block IP'}
+                        </button>
+                      )}
+                      {/* Block / Unblock email */}
+                      {[...g.emails][0] && (
+                        blockedEntities.some(b => b.email === [...g.emails][0]) ? (
+                          <button
+                            disabled={actionLoading[`unblock_email_${g.ip}`]}
+                            onClick={() => manageUser('unblock_email', { email: [...g.emails][0] }, `unblock_email_${g.ip}`)}
+                            style={{
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px',
+                              padding: '7px 12px', borderRadius: '10px', border: '1px solid #22c55e',
+                              background: 'rgba(34,197,94,0.12)', color: '#22c55e',
+                              fontWeight: 700, fontSize: '0.75rem', cursor: 'pointer',
+                            }}>
+                            <Unlock size={13} /> {actionLoading[`unblock_email_${g.ip}`] ? '...' : 'Unlock Account'}
+                          </button>
+                        ) : (
+                          <button
+                            disabled={actionLoading[`block_email_${g.ip}`]}
+                            onClick={() => manageUser('block_email', { email: [...g.emails][0] }, `block_email_${g.ip}`)}
+                            style={{
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px',
+                              padding: '7px 12px', borderRadius: '10px', border: '1px solid #f59e0b',
+                              background: 'rgba(245,158,11,0.12)', color: '#f59e0b',
+                              fontWeight: 700, fontSize: '0.75rem', cursor: 'pointer',
+                            }}>
+                            <Ban size={13} /> {actionLoading[`block_email_${g.ip}`] ? '...' : 'Block Account'}
+                          </button>
+                        )
+                      )}
+                      {/* Clear logs */}
+                      <button
+                        disabled={actionLoading[`clear_${g.ip}`]}
+                        onClick={() => window.confirm(`Clear all security logs for IP ${g.ip}?`) &&
+                          manageUser('clear_logs', { ip: g.ip }, `clear_${g.ip}`)}
+                        style={{
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px',
+                          padding: '7px 12px', borderRadius: '10px', border: '1px solid var(--surface-border)',
+                          background: 'var(--surface-badge)', color: 'var(--text-muted)',
+                          fontWeight: 700, fontSize: '0.75rem', cursor: 'pointer',
+                        }}>
+                        <Trash2 size={13} /> {actionLoading[`clear_${g.ip}`] ? '...' : 'Clear Logs'}
+                      </button>
                     </div>
                   </div>
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {/* ── BLOCKED TAB ─────────────────────────────────────────────── */}
+        {activeView === 'blocked' && (
+          <div>
+            <p style={{ color: 'var(--text-muted)', marginBottom: '20px', fontSize: '0.9rem' }}>
+              Currently blocked IPs and accounts. These entities are denied access to the app.
+            </p>
+            {blockedEntities.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '60px', color: 'var(--text-muted)', background: 'var(--surface)', borderRadius: '20px', border: '1px solid var(--surface-border)' }}>
+                <CheckCircle size={48} style={{ opacity: 0.3, marginBottom: '16px', color: '#22c55e' }} />
+                <p>No blocked entities. Your app is clean.</p>
+              </div>
+            ) : blockedEntities.map(b => (
+              <div key={b.id} style={{
+                background: 'var(--surface)', border: '1px solid var(--surface-border)',
+                borderRadius: '14px', padding: '16px 20px', marginBottom: '10px',
+                display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap',
+              }}>
+                {/* Type badge */}
+                <span style={{
+                  padding: '4px 12px', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 800,
+                  background: b.type === 'ip' ? 'rgba(239,68,68,0.15)' : 'rgba(245,158,11,0.15)',
+                  color: b.type === 'ip' ? '#ef4444' : '#f59e0b',
+                  border: `1px solid ${b.type === 'ip' ? '#ef444440' : '#f59e0b40'}`,
+                  textTransform: 'uppercase',
+                }}>
+                  {b.type === 'ip' ? '🌐 IP' : '👤 Account'}
+                </span>
+                {/* Identity */}
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontFamily: 'monospace', fontWeight: 800, fontSize: '0.95rem', color: 'var(--text-main)' }}>
+                    {b.ip || b.email || '—'}
+                  </div>
+                  {b.note && <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '2px' }}>{b.note}</div>}
+                </div>
+                {/* Blocked at */}
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                  {b.blockedAt ? new Date(b.blockedAt).toLocaleString() : '—'}
+                </div>
+                {/* Unlock button */}
+                <button
+                  disabled={actionLoading[`unblock_b_${b.id}`]}
+                  onClick={() => {
+                    const action = b.type === 'ip' ? 'unblock_ip' : 'unblock_email';
+                    const payload = b.type === 'ip' ? { ip: b.ip } : { email: b.email };
+                    manageUser(action, payload, `unblock_b_${b.id}`);
+                  }}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '6px',
+                    padding: '9px 18px', borderRadius: '10px',
+                    background: 'linear-gradient(135deg, #22c55e, #16a34a)',
+                    color: '#fff', border: 'none', fontWeight: 700,
+                    fontSize: '0.85rem', cursor: 'pointer',
+                    opacity: actionLoading[`unblock_b_${b.id}`] ? 0.6 : 1,
+                  }}>
+                  <Unlock size={15} />
+                  {actionLoading[`unblock_b_${b.id}`] ? 'Unlocking...' : 'Unlock'}
+                </button>
+              </div>
+            ))}
           </div>
         )}
 
