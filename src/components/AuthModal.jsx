@@ -11,23 +11,23 @@ const AuthModal = ({ isOpen, onClose, message = 'You need to be logged in to per
       {isOpen && (
         <>
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
+            animate={{ opacity: 1, backdropFilter: 'blur(8px)' }}
+            exit={{ opacity: 0, backdropFilter: 'blur(0px)' }}
+            transition={{ duration: 0.3, ease: 'easeInOut' }}
             onClick={onClose}
             style={{
               position: 'fixed',
               top: 0, left: 0, right: 0, bottom: 0,
               background: 'rgba(0, 0, 0, 0.6)',
-              backdropFilter: 'blur(8px)',
               zIndex: 99999,
             }}
           />
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            initial={{ opacity: 0, scale: 0.95, y: 15 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            exit={{ opacity: 0, scale: 0.95, y: 15 }}
+            transition={{ type: 'spring', damping: 20, stiffness: 250, mass: 0.8 }}
             style={{
               position: 'fixed',
               top: '50%', left: '50%',
@@ -37,7 +37,7 @@ const AuthModal = ({ isOpen, onClose, message = 'You need to be logged in to per
               maxWidth: '420px',
             }}
           >
-            <div className="glass-panel" style={{ padding: '32px', borderRadius: '24px', position: 'relative', textAlign: 'center', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
+            <div className="glass-panel" style={{ padding: '32px', borderRadius: '24px', position: 'relative', textAlign: 'center', border: '1px solid var(--surface-border)' }}>
               <button 
                 onClick={onClose}
                 style={{ position: 'absolute', top: '16px', right: '16px', background: 'var(--surface-badge)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', cursor: 'pointer' }}

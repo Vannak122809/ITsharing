@@ -1,10 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Upload, Download, Type, Image as ImageIcon, Layout, ArrowLeft, Wand2, Share2, Palette, Smile, Facebook, Instagram, MessageCircle } from 'lucide-react';
+import { Upload, Download, Type, Image as ImageIcon, Layout, ArrowLeft, Wand2, Share2, Palette, Smile, Facebook, Instagram, MessageCircle, Loader2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import CanvasStage from '../components/canvas/CanvasStage';
 import { Link } from 'react-router-dom';
 import { db } from '../firebase';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+
+const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY || '');
 
 const DEFAULT_FONTS = ['Battambang', 'Hanuman', 'Moul', 'Koulen', 'Inter'];
 const CATEGORIES = ['Birthday', 'Graduation', 'Wedding', 'Khmer New Year', 'Pchum Ben'];
@@ -45,6 +48,9 @@ const FrameEditor = () => {
   // Text Control State
   const [recipientName, setRecipientName] = useState('លោក វណ្ណៈ');
   const [wishMessage, setWishMessage] = useState('សូមជូនពរឲ្យជោគជ័យគ្រប់ភារកិច្ច');
+  const [aiRecommendations, setAiRecommendations] = useState([]);
+  const [customPrompt, setCustomPrompt] = useState('');
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [fontFamily, setFontFamily] = useState('Battambang');
   const [textColor, setTextColor] = useState('#ffffff');
   const [fontSize, setFontSize] = useState(40);
@@ -161,11 +167,39 @@ const FrameEditor = () => {
     setStickerLayers([...stickerLayers, { id: `sticker_${Date.now()}`, src }]);
   };
 
-  const generateAIWish = () => {
+  const generateAIWish = async () => {
     const currentCat = selectedFrame?.category || 'Birthday';
-    const wish = MOCK_WISHES[currentCat] || MOCK_WISHES['Birthday'];
-    setWishMessage(wish);
-    toast.success('AI Wish Generated!');
+    setIsGeneratingAI(true);
+    setAiRecommendations([]);
+    const toastId = toast.loading('AIកំពុងរៀបចំពាក្យជូនពរ... (AI is thinking)');
+    
+    try {
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const prompt = `Write exactly 3 distinct, meaningful, and beautiful congratulatory or blessing messages in Khmer language for a ${currentCat} event. ${customPrompt ? 'Specific context/instructions from user: ' + customPrompt + '.' : ''} They should be suitable to put on a greeting card or frame. Maximum 2 sentences per message. Separate each message with the exact string "|||". Only output the Khmer text, no quotes, no numbers, no translations.`;
+      
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      let text = response.text().trim();
+      text = text.replace(/^["']|["']$/g, '');
+      
+      const wishes = text.split('|||').map(w => w.trim()).filter(w => w.length > 0);
+      
+      if (wishes.length > 0) {
+        setWishMessage(wishes[0]);
+        setAiRecommendations(wishes);
+        toast.success('បង្កើតពាក្យជូនពរជោគជ័យ!', { id: toastId });
+      } else {
+        throw new Error('Failed to parse AI response');
+      }
+    } catch (error) {
+      console.error('Error generating AI wish:', error);
+      const wish = MOCK_WISHES[currentCat] || MOCK_WISHES['Birthday'];
+      setWishMessage(wish);
+      setAiRecommendations([wish]);
+      toast.success('AI Wish Generated (Fallback)!', { id: toastId });
+    } finally {
+      setIsGeneratingAI(false);
+    }
   };
 
   const generateKhmerDate = () => {
@@ -285,13 +319,27 @@ const FrameEditor = () => {
           <div className="glass-panel p-5">
             <h3 className="text-lg font-semibold flex items-center justify-between mb-4">
               <span className="flex items-center gap-2"><Type size={18} /> Add Text</span>
-              <div className="flex gap-2">
-                <button className="btn btn-sm bg-blue-600 hover:bg-blue-700 text-xs flex items-center gap-1 py-1 px-2 rounded" onClick={generateKhmerDate} title="Add Today's Date">
-                  + 📅
-                </button>
-                <button className="btn btn-sm bg-purple-600 hover:bg-purple-700 text-xs flex items-center gap-1 py-1 px-2 rounded" onClick={generateAIWish}>
-                  <Wand2 size={12} /> AI Wish
-                </button>
+              <div className="flex flex-col gap-2">
+                <input 
+                  type="text" 
+                  value={customPrompt} 
+                  onChange={(e) => setCustomPrompt(e.target.value)} 
+                  className="input-field text-xs py-1" 
+                  placeholder="AI Prompt (e.g. for my best friend, funny...)" 
+                />
+                <div className="flex gap-2">
+                  <button className="btn btn-sm bg-blue-600 hover:bg-blue-700 text-xs flex items-center gap-1 py-1 px-2 rounded" onClick={generateKhmerDate} title="Add Today's Date">
+                    + 📅
+                  </button>
+                  <button 
+                    className="btn btn-sm bg-purple-600 hover:bg-purple-700 text-xs flex items-center gap-1 py-1 px-2 rounded disabled:opacity-50 disabled:cursor-not-allowed w-full justify-center" 
+                    onClick={generateAIWish}
+                    disabled={isGeneratingAI}
+                  >
+                    {isGeneratingAI ? <Loader2 size={12} className="animate-spin" /> : <Wand2 size={12} />} 
+                    {isGeneratingAI ? 'Thinking...' : 'Generate New Text'}
+                  </button>
+                </div>
               </div>
             </h3>
             <div className="space-y-4">
@@ -308,6 +356,20 @@ const FrameEditor = () => {
                   <textarea value={wishMessage} onChange={(e) => setWishMessage(e.target.value)} className="input-field min-h-[60px]" placeholder="សូមជូនពរ..." />
                   <button className="btn btn-primary px-3" onClick={() => addTextLayer(wishMessage, 200)}>+</button>
                 </div>
+                {aiRecommendations.length > 1 && (
+                  <div className="mt-2 space-y-1">
+                    <p className="text-[10px] text-gray-400">AI Recommendations (Click to use):</p>
+                    {aiRecommendations.map((rec, idx) => (
+                      <div 
+                        key={idx} 
+                        onClick={() => setWishMessage(rec)} 
+                        className={`text-xs p-2 rounded cursor-pointer transition-colors ${wishMessage === rec ? 'bg-purple-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}`}
+                      >
+                        {rec}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="pt-2 border-t border-gray-700 grid grid-cols-2 gap-2">
@@ -344,7 +406,7 @@ const FrameEditor = () => {
                         setTextColor(e.target.value);
                         updateSelectedLayer({ fill: e.target.value });
                       }} 
-                      className="w-full h-8 rounded cursor-pointer border-0" 
+                      className="w-full h-8 rounded cursor-pointer border-0 p-0 bg-transparent" 
                     />
                   </div>
                 </div>
@@ -531,7 +593,7 @@ const FrameEditor = () => {
             </h3>
             <div className="mb-4">
               <label className="text-xs text-gray-400 mb-1 block">Canvas Background</label>
-              <input type="color" value={canvasBgColor} onChange={(e) => setCanvasBgColor(e.target.value)} className="w-full h-10 rounded cursor-pointer border-0" />
+              <input type="color" value={canvasBgColor} onChange={(e) => setCanvasBgColor(e.target.value)} className="w-full h-10 rounded cursor-pointer border-0 p-0 bg-transparent" />
             </div>
             <div>
               <label className="text-xs text-gray-400 mb-2 block">Add Stickers</label>
