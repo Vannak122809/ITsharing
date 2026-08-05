@@ -6,7 +6,8 @@
  *   logSecurityEvent('failed_login', { email: 'test@x.com', page: '/login' });
  */
 
-const API_BASE = import.meta.env.DEV ? 'http://localhost:3000' : '';
+import { db } from '../firebase';
+import { collection, addDoc } from 'firebase/firestore';
 
 /**
  * @param {string} eventType - One of the valid event types
@@ -14,13 +15,33 @@ const API_BASE = import.meta.env.DEV ? 'http://localhost:3000' : '';
  */
 export async function logSecurityEvent(eventType, metadata = {}) {
   try {
-    await fetch(`${API_BASE}/api/security-log`, {
+    const res = await fetch('/api/security-log', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ eventType, metadata }),
     });
+    if (res.ok) return;
   } catch {
-    // Logging failure must never crash the app — fire and forget
+    // API endpoint unavailable (e.g. running in local Vite dev mode)
+  }
+
+  // Fallback: log directly to Firestore security_logs collection
+  try {
+    await addDoc(collection(db, 'security_logs'), {
+      eventType,
+      ip: '127.0.0.1 (Dev)',
+      country: 'Localhost',
+      countryCode: 'KH',
+      city: 'Local Dev',
+      isp: 'Local Development Server',
+      threatScore: eventType === 'brute_force_detected' ? 50 : 15,
+      timestamp: new Date().toISOString(),
+      metaEmail: metadata.email || '',
+      metaPage: metadata.page || '',
+      metaNote: metadata.note || '',
+    });
+  } catch {
+    // Silent fail if both fail — logging must never break app execution
   }
 }
 

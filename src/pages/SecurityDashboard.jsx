@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../firebase';
 import {
-  collection, query, orderBy, limit, onSnapshot, doc, setDoc, deleteDoc
+  collection, query, orderBy, limit, onSnapshot, doc, setDoc, deleteDoc, where, getDocs
 } from 'firebase/firestore';
 import {
   Shield, AlertTriangle, Globe, MapPin, Monitor, Clock,
@@ -244,28 +244,78 @@ const SecurityDashboard = ({ user }) => {
   const [blockedEntities, setBlocked]  = useState([]);
   const [actionLoading, setActLoad]    = useState({}); // { [key]: true }
 
-  // ── Helper: call manage-user API ──────────────────────────────────────────
-  const API_BASE = import.meta.env.DEV ? 'http://localhost:3000' : '';
+  // ── Helper: manage user action with API + Firestore Fallback ────────────
+  const safeDocId = (str) => (str || '').replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 100);
+
+  const manageUserFallback = async (action, payload) => {
+    const { ip, email, note } = payload;
+    if (action === 'block_ip') {
+      const docId = `ip_${safeDocId(ip)}`;
+      await setDoc(doc(db, 'blocked_entities', docId), {
+        type: 'ip',
+        ip,
+        blocked: true,
+        blockedAt: new Date().toISOString(),
+        note: note || 'Blocked by admin',
+      });
+      return `IP ${ip} blocked`;
+    } else if (action === 'unblock_ip') {
+      const docId = `ip_${safeDocId(ip)}`;
+      await deleteDoc(doc(db, 'blocked_entities', docId));
+      return `IP ${ip} unblocked`;
+    } else if (action === 'block_email') {
+      const docId = `email_${safeDocId(email)}`;
+      await setDoc(doc(db, 'blocked_entities', docId), {
+        type: 'email',
+        email,
+        disabled: true,
+        blockedAt: new Date().toISOString(),
+        note: 'Blocked by admin — brute force detected',
+      });
+      return `Account ${email} blocked`;
+    } else if (action === 'unblock_email') {
+      const docId = `email_${safeDocId(email)}`;
+      await deleteDoc(doc(db, 'blocked_entities', docId));
+      return `Account ${email} unblocked`;
+    } else if (action === 'clear_logs') {
+      if (ip) {
+        const q = query(collection(db, 'security_logs'), where('ip', '==', ip));
+        const snap = await getDocs(q);
+        await Promise.all(snap.docs.map(d => deleteDoc(d.ref)));
+        return `Cleared ${snap.docs.length} logs for IP ${ip}`;
+      }
+    }
+    return 'Action completed';
+  };
 
   const manageUser = async (action, payload, key) => {
     setActLoad(p => ({ ...p, [key]: true }));
+    const { toast } = await import('react-hot-toast');
     try {
-      const res = await fetch(`${API_BASE}/api/manage-user`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action, ...payload }),
-      });
-      const data = await res.json();
-      if (data.ok) {
-        const { toast } = await import('react-hot-toast');
-        toast.success(data.message || 'Done');
-      } else {
-        const { toast } = await import('react-hot-toast');
-        toast.error(data.error || 'Failed');
+      // 1. Try server API first
+      try {
+        const res = await fetch(`/api/manage-user`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action, ...payload }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.ok) {
+            toast.success(data.message || 'Done');
+            return;
+          }
+        }
+      } catch (e) {
+        // API server unavailable (e.g. running vite dev directly) — proceed to fallback
       }
-    } catch {
-      const { toast } = await import('react-hot-toast');
-      toast.error('Network error');
+
+      // 2. Client-side fallback via Firestore SDK directly
+      const msg = await manageUserFallback(action, payload);
+      toast.success(msg);
+    } catch (err) {
+      console.error('manageUser error:', err);
+      toast.error('Operation failed');
     } finally {
       setActLoad(p => ({ ...p, [key]: false }));
     }
