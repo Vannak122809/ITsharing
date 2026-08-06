@@ -2,8 +2,10 @@
  * api/telegram-webhook.js — Telegram Bot Webhook Endpoint
  *
  * Receives incoming commands and inline button clicks from Telegram Bot.
- * Commands supported:
+ * Supported Commands:
  *   /status              — View real-time security stats & active bans
+ *   /blocked_list        — List all currently blocked IPs, Devices & Accounts with 1-click Unblock
+ *   /appeals             — View pending unblock appeals submitted by users
  *   /ban_ip <IP>         — Ban an IP address directly from Telegram
  *   /ban_device <DevID>  — Ban a Device ID directly from Telegram
  *   /ban_account <Email> — Ban a User Account directly from Telegram
@@ -63,11 +65,26 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  const botToken = process.env.TELEGRAM_BOT_TOKEN || req.query.token;
+  let botToken = process.env.TELEGRAM_BOT_TOKEN || req.query.token;
   const update = req.body || {};
 
   try {
     const db = getDb();
+
+    // Fallback: load botToken from Firestore if missing
+    if (!botToken) {
+      try {
+        const tgSnap = await db.collection('settings').doc('telegram').get();
+        if (tgSnap.exists) {
+          botToken = tgSnap.data().token;
+        }
+      } catch (e) {}
+    }
+
+    if (!botToken) {
+      return res.status(400).json({ error: 'Missing Telegram Bot Token' });
+    }
+
     const safeId = (str) => (str || '').toLowerCase().replace(/[^a-zA-Z0-9._-]/g, '_');
 
     // ── Handle Inline Button Clicks ───────────────────────────────────────────
@@ -114,7 +131,6 @@ export default async function handler(req, res) {
         await answerCallbackQuery(botToken, cb.id, `✅ Account ${target} Banned!`);
         await sendTelegramReply(botToken, chatId, `👤 <b>ACCOUNT BANNED</b>\nUser Account <code>${target}</code> has been suspended.`);
       } else if (action === 'unblock' && target) {
-        // Try unblocking ip, device, or email
         const targetClean = target.toLowerCase().trim();
         await db.collection('blocked_entities').doc(`ip_${safeId(targetClean)}`).delete().catch(() => {});
         await db.collection('blocked_entities').doc(`device_${safeId(targetClean)}`).delete().catch(() => {});
@@ -133,6 +149,36 @@ export default async function handler(req, res) {
 • <b>Active Banned Entities:</b> ${snapBans.size}
 • <b>Status:</b> 🟢 Active & Guarding
         `.trim());
+      } else if (action === 'blocked_list') {
+        const snapBans = await db.collection('blocked_entities').get();
+        if (snapBans.empty) {
+          await sendTelegramReply(botToken, chatId, '🟢 <b>No Active Blocked Entities</b>\nYour blocklist is currently empty.');
+        } else {
+          let listText = `🚫 <b>Active Blocked Entities (${snapBans.size})</b>\n\n`;
+          const buttons = [];
+          snapBans.docs.forEach(doc => {
+            const data = doc.data();
+            const val = data.ip || data.email || data.deviceId || doc.id;
+            const typeLabel = data.type === 'ip' ? '🌐 IP' : data.type === 'device' ? '📱 Device' : '👤 Account';
+            listText += `• ${typeLabel}: <code>${val}</code>\n`;
+            buttons.push([{ text: `✅ Unblock ${typeLabel}: ${val}`, callback_data: `unblock:${val}` }]);
+          });
+          await sendTelegramReply(botToken, chatId, listText, { inline_keyboard: buttons.slice(0, 10) });
+        }
+      } else if (action === 'appeals') {
+        const snapAppeals = await db.collection('ban_appeals').limit(10).get();
+        if (snapAppeals.empty) {
+          await sendTelegramReply(botToken, chatId, '✉️ <b>No Pending Unblock Appeals</b>');
+        } else {
+          let msg = `✉️ <b>Unblock Appeals (${snapAppeals.size})</b>\n\n`;
+          const buttons = [];
+          snapAppeals.docs.forEach(doc => {
+            const data = doc.data();
+            msg += `• <b>${data.email || 'User'}</b> (${data.deviceId || ''}):\n<i>"${data.appealText}"</i>\n\n`;
+            buttons.push([{ text: `✅ Approve Unblock: ${data.email || data.deviceId}`, callback_data: `unblock:${data.email || data.deviceId}` }]);
+          });
+          await sendTelegramReply(botToken, chatId, msg, { inline_keyboard: buttons.slice(0, 10) });
+        }
       }
 
       return res.status(200).json({ ok: true });
@@ -153,12 +199,14 @@ export default async function handler(req, res) {
 
 <b>Available Commands:</b>
 • <code>/status</code> — View real-time security stats & active bans
+• <code>/blocked_list</code> — View & unblock active banned entities
+• <code>/appeals</code> — View pending user unblock appeals
 • <code>/ban_ip 175.100.52.181</code> — Ban an IP address
 • <code>/ban_device DEV-8F92A1B4</code> — Ban a Device ID
 • <code>/ban_account user@gmail.com</code> — Ban a User Account Email
 • <code>/unblock target</code> — Unblock an IP, Device ID, or Email
 
-<i>Select a command or type directly in chat.</i>
+<i>Use the Telegram [/] menu or type commands above.</i>
       `.trim();
       await sendTelegramReply(botToken, chatId, helpMsg);
     } else if (text.startsWith('/status')) {
@@ -175,7 +223,46 @@ export default async function handler(req, res) {
 • 🟢 <b>Security Guard Status:</b> ACTIVE & ENFORCING
       `.trim();
 
-      await sendTelegramReply(botToken, chatId, msg);
+      const inlineKeyboard = {
+        inline_keyboard: [
+          [
+            { text: '🚫 View Blocked List', callback_data: 'blocked_list' },
+            { text: '✉️ View Appeals',      callback_data: 'appeals' }
+          ]
+        ]
+      };
+
+      await sendTelegramReply(botToken, chatId, msg, inlineKeyboard);
+    } else if (text.startsWith('/blocked_list')) {
+      const snapBans = await db.collection('blocked_entities').get();
+      if (snapBans.empty) {
+        await sendTelegramReply(botToken, chatId, '🟢 <b>No Active Blocked Entities</b>\nYour blocklist is currently empty.');
+      } else {
+        let listText = `🚫 <b>Active Blocked Entities (${snapBans.size})</b>\n\n`;
+        const buttons = [];
+        snapBans.docs.forEach(doc => {
+          const data = doc.data();
+          const val = data.ip || data.email || data.deviceId || doc.id;
+          const typeLabel = data.type === 'ip' ? '🌐 IP' : data.type === 'device' ? '📱 Device' : '👤 Account';
+          listText += `• ${typeLabel}: <code>${val}</code>\n`;
+          buttons.push([{ text: `✅ Unblock ${typeLabel}: ${val}`, callback_data: `unblock:${val}` }]);
+        });
+        await sendTelegramReply(botToken, chatId, listText, { inline_keyboard: buttons.slice(0, 10) });
+      }
+    } else if (text.startsWith('/appeals')) {
+      const snapAppeals = await db.collection('ban_appeals').limit(10).get();
+      if (snapAppeals.empty) {
+        await sendTelegramReply(botToken, chatId, '✉️ <b>No Pending Unblock Appeals</b>');
+      } else {
+        let msg = `✉️ <b>Unblock Appeals (${snapAppeals.size})</b>\n\n`;
+        const buttons = [];
+        snapAppeals.docs.forEach(doc => {
+          const data = doc.data();
+          msg += `• <b>${data.email || 'User'}</b> (${data.deviceId || ''}):\n<i>"${data.appealText}"</i>\n\n`;
+          buttons.push([{ text: `✅ Approve Unblock: ${data.email || data.deviceId}`, callback_data: `unblock:${data.email || data.deviceId}` }]);
+        });
+        await sendTelegramReply(botToken, chatId, msg, { inline_keyboard: buttons.slice(0, 10) });
+      }
     } else if (text.startsWith('/ban_ip')) {
       const ip = text.replace('/ban_ip', '').trim();
       if (!ip) {

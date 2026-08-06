@@ -46,6 +46,17 @@ export default async function handler(req, res) {
         chat_id: cleanChatId,
         text: messageText,
         parse_mode: 'HTML',
+        reply_markup: {
+          inline_keyboard: [
+            [
+              { text: '📊 System Status', callback_data: 'status' },
+              { text: '🚫 Blocked List',  callback_data: 'blocked_list' }
+            ],
+            [
+              { text: '✉️ View Appeals', callback_data: 'appeals' }
+            ]
+          ]
+        }
       })
     });
 
@@ -71,6 +82,24 @@ export default async function handler(req, res) {
       const host = req.headers.host || 'itsharing.vercel.app';
       const webhookUrl = `https://${host}/api/telegram-webhook?token=${cleanToken}`;
       await fetch(`https://api.telegram.org/bot${cleanToken}/setWebhook?url=${encodeURIComponent(webhookUrl)}`);
+
+      // 4. Register Bot Menu Commands with Telegram
+      await fetch(`https://api.telegram.org/bot${cleanToken}/setMyCommands`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          commands: [
+            { command: 'status', description: 'View security stats & active bans' },
+            { command: 'blocked_list', description: 'List & unblock active bans' },
+            { command: 'appeals', description: 'View pending unblock appeals' },
+            { command: 'ban_ip', description: 'Ban IP: /ban_ip 175.100.52.181' },
+            { command: 'ban_device', description: 'Ban Device: /ban_device DEV-XXX' },
+            { command: 'ban_account', description: 'Ban Account: /ban_account email' },
+            { command: 'unblock', description: 'Unblock: /unblock target' },
+            { command: 'help', description: 'View bot commands menu' }
+          ]
+        })
+      });
     } catch (dbErr) {
       console.warn('[telegram-test] Firestore save warning:', dbErr);
     }
