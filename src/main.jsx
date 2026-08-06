@@ -18,7 +18,14 @@ Sentry.init({
   replaysSessionSampleRate: 0.1,
   replaysOnErrorSampleRate: 1.0,
   enabled: !!import.meta.env.VITE_SENTRY_DSN,
-})
+});
+
+// ── Service Worker Registration for High-Traffic Static Caching ────
+if ('serviceWorker' in navigator && typeof window !== 'undefined') {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker?.register('/sw.js').catch(() => {});
+  });
+}
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

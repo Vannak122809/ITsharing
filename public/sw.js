@@ -1,70 +1,71 @@
 /**
- * ITShare Service Worker
- * Provides offline caching for static assets and app shell
+ * sw.js — High-Performance Service Worker Cache
+ *
+ * Caches static JS, CSS, fonts, and images in browser Cache Storage.
+ * Accelerates load speed and protects the server under high traffic spikes.
  */
-const CACHE_NAME = 'itshare-v1';
+
+const CACHE_NAME = 'itsharing-static-v1';
 const STATIC_ASSETS = [
   '/',
-  '/favicon.svg',
-  '/manifest.json',
+  '/index.html',
+  '/manifest.json'
 ];
 
-// Install — pre-cache app shell
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS);
+      return cache.addAll(STATIC_ASSETS).catch(() => {});
     })
   );
   self.skipWaiting();
 });
 
-// Activate — clean old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
-        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+        keys.map((key) => {
+          if (key !== CACHE_NAME) {
+            return caches.delete(key);
+          }
+        })
       );
     })
   );
   self.clients.claim();
 });
 
-// Fetch — network-first with cache fallback for navigation, cache-first for assets
 self.addEventListener('fetch', (event) => {
-  const { request } = event;
-  
-  // Skip non-GET and cross-origin requests
-  if (request.method !== 'GET') return;
-  if (!request.url.startsWith(self.location.origin)) return;
+  const req = event.request;
+  const url = new URL(req.url);
 
-  // Navigation requests — network first, fallback to cache
-  if (request.mode === 'navigate') {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-          return response;
-        })
-        .catch(() => caches.match(request).then((cached) => cached || caches.match('/')))
-    );
+  // Bypass non-GET requests and API calls
+  if (req.method !== 'GET' || url.pathname.startsWith('/api/') || url.hostname.includes('firestore.googleapis.com')) {
     return;
   }
 
-  // Static assets — cache first, network fallback
-  if (request.url.match(/\.(js|css|woff2?|png|jpg|svg|webp|ico)$/)) {
+  // Cache-First strategy for static assets (images, css, js, fonts)
+  if (
+    url.pathname.match(/\.(png|jpg|jpeg|webp|svg|css|js|woff2|ttf)$/i) ||
+    url.hostname.includes('r2.dev') ||
+    url.hostname.includes('pub-')
+  ) {
     event.respondWith(
-      caches.match(request).then((cached) => {
-        const fetchPromise = fetch(request).then((response) => {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-          return response;
-        });
-        return cached || fetchPromise;
+      caches.open(CACHE_NAME).then(async (cache) => {
+        const cachedRes = await cache.match(req);
+        if (cachedRes) return cachedRes;
+
+        try {
+          const networkRes = await fetch(req);
+          if (networkRes.ok) {
+            cache.put(req, networkRes.clone());
+          }
+          return networkRes;
+        } catch (e) {
+          return cachedRes || Promise.reject(e);
+        }
       })
     );
-    return;
   }
 });
