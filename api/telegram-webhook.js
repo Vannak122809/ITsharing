@@ -1,8 +1,16 @@
 /**
- * api/telegram-webhook.js — Telegram Bot Webhook Endpoint (REST API Powered)
+ * api/telegram-webhook.js — Full Featured Telegram Admin Bot Webhook Endpoint
  *
- * Receives incoming commands and inline button clicks from Telegram Bot.
- * Uses Direct Firestore REST API for 100% reliable execution on Vercel without requiring credentials.
+ * Supported Commands & Menu Features:
+ *   /status              — 📊 Real-time security stats & active ban breakdown
+ *   /blocked_list        — 🚫 Interactive blocked list with 1-click unblock buttons
+ *   /appeals             — ✉️ View pending user unblock appeals
+ *   /chat                — 💬 Live user chat & support message inbox
+ *   /ban_ip <IP>         — 🌐 Ban IP address in real-time
+ *   /ban_device <DevID>  — 📱 Ban Device ID in real-time
+ *   /ban_account <Email> — 👤 Ban User Account Email in real-time
+ *   /unblock <Target>    — 🔓 Unblock any IP, Device ID, or Email
+ *   /help                — 🛡️ Master command guide
  */
 
 const PROJECT_ID = process.env.VITE_FIREBASE_PROJECT_ID || 'login-form-49609';
@@ -74,19 +82,66 @@ async function listLogsCountREST() {
   }
 }
 
+async function listUserMessagesREST() {
+  try {
+    const url = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/user_messages?pageSize=10`;
+    const res = await fetch(url);
+    const data = await res.json();
+    return (data.documents || []).map(doc => {
+      const fields = doc.fields || {};
+      const obj = { id: doc.name.split('/').pop() };
+      for (const [k, v] of Object.entries(fields)) {
+        obj[k] = v.stringValue !== undefined ? v.stringValue : v.booleanValue !== undefined ? v.booleanValue : '';
+      }
+      return obj;
+    });
+  } catch {
+    return [];
+  }
+}
+
+// ── Persistent Master Control Panel Keyboard ──────────────────────────────────
+function getMasterControlKeyboard(extraButtons = []) {
+  const masterButtons = [
+    [
+      { text: '📊 System Status', callback_data: 'status' },
+      { text: '🚫 Blocked List',  callback_data: 'blocked_list' }
+    ],
+    [
+      { text: '✉️ Pending Appeals', callback_data: 'appeals' },
+      { text: '💬 Live User Chat',  callback_data: 'chat_menu' }
+    ],
+    [
+      { text: '🌐 Ban IP',       callback_data: 'prompt_ban_ip' },
+      { text: '📱 Ban Device',   callback_data: 'prompt_ban_device' }
+    ],
+    [
+      { text: '👤 Ban Account',  callback_data: 'prompt_ban_account' },
+      { text: '🔓 Unblock Target', callback_data: 'prompt_unblock' }
+    ]
+  ];
+
+  if (extraButtons && extraButtons.length > 0) {
+    return { inline_keyboard: [...extraButtons, ...masterButtons] };
+  }
+  return { inline_keyboard: masterButtons };
+}
+
 // ── Telegram Reply Helpers ────────────────────────────────────────────────────
 async function sendTelegramReply(botToken, chatId, text, inlineKeyboard = null) {
   try {
     const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+    const keyboard = inlineKeyboard || getMasterControlKeyboard();
+
     await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        chat_id: chatId,
+        chat_id: String(chatId),
         text,
         parse_mode: 'HTML',
         disable_web_page_preview: true,
-        ...(inlineKeyboard ? { reply_markup: inlineKeyboard } : {})
+        reply_markup: keyboard
       })
     });
   } catch (e) {
@@ -114,7 +169,6 @@ export default async function handler(req, res) {
 
   try {
     if (!botToken) {
-      const tgSettings = await listBlockedEntitiesREST().catch(() => []);
       const tgRes = await fetch(`https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/settings/telegram`).catch(() => null);
       if (tgRes && tgRes.ok) {
         const tgData = await tgRes.json();
@@ -131,7 +185,7 @@ export default async function handler(req, res) {
     // ── Handle Inline Button Clicks ───────────────────────────────────────────
     if (update.callback_query) {
       const cb = update.callback_query;
-      const chatId = cb.message.chat.id;
+      const chatId = String(cb.message.chat.id);
       const data = cb.data || '';
 
       const [action, ...args] = data.split(':');
@@ -144,7 +198,7 @@ export default async function handler(req, res) {
           blockedAt: new Date().toISOString(), note: 'Banned via Telegram Bot'
         });
         await answerCallbackQuery(botToken, cb.id, `✅ IP ${target} Banned!`);
-        await sendTelegramReply(botToken, chatId, `🚫 <b>IP BANNED</b>\nIP Address <code>${target}</code> has been blocked in real-time.`);
+        await sendTelegramReply(botToken, chatId, `🚫 <b>IP BANNED IN REAL-TIME</b>\n\n<b>IP Address:</b> <code>${target}</code>\n<b>Status:</b> 🔴 BLOCKED`);
       } else if (action === 'ban_device' && target) {
         const docId = `device_${safeId(target)}`;
         await setBlockedEntityREST(docId, {
@@ -152,7 +206,7 @@ export default async function handler(req, res) {
           blockedAt: new Date().toISOString(), note: 'Banned via Telegram Bot'
         });
         await answerCallbackQuery(botToken, cb.id, `✅ Device ${target} Banned!`);
-        await sendTelegramReply(botToken, chatId, `📱 <b>DEVICE BANNED</b>\nDevice ID <code>${target}</code> has been blocked in real-time.`);
+        await sendTelegramReply(botToken, chatId, `📱 <b>DEVICE BANNED IN REAL-TIME</b>\n\n<b>Device ID:</b> <code>${target}</code>\n<b>Status:</b> 🔴 BLOCKED`);
       } else if (action === 'ban_account' && target) {
         const docId = `email_${safeId(target)}`;
         await setBlockedEntityREST(docId, {
@@ -160,7 +214,7 @@ export default async function handler(req, res) {
           blockedAt: new Date().toISOString(), note: 'Banned via Telegram Bot'
         });
         await answerCallbackQuery(botToken, cb.id, `✅ Account ${target} Banned!`);
-        await sendTelegramReply(botToken, chatId, `👤 <b>ACCOUNT BANNED</b>\nUser Account <code>${target}</code> has been suspended.`);
+        await sendTelegramReply(botToken, chatId, `👤 <b>ACCOUNT BANNED IN REAL-TIME</b>\n\n<b>User Account:</b> <code>${target}</code>\n<b>Status:</b> 🔴 SUSPENDED`);
       } else if (action === 'unblock' && target) {
         const clean = target.toLowerCase().trim();
         await deleteBlockedEntityREST(`ip_${safeId(clean)}`);
@@ -168,26 +222,43 @@ export default async function handler(req, res) {
         await deleteBlockedEntityREST(`email_${safeId(clean)}`);
 
         await answerCallbackQuery(botToken, cb.id, `✅ Unblocked ${target}!`);
-        await sendTelegramReply(botToken, chatId, `✅ <b>UNBLOCKED</b>\nEntity <code>${target}</code> has been unblocked.`);
+        await sendTelegramReply(botToken, chatId, `✅ <b>ENTITY UNBLOCKED IN REAL-TIME</b>\n\n<b>Target Entity:</b> <code>${target}</code>\n<b>Status:</b> 🟢 RESTORED & ACCESS GRANTED`);
+      } else if (action === 'prompt_ban_ip') {
+        await answerCallbackQuery(botToken, cb.id, 'Enter IP to ban');
+        await sendTelegramReply(botToken, chatId, `🌐 <b>BAN IP ADDRESS</b>\n\nType or reply with:\n<code>/ban_ip 175.100.52.181</code>`);
+      } else if (action === 'prompt_ban_device') {
+        await answerCallbackQuery(botToken, cb.id, 'Enter Device ID to ban');
+        await sendTelegramReply(botToken, chatId, `📱 <b>BAN DEVICE ID</b>\n\nType or reply with:\n<code>/ban_device DEV-8F92A1B4</code>`);
+      } else if (action === 'prompt_ban_account') {
+        await answerCallbackQuery(botToken, cb.id, 'Enter Account Email to ban');
+        await sendTelegramReply(botToken, chatId, `👤 <b>BAN USER ACCOUNT</b>\n\nType or reply with:\n<code>/ban_account user@gmail.com</code>`);
+      } else if (action === 'prompt_unblock') {
+        await answerCallbackQuery(botToken, cb.id, 'Enter Target to unblock');
+        await sendTelegramReply(botToken, chatId, `🔓 <b>UNBLOCK TARGET</b>\n\nType or reply with:\n<code>/unblock 175.100.52.181</code> or <code>/unblock user@gmail.com</code>`);
       } else if (action === 'status') {
         const logsCount = await listLogsCountREST();
         const bansList = await listBlockedEntitiesREST();
         const appealsList = await listAppealsREST();
+        const chatList = await listUserMessagesREST();
 
-        await sendTelegramReply(botToken, chatId, `
-📊 <b>ITShare Security Status</b>
-
-• 🛡️ <b>Total Logs:</b> ${logsCount}
-• 🚫 <b>Active Banned Entities:</b> ${bansList.length}
-• ✉️ <b>Pending Appeals:</b> ${appealsList.length}
-• 🟢 <b>Security Status:</b> ACTIVE & ENFORCING
-        `.trim());
+        const statusMsg = `
+📊 <b>ITSHARE REAL-TIME SECURITY DASHBOARD</b>
+─────────────────────────────
+• 🛡️ <b>Total Security Logs:</b> <code>${logsCount}</code>
+• 🚫 <b>Active Banned Entities:</b> <code>${bansList.length}</code>
+• ✉️ <b>Pending Appeals:</b> <code>${appealsList.length}</code>
+• 💬 <b>User Chat Messages:</b> <code>${chatList.length}</code>
+• 🟢 <b>Guard Engine:</b> <b>ACTIVE & GUARDING 24/7</b>
+─────────────────────────────
+<i>Select an option below to perform real-time management.</i>
+        `.trim();
+        await sendTelegramReply(botToken, chatId, statusMsg);
       } else if (action === 'blocked_list') {
         const bansList = await listBlockedEntitiesREST();
         if (!bansList.length) {
           await sendTelegramReply(botToken, chatId, '🟢 <b>No Active Blocked Entities</b>\nYour blocklist is currently empty.');
         } else {
-          let listText = `🚫 <b>Active Blocked Entities (${bansList.length})</b>\n\n`;
+          let listText = `🚫 <b>ACTIVE BLOCKED ENTITIES (${bansList.length})</b>\n─────────────────────────────\n`;
           const buttons = [];
           bansList.forEach(data => {
             const val = data.ip || data.email || data.deviceId || data.id;
@@ -195,20 +266,31 @@ export default async function handler(req, res) {
             listText += `• ${typeLabel}: <code>${val}</code>\n`;
             buttons.push([{ text: `✅ Unblock ${typeLabel}: ${val}`, callback_data: `unblock:${val}` }]);
           });
-          await sendTelegramReply(botToken, chatId, listText, { inline_keyboard: buttons.slice(0, 10) });
+          await sendTelegramReply(botToken, chatId, listText, getMasterControlKeyboard(buttons.slice(0, 8)));
         }
       } else if (action === 'appeals') {
         const appealsList = await listAppealsREST();
         if (!appealsList.length) {
           await sendTelegramReply(botToken, chatId, '✉️ <b>No Pending Unblock Appeals</b>');
         } else {
-          let msg = `✉️ <b>Unblock Appeals (${appealsList.length})</b>\n\n`;
+          let msg = `✉️ <b>PENDING UNBLOCK APPEALS (${appealsList.length})</b>\n─────────────────────────────\n`;
           const buttons = [];
           appealsList.forEach(data => {
             msg += `• <b>${data.email || 'User'}</b> (${data.deviceId || ''}):\n<i>"${data.appealText}"</i>\n\n`;
             buttons.push([{ text: `✅ Approve Unblock: ${data.email || data.deviceId}`, callback_data: `unblock:${data.email || data.deviceId}` }]);
           });
-          await sendTelegramReply(botToken, chatId, msg, { inline_keyboard: buttons.slice(0, 10) });
+          await sendTelegramReply(botToken, chatId, msg, getMasterControlKeyboard(buttons.slice(0, 8)));
+        }
+      } else if (action === 'chat_menu') {
+        const chatList = await listUserMessagesREST();
+        if (!chatList.length) {
+          await sendTelegramReply(botToken, chatId, '💬 <b>LIVE USER CHAT INBOX</b>\n─────────────────────────────\nNo user chat messages found.\nVisitors can chat directly from your website!');
+        } else {
+          let chatText = `💬 <b>LIVE USER CHAT INBOX (${chatList.length})</b>\n─────────────────────────────\n`;
+          chatList.forEach(item => {
+            chatText += `• <b>${item.name || item.senderEmail || 'Visitor'}</b>: <i>"${item.text || item.message || ''}"</i>\n`;
+          });
+          await sendTelegramReply(botToken, chatId, chatText);
         }
       }
 
@@ -221,55 +303,50 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true });
     }
 
-    const chatId = message.chat.id;
-    const text = message.text.trim();
+    const chatId = String(message.chat.id);
+    let text = message.text.trim().replace(/@[a-zA-Z0-9_]+/i, '');
 
     if (text.startsWith('/start') || text.startsWith('/help')) {
       const helpMsg = `
-🛡️ <b>ITShare Security Bot Admin</b>
-
-<b>Available Commands:</b>
-• <code>/status</code> — View real-time security stats & active bans
+🛡️ <b>ITSHARE TELEGRAM SECURITY BOT ADMIN</b>
+─────────────────────────────
+<b>Available Quick Commands:</b>
+• <code>/status</code> — Real-time security stats & status
 • <code>/blocked_list</code> — View & unblock active banned entities
 • <code>/appeals</code> — View pending user unblock appeals
-• <code>/ban_ip 175.100.52.181</code> — Ban an IP address
-• <code>/ban_device DEV-8F92A1B4</code> — Ban a Device ID
-• <code>/ban_account user@gmail.com</code> — Ban a User Account Email
-• <code>/unblock target</code> — Unblock an IP, Device ID, or Email
-
-<i>Select a command or use the Telegram [/] menu.</i>
+• <code>/chat</code> — View user chat inbox & messages
+• <code>/ban_ip 175.100.52.181</code> — Ban IP Address
+• <code>/ban_device DEV-8F92A1B4</code> — Ban Device ID
+• <code>/ban_account user@gmail.com</code> — Ban User Account Email
+• <code>/unblock target</code> — Unblock IP, Device ID, or Email
+─────────────────────────────
+<i>Select any option below to manage your website in real-time!</i>
       `.trim();
       await sendTelegramReply(botToken, chatId, helpMsg);
     } else if (text.startsWith('/status')) {
       const logsCount = await listLogsCountREST();
       const bansList = await listBlockedEntitiesREST();
       const appealsList = await listAppealsREST();
+      const chatList = await listUserMessagesREST();
 
-      const msg = `
-📊 <b>ITShare Security Status</b>
-
-• 🛡️ <b>Total Logged Security Events:</b> ${logsCount}
-• 🚫 <b>Active Banned Entities:</b> ${bansList.length}
-• ✉️ <b>Pending Unblock Appeals:</b> ${appealsList.length}
-• 🟢 <b>Security Guard Status:</b> ACTIVE & ENFORCING
+      const statusMsg = `
+📊 <b>ITSHARE REAL-TIME SECURITY DASHBOARD</b>
+─────────────────────────────
+• 🛡️ <b>Total Security Logs:</b> <code>${logsCount}</code>
+• 🚫 <b>Active Banned Entities:</b> <code>${bansList.length}</code>
+• ✉️ <b>Pending Appeals:</b> <code>${appealsList.length}</code>
+• 💬 <b>User Chat Messages:</b> <code>${chatList.length}</code>
+• 🟢 <b>Guard Engine:</b> <b>ACTIVE & GUARDING 24/7</b>
+─────────────────────────────
+<i>Select an option below to perform real-time management.</i>
       `.trim();
-
-      const inlineKeyboard = {
-        inline_keyboard: [
-          [
-            { text: '🚫 View Blocked List', callback_data: 'blocked_list' },
-            { text: '✉️ View Appeals',      callback_data: 'appeals' }
-          ]
-        ]
-      };
-
-      await sendTelegramReply(botToken, chatId, msg, inlineKeyboard);
+      await sendTelegramReply(botToken, chatId, statusMsg);
     } else if (text.startsWith('/blocked_list')) {
       const bansList = await listBlockedEntitiesREST();
       if (!bansList.length) {
         await sendTelegramReply(botToken, chatId, '🟢 <b>No Active Blocked Entities</b>\nYour blocklist is currently empty.');
       } else {
-        let listText = `🚫 <b>Active Blocked Entities (${bansList.length})</b>\n\n`;
+        let listText = `🚫 <b>ACTIVE BLOCKED ENTITIES (${bansList.length})</b>\n─────────────────────────────\n`;
         const buttons = [];
         bansList.forEach(data => {
           const val = data.ip || data.email || data.deviceId || data.id;
@@ -277,20 +354,31 @@ export default async function handler(req, res) {
           listText += `• ${typeLabel}: <code>${val}</code>\n`;
           buttons.push([{ text: `✅ Unblock ${typeLabel}: ${val}`, callback_data: `unblock:${val}` }]);
         });
-        await sendTelegramReply(botToken, chatId, listText, { inline_keyboard: buttons.slice(0, 10) });
+        await sendTelegramReply(botToken, chatId, listText, getMasterControlKeyboard(buttons.slice(0, 8)));
       }
     } else if (text.startsWith('/appeals')) {
       const appealsList = await listAppealsREST();
       if (!appealsList.length) {
         await sendTelegramReply(botToken, chatId, '✉️ <b>No Pending Unblock Appeals</b>');
       } else {
-        let msg = `✉️ <b>Unblock Appeals (${appealsList.length})</b>\n\n`;
+        let msg = `✉️ <b>PENDING UNBLOCK APPEALS (${appealsList.length})</b>\n─────────────────────────────\n`;
         const buttons = [];
         appealsList.forEach(data => {
           msg += `• <b>${data.email || 'User'}</b> (${data.deviceId || ''}):\n<i>"${data.appealText}"</i>\n\n`;
           buttons.push([{ text: `✅ Approve Unblock: ${data.email || data.deviceId}`, callback_data: `unblock:${data.email || data.deviceId}` }]);
         });
-        await sendTelegramReply(botToken, chatId, msg, { inline_keyboard: buttons.slice(0, 10) });
+        await sendTelegramReply(botToken, chatId, msg, getMasterControlKeyboard(buttons.slice(0, 8)));
+      }
+    } else if (text.startsWith('/chat')) {
+      const chatList = await listUserMessagesREST();
+      if (!chatList.length) {
+        await sendTelegramReply(botToken, chatId, '💬 <b>LIVE USER CHAT INBOX</b>\n─────────────────────────────\nNo user chat messages found.\nVisitors can chat directly from your website!');
+      } else {
+        let chatText = `💬 <b>LIVE USER CHAT INBOX (${chatList.length})</b>\n─────────────────────────────\n`;
+        chatList.forEach(item => {
+          chatText += `• <b>${item.name || item.senderEmail || 'Visitor'}</b>: <i>"${item.text || item.message || ''}"</i>\n`;
+        });
+        await sendTelegramReply(botToken, chatId, chatText);
       }
     } else if (text.startsWith('/ban_ip')) {
       const ip = text.replace('/ban_ip', '').trim();
@@ -302,7 +390,7 @@ export default async function handler(req, res) {
           type: 'ip', ip, blocked: true,
           blockedAt: new Date().toISOString(), note: 'Banned via Telegram command'
         });
-        await sendTelegramReply(botToken, chatId, `🚫 <b>IP BANNED</b>\nIP Address <code>${ip}</code> has been blocked in real-time.`);
+        await sendTelegramReply(botToken, chatId, `🚫 <b>IP BANNED IN REAL-TIME</b>\n\n<b>IP Address:</b> <code>${ip}</code>\n<b>Status:</b> 🔴 BLOCKED`);
       }
     } else if (text.startsWith('/ban_device')) {
       const devId = text.replace('/ban_device', '').trim();
@@ -314,7 +402,7 @@ export default async function handler(req, res) {
           type: 'device', deviceId: devId, blocked: true,
           blockedAt: new Date().toISOString(), note: 'Banned via Telegram command'
         });
-        await sendTelegramReply(botToken, chatId, `📱 <b>DEVICE BANNED</b>\nDevice ID <code>${devId}</code> has been blocked in real-time.`);
+        await sendTelegramReply(botToken, chatId, `📱 <b>DEVICE BANNED IN REAL-TIME</b>\n\n<b>Device ID:</b> <code>${devId}</code>\n<b>Status:</b> 🔴 BLOCKED`);
       }
     } else if (text.startsWith('/ban_account')) {
       const email = text.replace('/ban_account', '').trim().toLowerCase();
@@ -326,7 +414,7 @@ export default async function handler(req, res) {
           type: 'email', email, blocked: true, disabled: true,
           blockedAt: new Date().toISOString(), note: 'Banned via Telegram command'
         });
-        await sendTelegramReply(botToken, chatId, `👤 <b>ACCOUNT BANNED</b>\nUser Account <code>${email}</code> has been suspended.`);
+        await sendTelegramReply(botToken, chatId, `👤 <b>ACCOUNT BANNED IN REAL-TIME</b>\n\n<b>User Account:</b> <code>${email}</code>\n<b>Status:</b> 🔴 SUSPENDED`);
       }
     } else if (text.startsWith('/unblock')) {
       const target = text.replace('/unblock', '').trim().toLowerCase();
@@ -337,7 +425,7 @@ export default async function handler(req, res) {
         await deleteBlockedEntityREST(`device_${safeId(target)}`);
         await deleteBlockedEntityREST(`email_${safeId(target)}`);
 
-        await sendTelegramReply(botToken, chatId, `✅ <b>UNBLOCKED</b>\nEntity <code>${target}</code> has been unblocked.`);
+        await sendTelegramReply(botToken, chatId, `✅ <b>ENTITY UNBLOCKED IN REAL-TIME</b>\n\n<b>Target Entity:</b> <code>${target}</code>\n<b>Status:</b> 🟢 RESTORED & ACCESS GRANTED`);
       }
     }
 

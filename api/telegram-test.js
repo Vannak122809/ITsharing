@@ -89,14 +89,15 @@ export default async function handler(req, res) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         commands: [
-          { command: 'status', description: 'View security stats & active bans' },
-          { command: 'blocked_list', description: 'List & unblock active bans' },
-          { command: 'appeals', description: 'View pending unblock appeals' },
-          { command: 'ban_ip', description: 'Ban IP: /ban_ip 175.100.52.181' },
-          { command: 'ban_device', description: 'Ban Device: /ban_device DEV-XXX' },
-          { command: 'ban_account', description: 'Ban Account: /ban_account email' },
-          { command: 'unblock', description: 'Unblock: /unblock target' },
-          { command: 'help', description: 'View bot commands menu' }
+          { command: 'status', description: '📊 Real-time security stats & active ban breakdown' },
+          { command: 'blocked_list', description: '🚫 List & unblock active banned entities' },
+          { command: 'appeals', description: '✉️ View pending user unblock appeals' },
+          { command: 'chat', description: '💬 Live user chat & support message inbox' },
+          { command: 'ban_ip', description: '🌐 Ban IP Address (e.g. /ban_ip 175.100.52.181)' },
+          { command: 'ban_device', description: '📱 Ban Device ID (e.g. /ban_device DEV-XXX)' },
+          { command: 'ban_account', description: '👤 Ban Account Email (e.g. /ban_account email)' },
+          { command: 'unblock', description: '🔓 Unblock Target (e.g. /unblock target)' },
+          { command: 'help', description: '🛡️ Display command guide & menu' }
         ]
       })
     });
