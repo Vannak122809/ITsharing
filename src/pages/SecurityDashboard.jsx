@@ -984,19 +984,22 @@ const SecurityDashboard = ({ user }) => {
 
                 <div>
                   <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '8px' }}>
-                    Admin Telegram Chat ID:
+                    Admin Personal Chat ID (Your User ID, NOT Bot ID):
                   </label>
                   <input
                     type="text"
                     value={tgChatId}
                     onChange={(e) => setTgChatId(e.target.value)}
-                    placeholder="987654321"
+                    placeholder="Your Personal User ID (e.g. 123456789)"
                     style={{
                       width: '100%', padding: '12px 16px', borderRadius: '12px',
                       background: 'var(--card-dark)', border: '1px solid var(--surface-border)',
                       color: 'var(--text-main)', fontFamily: 'monospace', fontSize: '0.85rem'
                     }}
                   />
+                  <div style={{ fontSize: '0.75rem', color: '#3b82f6', marginTop: '6px' }}>
+                    💡 Get your User ID by searching <b>@userinfobot</b> on Telegram and sending it a message.
+                  </div>
                 </div>
               </div>
 
