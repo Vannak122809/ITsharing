@@ -194,10 +194,10 @@ export default async function handler(req, res) {
     // Send Telegram alert if bot is configured
     let botToken = process.env.TELEGRAM_BOT_TOKEN;
     let chatId   = process.env.TELEGRAM_CHAT_ID;
+    const db     = getDb();
 
     if (!botToken || !chatId) {
       try {
-        const db = getDb();
         const tgSnap = await db.collection('settings').doc('telegram').get();
         if (tgSnap.exists) {
           const tgData = tgSnap.data();
@@ -208,15 +208,55 @@ export default async function handler(req, res) {
     }
 
     if (botToken && chatId) {
-      const text = `
-🚨 <b>ITShare Security Alert</b>
+      const safeId = (str) => (str || '').toLowerCase().replace(/[^a-zA-Z0-9._-]/g, '_');
+      let isAlreadyBlocked = false;
+      try {
+        const [ipSnap, devSnap] = await Promise.all([
+          db.collection('blocked_entities').doc(`ip_${safeId(ip)}`).get(),
+          metadata.deviceId ? db.collection('blocked_entities').doc(`device_${safeId(metadata.deviceId)}`).get() : Promise.resolve({ exists: false })
+        ]);
+        if (ipSnap.exists || devSnap.exists) isAlreadyBlocked = true;
+      } catch (e) {}
 
-<b>Event:</b> ${eventType.toUpperCase().replace(/_/g, ' ')}
-<b>Account:</b> <code>${targetEmail || 'None'}</code>
+      const eventLabel = eventType === 'failed_login'
+        ? '🔑 FAILED LOGIN ATTEMPT'
+        : eventType === 'brute_force_detected'
+        ? '💥 BRUTE FORCE ATTACK'
+        : eventType === 'rate_limit_hit'
+        ? '⚡ RATE LIMIT EXCEEDED'
+        : eventType.toUpperCase().replace(/_/g, ' ');
+
+      const statusBadge = isAlreadyBlocked ? '🚫 BLOCKED & LOCKED OUT' : '⚠️ ACTIVE ATTACKER (NOT BLOCKED)';
+
+      const text = `
+🚨 <b>ITShare Security Alert</b> 🚨
+
+<b>Attacker Action:</b> ${eventLabel}
+<b>Status:</b> ${statusBadge}
+<b>Target Account:</b> <code>${targetEmail || 'None'}</code> ${accountExists ? '⚠️ <b>(Real Account)</b>' : ''}
 <b>Device ID:</b> <code>${metadata.deviceId || 'Unknown'}</code>
-<b>IP:</b> <code>${ip}</code> (${geo.country || 'Unknown'})
-<b>Threat Score:</b> <b>${threatScore}</b>
+<b>Attacker IP:</b> <code>${ip}</code>
+<b>Location:</b> ${geo.city || 'Unknown'}, ${geo.country || 'Unknown'} (${geo.isp || 'ISP'})
+<b>VPN/Proxy:</b> ${geo.isProxy ? '⚠️ YES' : 'NO'} | <b>Bot:</b> ${geo.isHosting ? '⚠️ YES' : 'NO'}
+<b>Threat Score:</b> <b>${threatScore}</b> / 100
       `.trim();
+
+      const inlineButtons = [];
+      if (!isAlreadyBlocked) {
+        inlineButtons.push([
+          { text: '🚫 Ban IP', callback_data: `ban_ip:${ip}` },
+          { text: '📱 Ban Device', callback_data: `ban_device:${metadata.deviceId || ''}` }
+        ]);
+        if (targetEmail) {
+          inlineButtons.push([{ text: '👤 Ban Account', callback_data: `ban_account:${targetEmail}` }]);
+        }
+      } else {
+        inlineButtons.push([
+          { text: '✅ Unblock IP', callback_data: `unblock:${ip}` },
+          { text: '✅ Unblock Device', callback_data: `unblock:${metadata.deviceId || ''}` }
+        ]);
+      }
+      inlineButtons.push([{ text: '📊 System Status', callback_data: 'status' }]);
 
       fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
         method: 'POST',
@@ -225,15 +265,7 @@ export default async function handler(req, res) {
           chat_id: chatId,
           text,
           parse_mode: 'HTML',
-          reply_markup: {
-            inline_keyboard: [
-              [
-                { text: '🚫 Ban IP', callback_data: `ban_ip:${ip}` },
-                { text: '📱 Ban Device', callback_data: `ban_device:${metadata.deviceId || ''}` }
-              ],
-              ...(targetEmail ? [[{ text: '👤 Ban Account', callback_data: `ban_account:${targetEmail}` }]] : [])
-            ]
-          }
+          reply_markup: { inline_keyboard: inlineButtons }
         })
       }).catch(() => {});
     }
