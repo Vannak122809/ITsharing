@@ -7,17 +7,25 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { db } from '../firebase';
+import { db, auth } from '../firebase';
 import { collection, query, onSnapshot } from 'firebase/firestore';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { getDeviceId } from '../utils/deviceFingerprint';
-import { ShieldAlert, Lock, AlertTriangle, RefreshCw, Smartphone, Globe, Shield } from 'lucide-react';
+import { ShieldAlert, Lock, AlertTriangle, RefreshCw, Smartphone, Globe, UserX } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const DeviceBlockGuard = ({ children }) => {
-  const [isBlocked, setIsBlocked] = useState(false);
-  const [blockData, setBlockData] = useState(null);
-  const [userIP, setUserIP]       = useState('');
-  const deviceId                  = getDeviceId();
+  const [isBlocked, setIsBlocked]     = useState(false);
+  const [blockData, setBlockData]     = useState(null);
+  const [userIP, setUserIP]           = useState('');
+  const [currentUser, setCurrentUser] = useState(null);
+  const deviceId                      = getDeviceId();
+
+  // Listen to auth state
+  useEffect(() => {
+    const unsubAuth = onAuthStateChanged(auth, (u) => setCurrentUser(u));
+    return () => unsubAuth();
+  }, []);
 
   // Fetch client IP address for IP block enforcement
   useEffect(() => {
@@ -38,9 +46,9 @@ const DeviceBlockGuard = ({ children }) => {
     const unsub = onSnapshot(q, (snap) => {
       const blockedList = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-      const safeId = (str) => (str || '').replace(/[^a-zA-Z0-9._-]/g, '_');
+      const safeId = (str) => (str || '').toLowerCase().replace(/[^a-zA-Z0-9._-]/g, '_');
 
-      // Check if current deviceId OR client IP is blocked
+      // Check if current deviceId, client IP, OR account email is blocked
       const matched = blockedList.find(b => {
         // Device ID match
         if (b.deviceId && b.deviceId === deviceId) return true;
@@ -52,12 +60,23 @@ const DeviceBlockGuard = ({ children }) => {
           if (b.id === `ip_${safeId(userIP)}`) return true;
         }
 
+        // Account Email match
+        if (currentUser?.email) {
+          const userEmail = currentUser.email.toLowerCase().trim();
+          if (b.email && b.email.toLowerCase().trim() === userEmail) return true;
+          if (b.id === `email_${safeId(userEmail)}`) return true;
+        }
+
         return false;
       });
 
       if (matched) {
         setIsBlocked(true);
         setBlockData(matched);
+        // Force sign out blocked account
+        if (currentUser) {
+          signOut(auth).catch(() => {});
+        }
       } else {
         setIsBlocked(false);
         setBlockData(null);
@@ -67,10 +86,11 @@ const DeviceBlockGuard = ({ children }) => {
     });
 
     return () => unsub();
-  }, [deviceId, userIP]);
+  }, [deviceId, userIP, currentUser]);
 
   if (isBlocked) {
-    const isIPBlock = blockData?.type === 'ip';
+    const isIPBlock    = blockData?.type === 'ip';
+    const isEmailBlock = blockData?.type === 'email';
 
     return (
       <div style={{
@@ -122,12 +142,12 @@ const DeviceBlockGuard = ({ children }) => {
             letterSpacing: '0.06em', display: 'inline-flex', alignItems: 'center', gap: '6px',
             marginBottom: '20px'
           }}>
-            {isIPBlock ? <Globe size={14} /> : <Smartphone size={14} />}
-            {isIPBlock ? 'IP ACCESS BANNED' : 'DEVICE ACCESS BANNED'}
+            {isEmailBlock ? <UserX size={14} /> : isIPBlock ? <Globe size={14} /> : <Smartphone size={14} />}
+            {isEmailBlock ? 'ACCOUNT ACCESS BANNED' : isIPBlock ? 'IP ACCESS BANNED' : 'DEVICE ACCESS BANNED'}
           </div>
 
           <p style={{ color: '#94a3b8', fontSize: '0.9rem', lineHeight: '1.6', marginBottom: '24px', padding: '0 6px' }}>
-            This {isIPBlock ? 'IP address' : 'device'} has been flagged and blocked from accessing ITShare due to multiple security policy violations or automated attack activity.
+            This {isEmailBlock ? `account (${blockData?.email || 'user'})` : isIPBlock ? 'IP address' : 'device'} has been flagged and blocked from accessing ITShare due to security policy violations.
           </p>
 
           {/* Responsive Block Details Card (Bootstrap-Style) */}

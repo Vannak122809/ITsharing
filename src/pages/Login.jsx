@@ -12,7 +12,8 @@ import {
   updateProfile,
   sendEmailVerification,
 } from 'firebase/auth';
-import { auth } from '../firebase';
+import { auth, db } from '../firebase';
+import { doc, getDoc } from 'firebase/firestore';
 import {
   LogIn, UserPlus, AlertCircle, Eye, EyeOff,
   Mail, Lock, ArrowLeft, CheckCircle, Ghost, User,
@@ -100,6 +101,20 @@ const Login = () => {
 
     setLoading(true);
     try {
+      // Check if account email is blocked
+      const targetEmail = email.trim().toLowerCase();
+      const safeDocId = `email_${targetEmail.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+      try {
+        const blockedSnap = await getDoc(doc(db, 'blocked_entities', safeDocId));
+        if (blockedSnap.exists() && (blockedSnap.data().blocked || blockedSnap.data().disabled)) {
+          setError('This account has been disabled/blocked by an administrator.');
+          setLoading(false);
+          return;
+        }
+      } catch (e) {
+        console.warn('Blocked check warning:', e);
+      }
+
       try {
         await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence);
       } catch (pErr) {
