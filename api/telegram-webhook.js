@@ -236,10 +236,12 @@ export default async function handler(req, res) {
         await answerCallbackQuery(botToken, cb.id, 'Enter Target to unblock');
         await sendTelegramReply(botToken, chatId, `🔓 <b>UNBLOCK TARGET</b>\n\nType or reply with:\n<code>/unblock 175.100.52.181</code> or <code>/unblock user@gmail.com</code>`);
       } else if (action === 'status') {
-        const logsCount = await listLogsCountREST();
-        const bansList = await listBlockedEntitiesREST();
-        const appealsList = await listAppealsREST();
-        const chatList = await listUserMessagesREST();
+        const [logsCount, bansList, appealsList, chatList] = await Promise.all([
+          listLogsCountREST(),
+          listBlockedEntitiesREST(),
+          listAppealsREST(),
+          listUserMessagesREST()
+        ]);
 
         const statusMsg = `
 📊 <b>ITSHARE REAL-TIME SECURITY DASHBOARD</b>
@@ -324,10 +326,12 @@ export default async function handler(req, res) {
       `.trim();
       await sendTelegramReply(botToken, chatId, helpMsg);
     } else if (text.startsWith('/status')) {
-      const logsCount = await listLogsCountREST();
-      const bansList = await listBlockedEntitiesREST();
-      const appealsList = await listAppealsREST();
-      const chatList = await listUserMessagesREST();
+      const [logsCount, bansList, appealsList, chatList] = await Promise.all([
+        listLogsCountREST(),
+        listBlockedEntitiesREST(),
+        listAppealsREST(),
+        listUserMessagesREST()
+      ]);
 
       const statusMsg = `
 📊 <b>ITSHARE REAL-TIME SECURITY DASHBOARD</b>
