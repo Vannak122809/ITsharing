@@ -1002,11 +1002,35 @@ const SecurityDashboard = ({ user }) => {
 
               <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                 <button
+                  disabled={testingTg}
                   onClick={async () => {
+                    if (!tgToken.trim() || !tgChatId.trim()) {
+                      const { toast } = await import('react-hot-toast');
+                      toast.error('Please enter both Telegram Bot Token and Chat ID!');
+                      return;
+                    }
+                    setTestingTg(true);
+                    const { toast } = await import('react-hot-toast');
                     const { saveTelegramConfig } = await import('../utils/telegramNotify');
                     saveTelegramConfig(tgToken, tgChatId);
-                    const { toast } = await import('react-hot-toast');
-                    toast.success('Telegram Bot settings saved!');
+
+                    try {
+                      const res = await fetch('/api/telegram-test', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ token: tgToken.trim(), chatId: tgChatId.trim() }),
+                      });
+                      const data = await res.json();
+                      if (res.ok && data.ok) {
+                        toast.success('✅ Telegram Settings Saved!');
+                      } else {
+                        toast.error(`❌ Telegram Error: ${data.error || 'Failed to save settings'}`);
+                      }
+                    } catch (err) {
+                      toast.error(`❌ Connection Error: ${err.message}`);
+                    } finally {
+                      setTestingTg(false);
+                    }
                   }}
                   style={{
                     padding: '12px 20px', borderRadius: '12px', background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
@@ -1019,17 +1043,37 @@ const SecurityDashboard = ({ user }) => {
                 <button
                   disabled={testingTg}
                   onClick={async () => {
-                    setTestingTg(true);
-                    const { sendTelegramAlert, saveTelegramConfig } = await import('../utils/telegramNotify');
-                    saveTelegramConfig(tgToken, tgChatId);
-                    const { toast } = await import('react-hot-toast');
-                    const res = await sendTelegramAlert('🚨 <b>ITShare Security Bot Connected!</b>\nYou will now receive live alerts and unblock appeals in this chat.');
-                    if (res.ok) {
-                      toast.success('Test alert sent to Telegram!');
-                    } else {
-                      toast.error(`Telegram Alert Failed: ${res.error || 'Check Bot Token & Chat ID'}`);
+                    if (!tgToken.trim() || !tgChatId.trim()) {
+                      const { toast } = await import('react-hot-toast');
+                      toast.error('Please enter both Telegram Bot Token and Chat ID!');
+                      return;
                     }
-                    setTestingTg(false);
+                    setTestingTg(true);
+                    const { toast } = await import('react-hot-toast');
+                    const { saveTelegramConfig } = await import('../utils/telegramNotify');
+                    saveTelegramConfig(tgToken, tgChatId);
+
+                    try {
+                      const res = await fetch('/api/telegram-test', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          token: tgToken.trim(),
+                          chatId: tgChatId.trim(),
+                          text: '🚀 <b>ITShare Security Bot Connected!</b>\nYour Telegram Bot is working! Live security alerts, unblock appeals, and ban commands are now connected.'
+                        }),
+                      });
+                      const data = await res.json();
+                      if (res.ok && data.ok) {
+                        toast.success('🚀 Test Alert Sent to Telegram App!');
+                      } else {
+                        toast.error(`❌ Telegram API Error: ${data.error || 'Check Bot Token & Chat ID'}`);
+                      }
+                    } catch (err) {
+                      toast.error(`❌ Network Error: ${err.message}`);
+                    } finally {
+                      setTestingTg(false);
+                    }
                   }}
                   style={{
                     padding: '12px 20px', borderRadius: '12px', background: 'rgba(59,130,246,0.15)',
@@ -1037,7 +1081,7 @@ const SecurityDashboard = ({ user }) => {
                     cursor: 'pointer', fontSize: '0.88rem'
                   }}
                 >
-                  {testingTg ? 'Sending Test Alert...' : '🚀 Send Test Alert to Telegram'}
+                  {testingTg ? 'Connecting & Sending...' : '🚀 Send Test Alert to Telegram'}
                 </button>
               </div>
             </div>

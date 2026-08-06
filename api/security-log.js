@@ -192,8 +192,21 @@ export default async function handler(req, res) {
     await writeToFirestore(logEntry);
 
     // Send Telegram alert if bot is configured
-    const botToken = process.env.TELEGRAM_BOT_TOKEN;
-    const chatId   = process.env.TELEGRAM_CHAT_ID;
+    let botToken = process.env.TELEGRAM_BOT_TOKEN;
+    let chatId   = process.env.TELEGRAM_CHAT_ID;
+
+    if (!botToken || !chatId) {
+      try {
+        const db = getDb();
+        const tgSnap = await db.collection('settings').doc('telegram').get();
+        if (tgSnap.exists) {
+          const tgData = tgSnap.data();
+          botToken = botToken || tgData.token;
+          chatId   = chatId   || tgData.chatId;
+        }
+      } catch (e) {}
+    }
+
     if (botToken && chatId) {
       const text = `
 🚨 <b>ITShare Security Alert</b>
