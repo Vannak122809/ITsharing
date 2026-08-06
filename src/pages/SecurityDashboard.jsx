@@ -182,6 +182,7 @@ function LogRow({ log, expanded, onToggle }) {
             }}>
               {[
                 { label: 'Full IP',     value: log.ip },
+                { label: 'Device ID',   value: log.deviceId || '—' },
                 { label: 'ISP',        value: log.isp },
                 { label: 'Region',     value: `${log.region}, ${log.country}` },
                 { label: 'Timezone',   value: log.timezone },
@@ -693,6 +694,34 @@ const SecurityDashboard = ({ user }) => {
                               fontWeight: 700, fontSize: '0.75rem', cursor: 'pointer',
                             }}>
                             <Ban size={13} /> {actionLoading[`block_email_${g.ip}`] ? '...' : 'Block Account'}
+                          </button>
+                        )
+                      )}
+                      {/* Block / Unblock device */}
+                      {g.deviceId && (
+                        blockedEntities.some(b => b.deviceId === g.deviceId) ? (
+                          <button
+                            disabled={actionLoading[`unblock_dev_${g.ip}`]}
+                            onClick={() => manageUser('unblock_device', { deviceId: g.deviceId }, `unblock_dev_${g.ip}`)}
+                            style={{
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px',
+                              padding: '7px 12px', borderRadius: '10px', border: '1px solid #22c55e',
+                              background: 'rgba(34,197,94,0.12)', color: '#22c55e',
+                              fontWeight: 700, fontSize: '0.75rem', cursor: 'pointer',
+                            }}>
+                            <Unlock size={13} /> {actionLoading[`unblock_dev_${g.ip}`] ? '...' : 'Unlock Device'}
+                          </button>
+                        ) : (
+                          <button
+                            disabled={actionLoading[`block_dev_${g.ip}`]}
+                            onClick={() => manageUser('block_device', { deviceId: g.deviceId, note: `Brute force attacker device (${g.ip})` }, `block_dev_${g.ip}`)}
+                            style={{
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px',
+                              padding: '7px 12px', borderRadius: '10px', border: '1px solid #a855f7',
+                              background: 'rgba(168,85,247,0.12)', color: '#a855f7',
+                              fontWeight: 700, fontSize: '0.75rem', cursor: 'pointer',
+                            }}>
+                            <Ban size={13} /> {actionLoading[`block_dev_${g.ip}`] ? '...' : 'Block Device'}
                           </button>
                         )
                       )}
