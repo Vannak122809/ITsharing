@@ -274,6 +274,25 @@ const SecurityDashboard = ({ user }) => {
   const [testingTg, setTestingTg] = useState(false);
   const [manualType, setManualType]    = useState('ip');
 
+  // Live Telegram Commands Poller (enables /status, /ban_ip, /ban_device, /ban_account, /unblock on localhost!)
+  useEffect(() => {
+    if (!tgToken || !tgChatId) return;
+    let isSubscribed = true;
+
+    const interval = setInterval(async () => {
+      if (!isSubscribed) return;
+      try {
+        const { pollTelegramUpdates } = await import('../utils/telegramNotify');
+        await pollTelegramUpdates(tgToken, tgChatId, db);
+      } catch (e) {}
+    }, 2500);
+
+    return () => {
+      isSubscribed = false;
+      clearInterval(interval);
+    };
+  }, [tgToken, tgChatId]);
+
   // ── Helper: manage user action with API + Firestore Fallback ────────────
   const safeDocId = (str) => (str || '').replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 100);
 
