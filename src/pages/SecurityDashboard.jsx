@@ -1011,7 +1011,7 @@ const SecurityDashboard = ({ user }) => {
                     }
                     setTestingTg(true);
                     const { toast } = await import('react-hot-toast');
-                    const { saveTelegramConfig } = await import('../utils/telegramNotify');
+                    const { saveTelegramConfig, sendTelegramAlert } = await import('../utils/telegramNotify');
                     saveTelegramConfig(tgToken, tgChatId);
 
                     try {
@@ -1020,17 +1020,34 @@ const SecurityDashboard = ({ user }) => {
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ token: tgToken.trim(), chatId: tgChatId.trim() }),
                       });
-                      const data = await res.json();
-                      if (res.ok && data.ok) {
+                      const resText = await res.text();
+                      let data = null;
+                      try { data = JSON.parse(resText); } catch {}
+
+                      if (res.ok && data?.ok) {
                         toast.success('✅ Telegram Settings Saved!');
-                      } else {
-                        toast.error(`❌ Telegram Error: ${data.error || 'Failed to save settings'}`);
+                        setTestingTg(false);
+                        return;
+                      } else if (data?.error) {
+                        toast.error(`❌ Telegram API Error: ${data.error}`);
+                        setTestingTg(false);
+                        return;
                       }
-                    } catch (err) {
-                      toast.error(`❌ Connection Error: ${err.message}`);
-                    } finally {
-                      setTestingTg(false);
+                    } catch (e) {
+                      // Fallback for local Vite dev
                     }
+
+                    // Local dev mode fallback
+                    const directRes = await sendTelegramAlert(
+                      '✅ <b>Telegram Settings Saved!</b>\nYour Telegram Bot credentials have been stored successfully.',
+                      null, tgToken, tgChatId
+                    );
+                    if (directRes.ok) {
+                      toast.success('✅ Telegram Settings Saved!');
+                    } else {
+                      toast.error(`❌ Telegram Error: ${directRes.error || directRes.description || 'Check Bot Token & Chat ID'}`);
+                    }
+                    setTestingTg(false);
                   }}
                   style={{
                     padding: '12px 20px', borderRadius: '12px', background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
@@ -1050,7 +1067,7 @@ const SecurityDashboard = ({ user }) => {
                     }
                     setTestingTg(true);
                     const { toast } = await import('react-hot-toast');
-                    const { saveTelegramConfig } = await import('../utils/telegramNotify');
+                    const { saveTelegramConfig, sendTelegramAlert } = await import('../utils/telegramNotify');
                     saveTelegramConfig(tgToken, tgChatId);
 
                     try {
@@ -1063,17 +1080,35 @@ const SecurityDashboard = ({ user }) => {
                           text: '🚀 <b>ITShare Security Bot Connected!</b>\nYour Telegram Bot is working! Live security alerts, unblock appeals, and ban commands are now connected.'
                         }),
                       });
-                      const data = await res.json();
-                      if (res.ok && data.ok) {
+                      const resText = await res.text();
+                      let data = null;
+                      try { data = JSON.parse(resText); } catch {}
+
+                      if (res.ok && data?.ok) {
                         toast.success('🚀 Test Alert Sent to Telegram App!');
-                      } else {
-                        toast.error(`❌ Telegram API Error: ${data.error || 'Check Bot Token & Chat ID'}`);
+                        setTestingTg(false);
+                        return;
+                      } else if (data?.error) {
+                        toast.error(`❌ Telegram API Error: ${data.error}`);
+                        setTestingTg(false);
+                        return;
                       }
-                    } catch (err) {
-                      toast.error(`❌ Network Error: ${err.message}`);
-                    } finally {
-                      setTestingTg(false);
+                    } catch (e) {
+                      // Fallback for local Vite dev
                     }
+
+                    // Local dev mode fallback
+                    const directRes = await sendTelegramAlert(
+                      '🚀 <b>ITShare Security Bot Connected!</b>\nYour Telegram Bot is working! Live security alerts, unblock appeals, and ban commands are now connected.',
+                      null, tgToken, tgChatId
+                    );
+
+                    if (directRes.ok) {
+                      toast.success('🚀 Test Alert Sent to Telegram App!');
+                    } else {
+                      toast.error(`❌ Telegram Error: ${directRes.error || directRes.description || 'Check Bot Token & Chat ID'}`);
+                    }
+                    setTestingTg(false);
                   }}
                   style={{
                     padding: '12px 20px', borderRadius: '12px', background: 'rgba(59,130,246,0.15)',

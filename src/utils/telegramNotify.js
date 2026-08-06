@@ -19,8 +19,11 @@ export function saveTelegramConfig(token, chatId) {
 /**
  * Send a Markdown-formatted message to Telegram Admin Chat
  */
-export async function sendTelegramAlert(text, replyMarkup = null) {
-  const { token, chatId } = getTelegramConfig();
+export async function sendTelegramAlert(text, replyMarkup = null, overrideToken = null, overrideChatId = null) {
+  const config = getTelegramConfig();
+  const token  = (overrideToken || config.token || '').trim();
+  const chatId = (overrideChatId || config.chatId || '').trim();
+
   if (!token || !chatId) return { ok: false, error: 'Telegram Bot Token or Chat ID not configured' };
 
   try {
