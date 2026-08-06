@@ -83,21 +83,21 @@ export default async function handler(req, res) {
     const webhookUrl = `https://itsharing.vercel.app/api/telegram-webhook?token=${cleanToken}`;
     await fetch(`https://api.telegram.org/bot${cleanToken}/setWebhook?url=${encodeURIComponent(webhookUrl)}`);
 
-    // 4. Register Bot Menu Commands with Telegram
+    // 4. Register Bot Menu Commands with Telegram (Clean BotFather Format)
     await fetch(`https://api.telegram.org/bot${cleanToken}/setMyCommands`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         commands: [
-          { command: 'status', description: '📊 Real-time security stats & active ban breakdown' },
-          { command: 'blocked_list', description: '🚫 List & unblock active banned entities' },
-          { command: 'appeals', description: '✉️ View pending user unblock appeals' },
-          { command: 'chat', description: '💬 Live user chat & support message inbox' },
-          { command: 'ban_ip', description: '🌐 Ban IP Address (e.g. /ban_ip 175.100.52.181)' },
-          { command: 'ban_device', description: '📱 Ban Device ID (e.g. /ban_device DEV-XXX)' },
-          { command: 'ban_account', description: '👤 Ban Account Email (e.g. /ban_account email)' },
-          { command: 'unblock', description: '🔓 Unblock Target (e.g. /unblock target)' },
-          { command: 'help', description: '🛡️ Display command guide & menu' }
+          { command: 'status', description: 'Real-time security stats & active bans' },
+          { command: 'blocked_list', description: 'List & unblock active banned entities' },
+          { command: 'appeals', description: 'View pending user unblock appeals' },
+          { command: 'chat', description: 'Live user chat & support message inbox' },
+          { command: 'ban_ip', description: 'Ban IP address in real-time' },
+          { command: 'ban_device', description: 'Ban Device ID in real-time' },
+          { command: 'ban_account', description: 'Ban User Account Email in real-time' },
+          { command: 'unblock', description: 'Unblock IP, Device ID, or Email' },
+          { command: 'help', description: 'Display admin command guide and menu' }
         ]
       })
     });

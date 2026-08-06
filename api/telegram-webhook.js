@@ -308,17 +308,17 @@ export default async function handler(req, res) {
 
     if (text.startsWith('/start') || text.startsWith('/help')) {
       const helpMsg = `
-🛡️ <b>ITSHARE TELEGRAM SECURITY BOT ADMIN</b>
+🛡️ <b>ITSHARE TELEGRAM BOT COMMANDS LIST</b>
 ─────────────────────────────
-<b>Available Quick Commands:</b>
-• <code>/status</code> — Real-time security stats & status
-• <code>/blocked_list</code> — View & unblock active banned entities
-• <code>/appeals</code> — View pending user unblock appeals
-• <code>/chat</code> — View user chat inbox & messages
-• <code>/ban_ip 175.100.52.181</code> — Ban IP Address
-• <code>/ban_device DEV-8F92A1B4</code> — Ban Device ID
-• <code>/ban_account user@gmail.com</code> — Ban User Account Email
-• <code>/unblock target</code> — Unblock IP, Device ID, or Email
+<code>status</code> - Real-time security stats & active bans
+<code>blocked_list</code> - List & unblock active banned entities
+<code>appeals</code> - View pending user unblock appeals
+<code>chat</code> - Live user chat & support message inbox
+<code>ban_ip</code> - Ban IP address in real-time (e.g. /ban_ip 175.100.52.181)
+<code>ban_device</code> - Ban Device ID in real-time (e.g. /ban_device DEV-XXX)
+<code>ban_account</code> - Ban User Account Email in real-time (e.g. /ban_account user@gmail.com)
+<code>unblock</code> - Unblock IP, Device ID, or Email (e.g. /unblock target)
+<code>help</code> - Display admin command guide and menu
 ─────────────────────────────
 <i>Select any option below to manage your website in real-time!</i>
       `.trim();
