@@ -98,16 +98,23 @@ function LogRow({ log, expanded, onToggle }) {
           </div>
         </div>
 
-        {/* IP */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Monitor size={14} color="var(--text-muted)" />
-          <span style={{ fontFamily: 'monospace', fontSize: '0.85rem', color: 'var(--text-main)', fontWeight: 600 }}>
-            {log.ip || 'Unknown'}
-          </span>
-          {(log.isProxy || log.isHosting) && (
-            <span style={{ background: '#ef444420', color: '#ef4444', fontSize: '0.65rem', fontWeight: 800, padding: '2px 6px', borderRadius: '6px' }}>
-              {log.isProxy ? 'VPN' : 'BOT'}
+        {/* IP & Device ID */}
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Monitor size={14} color="var(--text-muted)" />
+            <span style={{ fontFamily: 'monospace', fontSize: '0.85rem', color: 'var(--text-main)', fontWeight: 600 }}>
+              {log.ip || 'Unknown'}
             </span>
+            {(log.isProxy || log.isHosting) && (
+              <span style={{ background: '#ef444420', color: '#ef4444', fontSize: '0.65rem', fontWeight: 800, padding: '2px 6px', borderRadius: '6px' }}>
+                {log.isProxy ? 'VPN' : 'BOT'}
+              </span>
+            )}
+          </div>
+          {log.deviceId && (
+            <div style={{ fontSize: '0.72rem', color: '#a855f7', fontFamily: 'monospace', fontWeight: 700, marginTop: '2px' }}>
+              📱 {log.deviceId}
+            </div>
           )}
         </div>
 
@@ -598,9 +605,14 @@ const SecurityDashboard = ({ user }) => {
                   <div style={{ fontWeight: 900, fontSize: '1.4rem', color: i === 0 ? '#ef4444' : i === 1 ? '#f59e0b' : 'var(--text-muted)', width: '32px', textAlign: 'center' }}>
                     #{i + 1}
                   </div>
-                  {/* IP + ISP */}
+                  {/* IP + Device ID + ISP */}
                   <div>
                     <div style={{ fontFamily: 'monospace', fontWeight: 800, fontSize: '1rem', color: '#ef4444' }}>{g.ip}</div>
+                    {g.deviceId && (
+                      <div style={{ fontSize: '0.75rem', color: '#a855f7', fontFamily: 'monospace', fontWeight: 800, marginTop: '2px' }}>
+                        📱 {g.deviceId}
+                      </div>
+                    )}
                     <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '2px' }}>{g.isp || '—'}</div>
                     <div style={{ display: 'flex', gap: '6px', marginTop: '6px', flexWrap: 'wrap' }}>
                       {g.isProxy && <span style={{ background: '#ef444420', color: '#ef4444', fontSize: '0.65rem', fontWeight: 800, padding: '2px 8px', borderRadius: '6px', border: '1px solid #ef444440' }}>VPN</span>}
