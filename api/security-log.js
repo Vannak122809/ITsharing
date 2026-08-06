@@ -192,17 +192,18 @@ export default async function handler(req, res) {
     await writeToFirestore(logEntry);
 
     // Send Telegram alert if bot is configured
-    let botToken = process.env.TELEGRAM_BOT_TOKEN;
-    let chatId   = process.env.TELEGRAM_CHAT_ID;
-    const db     = getDb();
+    let botToken = metadata.telegramToken || process.env.TELEGRAM_BOT_TOKEN;
+    let chatId   = metadata.telegramChatId || process.env.TELEGRAM_CHAT_ID;
 
     if (!botToken || !chatId) {
       try {
-        const tgSnap = await db.collection('settings').doc('telegram').get();
-        if (tgSnap.exists) {
-          const tgData = tgSnap.data();
-          botToken = botToken || tgData.token;
-          chatId   = chatId   || tgData.chatId;
+        const PROJECT_ID = process.env.VITE_FIREBASE_PROJECT_ID || 'login-form-49609';
+        const tgRes = await fetch(`https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/settings/telegram`);
+        if (tgRes.ok) {
+          const tgData = await tgRes.json();
+          const fields = tgData.fields || {};
+          botToken = botToken || fields.token?.stringValue || '';
+          chatId   = chatId   || fields.chatId?.stringValue || '';
         }
       } catch (e) {}
     }

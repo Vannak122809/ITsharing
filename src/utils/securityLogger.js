@@ -1,9 +1,5 @@
 /**
- * securityLogger.js — Client-side helper to report security events to /api/security-log
- *
- * Usage:
- *   import { logSecurityEvent } from '../utils/securityLogger';
- *   logSecurityEvent('failed_login', { email: 'test@x.com', page: '/login' });
+ * securityLogger.js — Client-side helper to report security events to /api/security-log and Telegram
  */
 
 import { db } from '../firebase';
@@ -16,7 +12,10 @@ import { getDeviceId } from './deviceFingerprint';
  */
 export async function logSecurityEvent(eventType, metadata = {}) {
   const deviceId = getDeviceId();
-  const fullMeta = { ...metadata, deviceId };
+  const telegramToken  = localStorage.getItem('itshare_telegram_token') || '';
+  const telegramChatId = localStorage.getItem('itshare_telegram_chat_id') || '';
+
+  const fullMeta = { ...metadata, deviceId, telegramToken, telegramChatId };
 
   try {
     const res = await fetch('/api/security-log', {
@@ -46,14 +45,42 @@ export async function logSecurityEvent(eventType, metadata = {}) {
       metaNote: metadata.note || '',
     });
   } catch {
-    // Silent fail if both fail — logging must never break app execution
+    // Silent fail
+  }
+
+  // Direct Telegram Alert Fallback for Local Dev Mode
+  if (telegramToken && telegramChatId) {
+    try {
+      const { sendTelegramAlert } = await import('./telegramNotify');
+      const eventLabel = eventType === 'failed_login'
+        ? '🔑 FAILED LOGIN ATTEMPT'
+        : eventType === 'brute_force_detected'
+        ? '💥 BRUTE FORCE ATTACK'
+        : eventType === 'rate_limit_hit'
+        ? '⚡ RATE LIMIT EXCEEDED'
+        : eventType.toUpperCase().replace(/_/g, ' ');
+
+      const alertText = `
+🚨 <b>ITShare Security Alert</b> 🚨
+
+<b>Attacker Action:</b> ${eventLabel}
+<b>Status:</b> ⚠️ ACTIVE ATTACKER (NOT BLOCKED)
+<b>Target Account:</b> <code>${metadata.email || 'None'}</code>
+<b>Device ID:</b> <code>${deviceId}</code>
+<b>Location:</b> Local Development Server
+<b>Threat Score:</b> ${eventType === 'brute_force_detected' ? 50 : 30} / 100
+      `.trim();
+
+      const inlineButtons = [
+        [{ text: '📱 Ban Device', callback_data: `ban_device:${deviceId}` }]
+      ];
+      if (metadata.email) {
+        inlineButtons.push([{ text: '👤 Ban Account', callback_data: `ban_account:${metadata.email}` }]);
+      }
+
+      await sendTelegramAlert(alertText, { inline_keyboard: inlineButtons }, telegramToken, telegramChatId);
+    } catch {
+      // Silent fail
+    }
   }
 }
-
-// ── Pre-configured helpers ────────────────────────────────────────────────────
-
-export const logFailedLogin   = (email) => logSecurityEvent('failed_login',         { email, page: '/login' });
-export const logRateLimit     = (page)  => logSecurityEvent('rate_limit_hit',        { page });
-export const logBruteForce    = (email) => logSecurityEvent('brute_force_detected',  { email, page: '/login' });
-export const logUnauthorized  = (page)  => logSecurityEvent('unauthorized_access',   { page });
-export const logBlockedDl     = (page)  => logSecurityEvent('blocked_download',      { page });

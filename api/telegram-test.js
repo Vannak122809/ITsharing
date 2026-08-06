@@ -69,14 +69,24 @@ export default async function handler(req, res) {
       });
     }
 
-    // 2. Save settings to Firestore `settings/telegram` document
+    // 2. Save settings to Firestore `settings/telegram` document via REST API
     try {
-      const db = getDb();
-      await db.collection('settings').doc('telegram').set({
-        token: cleanToken,
-        chatId: cleanChatId,
-        updatedAt: new Date().toISOString(),
+      const PROJECT_ID = process.env.VITE_FIREBASE_PROJECT_ID || 'login-form-49609';
+      const saveUrl = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/settings/telegram`;
+      await fetch(saveUrl, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fields: {
+            token: { stringValue: cleanToken },
+            chatId: { stringValue: cleanChatId },
+            updatedAt: { stringValue: new Date().toISOString() }
+          }
+        })
       });
+    } catch (dbErr) {
+      console.warn('[telegram-test] Firestore save warning:', dbErr);
+    }
 
       // 3. Register Webhook for Production or Delete Webhook for Localhost
       const host = req.headers.host || '';
