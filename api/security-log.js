@@ -180,7 +180,8 @@ export default async function handler(req, res) {
     isHosting:   geo.isHosting   || false,
     // Threat
     threatScore,
-    // Account info
+    // Device & Metadata info
+    deviceId:       metadata.deviceId || '',
     metaEmail:      metadata.email   || '',
     metaPage:       metadata.page    || '',
     metaNote:       metadata.note    || '',

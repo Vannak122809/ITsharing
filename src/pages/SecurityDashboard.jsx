@@ -35,13 +35,15 @@ function getThreatLevel(score) {
   return 'low';
 }
 
-function timeAgo(isoStr) {
-  const diff = Date.now() - new Date(isoStr).getTime();
-  const s = Math.floor(diff / 1000);
-  if (s < 60)  return `${s}s ago`;
-  if (s < 3600) return `${Math.floor(s / 60)}m ago`;
-  if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
-  return `${Math.floor(s / 86400)}d ago`;
+function getLogDeviceId(log) {
+  if (log.deviceId) return log.deviceId;
+  const raw = `${log.ip || '127.0.0.1'}~~~${log.userAgent || 'agent'}`;
+  let hash = 0;
+  for (let i = 0; i < raw.length; i++) {
+    hash = (hash << 5) - hash + raw.charCodeAt(i);
+    hash |= 0;
+  }
+  return `DEV-${Math.abs(hash).toString(16).toUpperCase().padStart(8, '0')}`;
 }
 
 function StatCard({ icon: Icon, label, value, color, sub }) {
@@ -111,11 +113,9 @@ function LogRow({ log, expanded, onToggle }) {
               </span>
             )}
           </div>
-          {log.deviceId && (
-            <div style={{ fontSize: '0.72rem', color: '#a855f7', fontFamily: 'monospace', fontWeight: 700, marginTop: '2px' }}>
-              📱 {log.deviceId}
-            </div>
-          )}
+          <div style={{ fontSize: '0.72rem', color: '#a855f7', fontFamily: 'monospace', fontWeight: 700, marginTop: '2px' }}>
+            📱 {getLogDeviceId(log)}
+          </div>
         </div>
 
         {/* Location */}
@@ -189,7 +189,7 @@ function LogRow({ log, expanded, onToggle }) {
             }}>
               {[
                 { label: 'Full IP',     value: log.ip },
-                { label: 'Device ID',   value: log.deviceId || '—' },
+                { label: 'Device ID',   value: getLogDeviceId(log) },
                 { label: 'ISP',        value: log.isp },
                 { label: 'Region',     value: `${log.region}, ${log.country}` },
                 { label: 'Timezone',   value: log.timezone },
@@ -608,11 +608,9 @@ const SecurityDashboard = ({ user }) => {
                   {/* IP + Device ID + ISP */}
                   <div>
                     <div style={{ fontFamily: 'monospace', fontWeight: 800, fontSize: '1rem', color: '#ef4444' }}>{g.ip}</div>
-                    {g.deviceId && (
-                      <div style={{ fontSize: '0.75rem', color: '#a855f7', fontFamily: 'monospace', fontWeight: 800, marginTop: '2px' }}>
-                        📱 {g.deviceId}
-                      </div>
-                    )}
+                    <div style={{ fontSize: '0.75rem', color: '#a855f7', fontFamily: 'monospace', fontWeight: 800, marginTop: '2px' }}>
+                      📱 {getLogDeviceId(g)}
+                    </div>
                     <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '2px' }}>{g.isp || '—'}</div>
                     <div style={{ display: 'flex', gap: '6px', marginTop: '6px', flexWrap: 'wrap' }}>
                       {g.isProxy && <span style={{ background: '#ef444420', color: '#ef4444', fontSize: '0.65rem', fontWeight: 800, padding: '2px 8px', borderRadius: '6px', border: '1px solid #ef444440' }}>VPN</span>}
@@ -710,11 +708,12 @@ const SecurityDashboard = ({ user }) => {
                         )
                       )}
                       {/* Block / Unblock device */}
-                      {g.deviceId && (
-                        blockedEntities.some(b => b.deviceId === g.deviceId) ? (
+                      {(() => {
+                        const devId = getLogDeviceId(g);
+                        return blockedEntities.some(b => b.deviceId === devId) ? (
                           <button
                             disabled={actionLoading[`unblock_dev_${g.ip}`]}
-                            onClick={() => manageUser('unblock_device', { deviceId: g.deviceId }, `unblock_dev_${g.ip}`)}
+                            onClick={() => manageUser('unblock_device', { deviceId: devId }, `unblock_dev_${g.ip}`)}
                             style={{
                               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px',
                               padding: '7px 12px', borderRadius: '10px', border: '1px solid #22c55e',
@@ -726,7 +725,7 @@ const SecurityDashboard = ({ user }) => {
                         ) : (
                           <button
                             disabled={actionLoading[`block_dev_${g.ip}`]}
-                            onClick={() => manageUser('block_device', { deviceId: g.deviceId, note: `Brute force attacker device (${g.ip})` }, `block_dev_${g.ip}`)}
+                            onClick={() => manageUser('block_device', { deviceId: devId, note: `Brute force attacker device (${g.ip})` }, `block_dev_${g.ip}`)}
                             style={{
                               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px',
                               padding: '7px 12px', borderRadius: '10px', border: '1px solid #a855f7',
@@ -735,8 +734,8 @@ const SecurityDashboard = ({ user }) => {
                             }}>
                             <Ban size={13} /> {actionLoading[`block_dev_${g.ip}`] ? '...' : 'Block Device'}
                           </button>
-                        )
-                      )}
+                        );
+                      })()}
                       {/* Clear logs */}
                       <button
                         disabled={actionLoading[`clear_${g.ip}`]}
