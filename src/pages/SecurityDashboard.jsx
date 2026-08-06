@@ -523,9 +523,7 @@ const SecurityDashboard = ({ user }) => {
               🔒 Firewall Active
             </span>
           </div>
-        </div>            </button>
-          </div>
-        </motion.div>
+        </div>
 
         {/* Stats Grid */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px', marginBottom: '32px' }}>
