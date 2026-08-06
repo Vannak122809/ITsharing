@@ -100,7 +100,45 @@ async function listUserMessagesREST() {
   }
 }
 
-// ── Persistent Master Control Panel Keyboard ──────────────────────────────────
+// ── Telegram Bot Keyboards (Inline & Custom Reply Keyboard) ────────────────────
+function getInlineMenuKeyboard() {
+  return {
+    inline_keyboard: [
+      [
+        { text: '🕵️‍♂️ Check Registration Date', callback_data: 'check_reg_date' }
+      ],
+      [
+        { text: '🚀 Share ID', switch_inline_query: '' }
+      ]
+    ]
+  };
+}
+
+function getReplyMenuKeyboard() {
+  return {
+    keyboard: [
+      [
+        { text: '👤 User', request_user: { request_id: 1, user_is_bot: false } },
+        { text: '🤖 Bot', request_user: { request_id: 2, user_is_bot: true } }
+      ],
+      [
+        { text: '📢 Channel', request_chat: { request_id: 3, chat_is_channel: true } },
+        { text: '👥 Group', request_chat: { request_id: 4, chat_is_channel: false } }
+      ],
+      [
+        { text: '🏠 My Channel', request_chat: { request_id: 5, chat_is_channel: true, bot_is_member: true } },
+        { text: '🏠 My Group', request_chat: { request_id: 6, chat_is_channel: false, bot_is_member: true } }
+      ],
+      [
+        { text: '💬 Forum', request_chat: { request_id: 7, chat_is_channel: false, is_forum: true } },
+        { text: '💬 My Forum', request_chat: { request_id: 8, chat_is_channel: false, is_forum: true, bot_is_member: true } }
+      ]
+    ],
+    resize_keyboard: true,
+    is_persistent: true
+  };
+}
+
 function getMasterControlKeyboard(extraButtons = []) {
   const masterButtons = [
     [
@@ -159,6 +197,26 @@ async function answerCallbackQuery(botToken, callbackQueryId, text) {
   } catch (e) {}
 }
 
+async function saveTelegramSettingsREST(token, chatId) {
+  if (!token || !chatId) return;
+  try {
+    const url = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/settings/telegram?updateMask.fieldPaths=token&updateMask.fieldPaths=chatId&updateMask.fieldPaths=updatedAt`;
+    await fetch(url, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fields: {
+          token: { stringValue: String(token).trim() },
+          chatId: { stringValue: String(chatId).trim() },
+          updatedAt: { stringValue: new Date().toISOString() }
+        }
+      })
+    });
+  } catch (e) {
+    console.warn('[telegram-webhook] Failed to auto-save chatId:', e);
+  }
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
@@ -178,6 +236,12 @@ export default async function handler(req, res) {
 
     if (!botToken) {
       return res.status(400).json({ error: 'Missing Telegram Bot Token' });
+    }
+
+    const incomingChatId = update.message?.chat?.id || update.callback_query?.message?.chat?.id;
+    if (incomingChatId) {
+      // Auto-persist active admin chatId so submit-appeal API always works!
+      saveTelegramSettingsREST(botToken, incomingChatId).catch(() => {});
     }
 
     const safeId = (str) => (str || '').toLowerCase().replace(/[^a-zA-Z0-9._-]/g, '_');
@@ -294,8 +358,56 @@ export default async function handler(req, res) {
           });
           await sendTelegramReply(botToken, chatId, chatText);
         }
+      } else if (action === 'check_reg_date') {
+        const userId = cb.from.id;
+        const firstName = cb.from.first_name || 'User';
+        await answerCallbackQuery(botToken, cb.id, '🕵️‍♂️ Checking Registration Date...');
+
+        let estDate = '2023 - Present';
+        if (userId < 100000000) estDate = '2013 - 2015';
+        else if (userId < 300000000) estDate = '2015 - 2017';
+        else if (userId < 800000000) estDate = '2017 - 2019';
+        else if (userId < 1300000000) estDate = '2019 - 2021';
+        else if (userId < 2000000000) estDate = '2021 - 2023';
+
+        const infoMsg = `
+🕵️‍♂️ <b>TELEGRAM ACCOUNT REGISTRATION INFO</b>
+─────────────────────────────
+• 👤 <b>Name:</b> ${firstName}
+• 🆔 <b>Telegram User ID:</b> <code>${userId}</code>
+• 📅 <b>Estimated Registration Date:</b> <code>${estDate}</code>
+─────────────────────────────
+        `.trim();
+        await sendTelegramReply(botToken, chatId, infoMsg);
       }
 
+      return res.status(200).json({ ok: true });
+    }
+
+    // ── Handle User / Chat Shared Button Triggers ─────────────────────────────
+    if (message.user_shared) {
+      const shared = message.user_shared;
+      const sharedMsg = `
+👤 <b>USER / BOT SELECTION RECEIVED</b>
+─────────────────────────────
+• <b>Request ID:</b> <code>${shared.request_id}</code>
+• <b>Selected User ID:</b> <code>${shared.user_id}</code>
+─────────────────────────────
+      `.trim();
+      await sendTelegramReply(botToken, chatId, sharedMsg);
+      return res.status(200).json({ ok: true });
+    }
+
+    if (message.chat_shared) {
+      const shared = message.chat_shared;
+      const sharedMsg = `
+📢 <b>CHANNEL / GROUP / FORUM SELECTION RECEIVED</b>
+─────────────────────────────
+• <b>Request ID:</b> <code>${shared.request_id}</code>
+• <b>Selected Chat ID:</b> <code>${shared.chat_id}</code>
+─────────────────────────────
+      `.trim();
+      await sendTelegramReply(botToken, chatId, sharedMsg);
       return res.status(200).json({ ok: true });
     }
 
@@ -316,15 +428,15 @@ export default async function handler(req, res) {
 <code>blocked_list</code> - List & unblock active banned entities
 <code>appeals</code> - View pending user unblock appeals
 <code>chat</code> - Live user chat & support message inbox
-<code>ban_ip</code> - Ban IP address in real-time (e.g. /ban_ip 175.100.52.181)
-<code>ban_device</code> - Ban Device ID in real-time (e.g. /ban_device DEV-XXX)
-<code>ban_account</code> - Ban User Account Email in real-time (e.g. /ban_account user@gmail.com)
-<code>unblock</code> - Unblock IP, Device ID, or Email (e.g. /unblock target)
-<code>help</code> - Display admin command guide and menu
+<code>ban_ip</code> - Ban IP address in real-time
+<code>ban_device</code> - Ban Device ID in real-time
+<code>ban_account</code> - Ban User Account Email in real-time
+<code>unblock</code> - Unblock IP, Device ID, or Email
 ─────────────────────────────
-<i>Select any option below to manage your website in real-time!</i>
+<i>Select an option below or use the bottom keyboard menu!</i>
       `.trim();
-      await sendTelegramReply(botToken, chatId, helpMsg);
+      await sendTelegramReply(botToken, chatId, helpMsg, getInlineMenuKeyboard());
+      await sendTelegramReply(botToken, chatId, '👇 <b>Main Navigation Menu:</b>', getReplyMenuKeyboard());
     } else if (text.startsWith('/status')) {
       const [logsCount, bansList, appealsList, chatList] = await Promise.all([
         listLogsCountREST(),

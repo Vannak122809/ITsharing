@@ -41,6 +41,6 @@
       ],
       "destination": "/api/bot-share-course?course=$course"
     },
-    { "source": "/(.*)", "destination": "/" }
+    { "source": "/((?!api/).*)", "destination": "/" }
   ]
 }

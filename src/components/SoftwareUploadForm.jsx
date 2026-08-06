@@ -1,8 +1,8 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
     Upload, X, Monitor, Apple, CheckCircle2, 
-    RefreshCw, Save, HardDrive, Cpu, Layers,
-    Plus, Info, AlertCircle, ShieldCheck, Database, Globe
+    RefreshCw, Save, HardDrive, Layers, Cloud, Sparkles,
+    Plus, Info, AlertCircle, ShieldCheck, Database, Globe, Type, Image as ImageIcon, FileCode
 } from 'lucide-react';
 import { uploadFileToR2 } from '../r2Utils';
 import { db } from '../firebase';
@@ -33,6 +33,8 @@ const SoftwareUploadForm = ({ onComplete, editData = null }) => {
     const [uploadProgress, setUploadProgress] = useState(0);
     const [isUploadingIcon, setIsUploadingIcon] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    const [showAdvanced, setShowAdvanced] = useState(false);
+    const [selectedBucket, setSelectedBucket] = useState('software');
 
     const fileInputRef = useRef(null);
     const iconInputRef = useRef(null);
@@ -65,10 +67,8 @@ const SoftwareUploadForm = ({ onComplete, editData = null }) => {
         const file = e.target.files[0];
         if (!file) return;
 
-        // Auto-fill metadata fields if empty
         if (!title) setTitle(formatFileNameToTitle(file.name));
         
-        // Calculate file size string
         const sizeInMb = file.size / (1024 * 1024);
         if (sizeInMb >= 1024) {
             setSize(`${(sizeInMb / 1024).toFixed(2)} GB`);
@@ -80,14 +80,13 @@ const SoftwareUploadForm = ({ onComplete, editData = null }) => {
         setUploadProgress(0);
 
         try {
-            console.log(`[Software Upload] Starting chunked upload for: ${file.name} (${file.size} bytes)`);
             const fileKey = await uploadFileToR2(file, 'software', (percent) => {
                 setUploadProgress(percent);
             });
             
             const publicUrl = `${import.meta.env.VITE_R2_PUBLIC_URL}/${fileKey}`;
             setDownloadUrl(publicUrl);
-            console.log(`[Software Upload] Upload successful. Public URL: ${publicUrl}`);
+            toast.success('Binary file uploaded successfully to Cloudflare R2!');
         } catch (error) {
             console.error('[Software Upload] R2 upload failed:', error);
             toast.error(`File upload failed: ${error.message || 'Check R2 CORS/credentials.'}`);
@@ -102,11 +101,10 @@ const SoftwareUploadForm = ({ onComplete, editData = null }) => {
 
         setIsUploadingIcon(true);
         try {
-            console.log(`[Icon Upload] Uploading icon file: ${file.name}`);
             const fileKey = await uploadFileToR2(file, 'software_icons');
             const publicUrl = `${import.meta.env.VITE_R2_PUBLIC_URL}/${fileKey}`;
             setIconUrl(publicUrl);
-            console.log(`[Icon Upload] Icon uploaded to: ${publicUrl}`);
+            toast.success('Icon uploaded successfully!');
         } catch (error) {
             console.error('[Icon Upload] Failed:', error);
             toast.error(`Icon upload failed: ${error.message}`);
@@ -116,7 +114,7 @@ const SoftwareUploadForm = ({ onComplete, editData = null }) => {
     };
 
     const handleSave = async (e) => {
-        e.preventDefault();
+        if (e) e.preventDefault();
         if (!title.trim()) {
             toast.error('Please specify a software title.');
             return;
@@ -143,11 +141,11 @@ const SoftwareUploadForm = ({ onComplete, editData = null }) => {
             size: size.trim() || 'Unknown',
             developer: developer.trim() || 'Unknown Developer',
             downloadUrl: downloadUrl.trim(),
-            url: downloadUrl.trim(), // fallback field
+            url: downloadUrl.trim(),
             iconUrl: iconUrl.trim() || null,
-            icon: iconUrl.trim() || null, // fallback field
+            icon: iconUrl.trim() || null,
             description: description.trim(),
-            desc: description.trim(), // fallback field
+            desc: description.trim(),
             requirements: requirementsArray.length ? requirementsArray : ['Compatible Operating System', 'Standard Hardware Specifications'],
             features: featuresArray.length ? featuresArray : ['Direct Download', 'Verified Integrity'],
             folder,
@@ -157,16 +155,16 @@ const SoftwareUploadForm = ({ onComplete, editData = null }) => {
 
         try {
             if (isEditMode) {
-                console.log(`[Software DB] Updating existing software document: ${editData.id}`);
                 const docRef = doc(db, 'software', editData.id);
                 await updateDoc(docRef, softwareDataObj);
+                toast.success('Software record updated successfully!');
             } else {
-                console.log('[Software DB] Creating new software document');
                 const docRef = collection(db, 'software');
                 await addDoc(docRef, {
                     ...softwareDataObj,
                     createdAt: serverTimestamp()
                 });
+                toast.success('Software package published successfully!');
             }
 
             if (onComplete) onComplete();
@@ -179,243 +177,338 @@ const SoftwareUploadForm = ({ onComplete, editData = null }) => {
     };
 
     return (
-        <div className={`software-upload-container ${os}-theme`}>
-            {/* Subtle glow effect */}
-            <div className="glow-orb-soft" />
+        <div className={`artistic-upload-container ${os === 'mac' ? 'mac-theme' : 'windows-theme'}`}>
+            {/* Artistic Background Glow */}
+            <div className="glow-orb" style={{ backgroundColor: os === 'mac' ? '#a855f7' : '#2563eb' }} />
 
-            <div className="software-upload-card glass-morphism-soft">
-                <header className="software-upload-header">
-                    <div className="header-info">
-                        <div className="icon-wrapper">
-                            <HardDrive size={26} />
+            <div className="upload-master-content glass-morphism">
+                {/* Header */}
+                <header className="upload-master-header">
+                    <div className="header-brand-info">
+                        <div 
+                            className="artistic-cat-icon" 
+                            style={{ 
+                                backgroundColor: os === 'mac' ? '#a855f7' : '#2563eb',
+                                boxShadow: `0 10px 30px ${os === 'mac' ? 'rgba(168,85,247,0.4)' : 'rgba(37,99,235,0.4)'}`
+                            }}
+                        >
+                            <HardDrive size={28} />
                         </div>
-                        <div className="title-text">
-                            <h2>{isEditMode ? 'Modify Software Identity' : 'Publish New Software Package'}</h2>
-                            <p>Store binaries securely in Cloudflare R2 and index in Firestore</p>
+                        <div className="text-meta">
+                            <h2>{isEditMode ? 'Modify Software Identity' : 'Publish Software Package'}</h2>
+                            <p>Store binaries securely in Cloudflare R2 & index in Firestore &bull; {os.toUpperCase()}</p>
                         </div>
                     </div>
-                    <button className="close-btn" onClick={onComplete} title="Close Form">
-                        <X size={20} />
-                    </button>
+
+                    <div className="upload-header-controls">
+                        <button 
+                            type="button"
+                            className={`cloud-setup-btn ${showAdvanced ? 'active' : ''}`} 
+                            onClick={() => setShowAdvanced(!showAdvanced)}
+                        >
+                            <Cloud size={16} /> Cloud Config
+                        </button>
+                        <div className="os-switcher-pill">
+                            <button 
+                                type="button" 
+                                className={`pill-os ${os === 'windows' ? 'active' : ''}`}
+                                onClick={() => setOs('windows')}
+                            >
+                                <Monitor size={15} /> Windows
+                            </button>
+                            <button 
+                                type="button" 
+                                className={`pill-os ${os === 'mac' ? 'active' : ''}`}
+                                onClick={() => setOs('mac')}
+                            >
+                                <Apple size={15} /> macOS
+                            </button>
+                        </div>
+                    </div>
                 </header>
 
-                <form onSubmit={handleSave} className="software-upload-body">
-                    <div className="form-main-grid">
-                        {/* Column 1: Metadata inputs */}
-                        <div className="inputs-column">
-                            <div className="input-row" style={{ alignItems: 'flex-end' }}>
-                                <div className="form-group" style={{ minWidth: '80px', width: '80px' }}>
-                                    <label>Icon</label>
-                                    <div 
-                                        className="icon-upload-preview-box" 
-                                        onClick={() => !isUploadingIcon && iconInputRef.current.click()}
-                                        style={{
-                                            width: '80px',
-                                            height: '48px',
-                                            borderRadius: '12px',
-                                            border: '2px dashed var(--surface-border)',
-                                            background: 'var(--surface-badge)',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            cursor: 'pointer',
-                                            overflow: 'hidden',
-                                            position: 'relative'
-                                        }}
-                                    >
-                                        <input 
-                                            type="file" 
-                                            ref={iconInputRef} 
-                                            accept="image/*" 
-                                            onChange={handleIconSelect} 
-                                            hidden 
-                                        />
-                                        {isUploadingIcon ? (
-                                            <RefreshCw className="spin-icon" size={16} />
-                                        ) : iconUrl ? (
-                                            <img src={iconUrl} alt="icon" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-                                        ) : (
-                                            <Plus size={16} />
-                                        )}
-                                    </div>
-                                </div>
-                                <div className="form-group flex-1">
-                                    <label>Software Title</label>
-                                    <input 
-                                        type="text" 
-                                        placeholder="e.g. Adobe Photoshop 2025" 
-                                        value={title} 
-                                        onChange={(e) => setTitle(e.target.value)} 
-                                        required 
-                                    />
-                                </div>
-                                <div className="form-group flex-1">
-                                    <label>OS Platform</label>
-                                    <div className="os-switcher">
-                                        <button 
-                                            type="button" 
-                                            className={`os-btn win ${os === 'windows' ? 'active' : ''}`}
-                                            onClick={() => setOs('windows')}
-                                        >
-                                            <Monitor size={16} /> Windows
-                                        </button>
-                                        <button 
-                                            type="button" 
-                                            className={`os-btn mac ${os === 'mac' ? 'active' : ''}`}
-                                            onClick={() => setOs('mac')}
-                                        >
-                                            <Apple size={16} /> macOS
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
+                <button 
+                    type="button"
+                    className="btn-close-dashboard" 
+                    onClick={() => onComplete && onComplete()} 
+                    title="Close Form"
+                >
+                    <X size={20} />
+                </button>
 
-                            <div className="input-row">
-                                <div className="form-group flex-1">
-                                    <label>Target Repository Folder</label>
-                                    <select value={folder} onChange={(e) => setFolder(e.target.value)}>
-                                        {folderPresets.map(f => <option key={f} value={f}>{f}</option>)}
-                                    </select>
-                                </div>
-                                <div className="form-group flex-1">
-                                    <label>Subfolder (Optional)</label>
-                                    <input 
-                                        type="text" 
-                                        placeholder="e.g. Graphic Card, Attendance" 
-                                        value={subfolder} 
-                                        onChange={(e) => setSubfolder(e.target.value)} 
-                                    />
-                                </div>
-                            </div>
+                {/* Target Category Bar */}
+                <div className="collection-master-bar glass-panel">
+                    <div className="bar-label">
+                        <Sparkles size={16} /> Target Folder
+                    </div>
+                    <div className="collection-pills-scroll">
+                        {folderPresets.map(f => (
+                            <button 
+                                type="button"
+                                key={f}
+                                className={`col-pill ${folder === f ? 'active' : ''}`}
+                                onClick={() => setFolder(f)}
+                            >
+                                {f}
+                            </button>
+                        ))}
+                    </div>
+                </div>
 
-                            <div className="input-row">
-                                <div className="form-group flex-1">
-                                    <label>Version Tag</label>
-                                    <input 
-                                        type="text" 
-                                        placeholder="e.g. v26.1.0, 24H2" 
-                                        value={version} 
-                                        onChange={(e) => setVersion(e.target.value)} 
-                                    />
-                                </div>
-                                <div className="form-group flex-1">
-                                    <label>Software Developer</label>
-                                    <input 
-                                        type="text" 
-                                        placeholder="e.g. Adobe, Microsoft" 
-                                        value={developer} 
-                                        onChange={(e) => setDeveloper(e.target.value)} 
-                                    />
-                                </div>
+                {/* Advanced Settings Drawer */}
+                {showAdvanced && (
+                    <div className="advanced-settings-drawer">
+                        <div className="drawer-grid">
+                            <div className="drawer-field">
+                                <label><HardDrive size={13} /> Storage Bucket</label>
+                                <select value={selectedBucket} onChange={(e) => setSelectedBucket(e.target.value)}>
+                                    <option value="software">Cloudflare R2: SOFTWARE</option>
+                                    <option value="tools">Cloudflare R2: TOOLS</option>
+                                </select>
                             </div>
+                            <div className="drawer-field">
+                                <label><Globe size={13} /> R2 Public URL Endpoint</label>
+                                <input type="text" value={import.meta.env.VITE_R2_PUBLIC_URL || 'https://r2.dev'} readOnly />
+                            </div>
+                            <div className="drawer-field">
+                                <label><Globe size={13} /> Storage Edge Access</label>
+                                <select value="public" readOnly disabled>
+                                    <option value="public">Global CDN Public Edge</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
-                            <div className="form-group">
-                                <label>Description</label>
-                                <textarea 
-                                    placeholder="Provide detailed description of the software features, installation instructions, reset options, etc." 
-                                    value={description} 
-                                    onChange={(e) => setDescription(e.target.value)} 
-                                    rows={4}
+                {/* Main Body Grid */}
+                <div className="upload-body-grid">
+                    {/* Left Column: Form Inputs Stack */}
+                    <div className="input-vertical-stack">
+                        {/* Title Input */}
+                        <div className="master-input-group">
+                            <label><Type size={14} /> Software Title</label>
+                            <input 
+                                type="text" 
+                                placeholder="e.g. Adobe Photoshop 2025, Windows 11 Pro 24H2..." 
+                                value={title} 
+                                onChange={(e) => setTitle(e.target.value)} 
+                                required 
+                            />
+                        </div>
+
+                        {/* Dropzone Duo */}
+                        <div className="dropzone-duo">
+                            {/* Binary File Upload Zone */}
+                            <div 
+                                className={`master-dropzone ${isUploadingFile ? 'uploading' : ''} ${downloadUrl ? 'ready' : ''}`}
+                                onClick={() => !isUploadingFile && fileInputRef.current.click()}
+                            >
+                                <input 
+                                    type="file" 
+                                    ref={fileInputRef} 
+                                    onChange={handleFileSelect} 
+                                    hidden 
                                 />
+                                <div className="drop-status-icon">
+                                    {isUploadingFile ? (
+                                        <RefreshCw className="spin-icon" size={28} />
+                                    ) : downloadUrl ? (
+                                        <CheckCircle2 size={28} color="#10b981" />
+                                    ) : (
+                                        <Upload size={28} />
+                                    )}
+                                </div>
+                                <div className="drop-labels">
+                                    <strong>
+                                        {isUploadingFile 
+                                            ? `Uploading (${uploadProgress}%)` 
+                                            : downloadUrl 
+                                            ? 'Binary Package Linked' 
+                                            : 'Upload Binary Package'}
+                                    </strong>
+                                    <p>
+                                        {isUploadingFile 
+                                            ? 'Uploading to Cloudflare R2...' 
+                                            : size 
+                                            ? `Size: ${size}` 
+                                            : 'Supports ISO, EXE, DMG, ZIP over 300MB'}
+                                    </p>
+                                </div>
+                                {downloadUrl && <CheckCircle2 className="checked-indicator" size={18} />}
                             </div>
 
-                            <div className="form-group">
-                                <label>Hardware/OS Requirements (Comma-separated list)</label>
+                            {/* Icon Image Upload Zone */}
+                            <div 
+                                className={`master-dropzone preview-drop ${iconUrl ? 'ready' : ''}`}
+                                onClick={() => !isUploadingIcon && iconInputRef.current.click()}
+                            >
+                                <input 
+                                    type="file" 
+                                    ref={iconInputRef} 
+                                    accept="image/*" 
+                                    onChange={handleIconSelect} 
+                                    hidden 
+                                />
+                                <div className="drop-status-icon">
+                                    {isUploadingIcon ? <RefreshCw className="spin-icon" size={28} /> : <ImageIcon size={28} />}
+                                </div>
+                                <div className="drop-labels">
+                                    <strong>{iconUrl ? 'Icon Asset Uploaded' : 'Add Software Icon'}</strong>
+                                    <p>{iconUrl ? 'Click to replace icon' : 'PNG, WEBP, SVG app logo'}</p>
+                                </div>
+                                {iconUrl && (
+                                    <div className="float-preview">
+                                        <img src={iconUrl} alt="Icon preview" />
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Extra Details Grid */}
+                        <div className="input-two-col-grid">
+                            <div className="master-input-group">
+                                <label><Layers size={14} /> Version Tag</label>
                                 <input 
                                     type="text" 
-                                    placeholder="e.g. Windows 11 64-bit, 8GB RAM, 4GB disk space" 
-                                    value={requirements} 
-                                    onChange={(e) => setRequirements(e.target.value)} 
+                                    placeholder="e.g. v26.1.0, 24H2" 
+                                    value={version} 
+                                    onChange={(e) => setVersion(e.target.value)} 
                                 />
                             </div>
-
-                            <div className="form-group">
-                                <label>Key Features / Highlights (Comma-separated list)</label>
+                            <div className="master-input-group">
+                                <label><Database size={14} /> Developer / Vendor</label>
                                 <input 
                                     type="text" 
-                                    placeholder="e.g. AI-powered editing, GPU acceleration, Multi-language support" 
-                                    value={features} 
-                                    onChange={(e) => setFeatures(e.target.value)} 
+                                    placeholder="e.g. Adobe, Microsoft" 
+                                    value={developer} 
+                                    onChange={(e) => setDeveloper(e.target.value)} 
                                 />
                             </div>
                         </div>
 
-                        {/* Column 2: Upload Zone & Actions */}
-                        <div className="sidebar-column">
-                            <div className="form-group">
-                                <label>Software Package File (Cloudflare R2 Direct)</label>
-                                <div 
-                                    className={`file-upload-zone ${isUploadingFile ? 'uploading' : ''} ${downloadUrl ? 'has-file' : ''}`}
-                                    onClick={() => !isUploadingFile && fileInputRef.current.click()}
-                                >
-                                    <input 
-                                        type="file" 
-                                        ref={fileInputRef} 
-                                        onChange={handleFileSelect} 
-                                        hidden 
-                                    />
-                                    {isUploadingFile ? (
-                                        <div className="uploading-state">
-                                            <RefreshCw className="spin-icon" size={32} />
-                                            <strong>Uploading Part Chunks...</strong>
-                                            <div className="progress-bar-wrapper">
-                                                <div className="progress-fill" style={{ width: `${uploadProgress}%` }} />
-                                            </div>
-                                            <span>{uploadProgress}% completed</span>
-                                        </div>
-                                    ) : downloadUrl ? (
-                                        <div className="uploaded-state">
-                                            <CheckCircle2 size={32} className="success-icon" />
-                                            <strong>Package Linked Successfully</strong>
-                                            <p className="file-info">{size || 'Unknown size'}</p>
-                                            <span className="file-url-hint">{downloadUrl.substring(0, 45)}...</span>
-                                        </div>
-                                    ) : (
-                                        <div className="idle-state">
-                                            <Upload size={32} />
-                                            <strong>Drag or Browse Binary</strong>
-                                            <p>Supports files over 300MB via chunked multipart upload</p>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            <div className="form-group">
-                                <label>Download Link / External URL</label>
+                        <div className="input-two-col-grid">
+                            <div className="master-input-group">
+                                <label><Globe size={14} /> Download URL / Mirror Link</label>
                                 <input 
                                     type="url" 
-                                    placeholder="Paste URL if not uploading (e.g. Google Drive, official site)" 
+                                    placeholder="Direct link or R2 public URL" 
                                     value={downloadUrl} 
                                     onChange={(e) => setDownloadUrl(e.target.value)} 
                                 />
                             </div>
-
-                            <div className="form-group">
-                                <label>Package Size</label>
+                            <div className="master-input-group">
+                                <label><Layers size={14} /> Subfolder / Category Tag</label>
                                 <input 
                                     type="text" 
-                                    placeholder="e.g. 5.2 GB, 120 MB" 
-                                    value={size} 
-                                    onChange={(e) => setSize(e.target.value)} 
+                                    placeholder="e.g. Graphics, Utility, Office" 
+                                    value={subfolder} 
+                                    onChange={(e) => setSubfolder(e.target.value)} 
                                 />
                             </div>
+                        </div>
 
-                            <div className="actions-rack">
-                                <button type="button" className="btn-cancel-soft" onClick={onComplete}>
-                                    Discard
-                                </button>
-                                <button type="submit" className="btn-save-soft" disabled={isUploadingFile || isSaving}>
-                                    {isSaving ? <RefreshCw className="spin-icon" size={18} /> : <Save size={18} />}
-                                    {isEditMode ? 'Update Software' : 'Publish Software'}
-                                </button>
-                            </div>
+                        <div className="master-input-group">
+                            <label><Info size={14} /> Description</label>
+                            <textarea 
+                                placeholder="Provide detailed software features, specs, installation guide..." 
+                                value={description} 
+                                onChange={(e) => setDescription(e.target.value)} 
+                                rows={3}
+                            />
+                        </div>
 
-                            <p className="security-note">
-                                <ShieldCheck size={12} /> Encrypted R2 Storage Edge Channel
-                            </p>
+                        <div className="master-input-group">
+                            <label><AlertCircle size={14} /> System Requirements (Comma-separated)</label>
+                            <input 
+                                type="text" 
+                                placeholder="e.g. Windows 11 64-bit, 8GB RAM, 4GB disk space" 
+                                value={requirements} 
+                                onChange={(e) => setRequirements(e.target.value)} 
+                            />
+                        </div>
+
+                        <div className="master-input-group">
+                            <label><Sparkles size={14} /> Key Highlights / Features (Comma-separated)</label>
+                            <input 
+                                type="text" 
+                                placeholder="e.g. AI tools, GPU Acceleration, Multi-language" 
+                                value={features} 
+                                onChange={(e) => setFeatures(e.target.value)} 
+                            />
                         </div>
                     </div>
-                </form>
+
+                    {/* Right Column: Live Card Preview & Actions Sidebar */}
+                    <div className="final-actions-sidebar">
+                        <div className="live-asset-card glass-panel">
+                            <div className="card-top-preview" style={{ background: os === 'mac' ? 'rgba(168,85,247,0.1)' : 'rgba(37,99,235,0.1)' }}>
+                                {iconUrl ? (
+                                    <img src={iconUrl} alt="Software Preview" style={{ objectFit: 'contain', padding: '24px' }} />
+                                ) : (
+                                    <HardDrive size={54} color={os === 'mac' ? '#a855f7' : '#2563eb'} />
+                                )}
+                            </div>
+                            <div className="card-bottom-info">
+                                <div className="badge-row">
+                                    <span className="cat-tag" style={{ color: os === 'mac' ? '#a855f7' : '#2563eb' }}>
+                                        {os === 'mac' ? 'macOS' : 'Windows'}
+                                    </span>
+                                    <span className="coll-tag">{folder}</span>
+                                </div>
+                                <h4>{title || 'Software Title'}</h4>
+                                <div className="meta-footer">
+                                    <span>{size || 'Unknown size'} &bull; {version || 'Latest'}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="utility-switch-rack">
+                            <div className="switch-item">
+                                <div className="s-info">
+                                    <strong>Cloudflare R2 Direct</strong>
+                                    <span>High-speed global CDN</span>
+                                </div>
+                                <div className="status-dot-art active" />
+                            </div>
+                            <div className="switch-item">
+                                <div className="s-info">
+                                    <strong>Firestore Sync</strong>
+                                    <span>Real-time persistence</span>
+                                </div>
+                                <div className="status-dot-art active" />
+                            </div>
+                        </div>
+
+                        <div className="action-button-group">
+                            <button 
+                                type="button" 
+                                className="btn-discard" 
+                                onClick={() => onComplete && onComplete()}
+                            >
+                                Discard & Close
+                            </button>
+                            <button 
+                                type="button" 
+                                className="master-publish-btn" 
+                                disabled={isUploadingFile || isUploadingIcon || isSaving} 
+                                onClick={handleSave}
+                                style={{
+                                    background: os === 'mac' ? 'linear-gradient(135deg, #a855f7, #7e22ce)' : 'linear-gradient(135deg, #2563eb, #1d4ed8)'
+                                }}
+                            >
+                                {isSaving ? (
+                                    <><RefreshCw className="spinning" size={20} /> Saving...</>
+                                ) : (
+                                    <>{isEditMode ? <CheckCircle2 size={20} /> : <Save size={20} />} {isEditMode ? 'Save & Synchronize' : 'Finalize & Publish'}</>
+                                )}
+                            </button>
+                        </div>
+
+                        <p className="master-security-disclaimer">
+                            <ShieldCheck size={12} /> System Administrator Controlled Session
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
     );

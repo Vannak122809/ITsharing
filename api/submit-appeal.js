@@ -15,7 +15,7 @@ async function getSettingsTelegramREST() {
     const fields = data.fields || {};
     return {
       token: fields.token?.stringValue || '',
-      chatId: fields.chatId?.stringValue || ''
+      chatId: fields.chatId?.stringValue || fields.chat_id?.stringValue || fields.adminChatId?.stringValue || ''
     };
   } catch {
     return { token: '', chatId: '' };
@@ -36,6 +36,15 @@ async function addBanAppealREST(appealData) {
 }
 
 export default async function handler(req, res) {
+  // CORS Headers for hosted environments
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
@@ -103,17 +112,25 @@ export default async function handler(req, res) {
         ]
       ];
 
-      fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          chat_id: String(chatId),
-          text: alertMsg,
-          parse_mode: 'HTML',
-          disable_web_page_preview: true,
-          reply_markup: { inline_keyboard: masterButtons }
-        })
-      }).catch(() => {});
+      try {
+        const tgRes = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: String(chatId),
+            text: alertMsg,
+            parse_mode: 'HTML',
+            disable_web_page_preview: true,
+            reply_markup: { inline_keyboard: masterButtons }
+          })
+        });
+        const tgData = await tgRes.json();
+        if (!tgData.ok) {
+          console.warn('[submit-appeal] Telegram API error:', tgData.description);
+        }
+      } catch (tgErr) {
+        console.error('[submit-appeal] Telegram fetch failed:', tgErr);
+      }
     }
 
     return res.status(200).json({ ok: true, message: 'Appeal submitted successfully' });

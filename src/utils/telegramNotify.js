@@ -51,8 +51,22 @@ export function getMasterControlKeyboard(extraButtons = []) {
  */
 export async function sendTelegramAlert(text, replyMarkup = null, overrideToken = null, overrideChatId = null) {
   const config = getTelegramConfig();
-  const token  = String(overrideToken || config.token || '').trim();
-  const chatId = String(overrideChatId || config.chatId || '').trim();
+  let token  = String(overrideToken || config.token || '').trim();
+  let chatId = String(overrideChatId || config.chatId || '').trim();
+
+  // If token or chatId are missing (e.g. on hosted client), fetch from Firestore settings/telegram document
+  if (!token || !chatId) {
+    try {
+      const PROJECT_ID = 'login-form-49609';
+      const res = await fetch(`https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/settings/telegram`);
+      if (res.ok) {
+        const data = await res.json();
+        const fields = data.fields || {};
+        token  = token  || fields.token?.stringValue || '';
+        chatId = chatId || fields.chatId?.stringValue || '';
+      }
+    } catch (e) {}
+  }
 
   if (!token || !chatId) return { ok: false, error: 'Telegram Bot Token or Chat ID not configured' };
 

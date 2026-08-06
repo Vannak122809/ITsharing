@@ -94,6 +94,14 @@ service cloud.firestore {
       allow read, write: if isOwner(userId);
     }
 
+    // ── Ban Appeals (/ban_appeals/{appealId}) ─────────────────────────────
+    match /ban_appeals/{appealId} {
+      // Anyone (including banned users) can submit an unblock appeal
+      allow create: if true;
+      // Only admins can view, update, or resolve appeals
+      allow read, update, delete: if isAdmin();
+    }
+
     // ── Deny everything else by default ─────────────────────────────────────
     match /{document=**} {
       allow read, write: if false;

@@ -104,9 +104,28 @@ const DeviceBlockGuard = ({ children }) => {
 
     const targetEmail = blockData?.email || currentUser?.email || 'theghostkhmer@gmail.com';
     const textReason  = appealText.trim();
+    let success = false;
 
+    // 1. Direct Firestore Write (Ensures appeal record is stored even if serverless endpoint is offline)
     try {
-      // 1. Try serverless endpoint (handles Telegram alert + Firestore write)
+      await addDoc(collection(db, 'ban_appeals'), {
+        email: targetEmail,
+        deviceId,
+        ip: userIP || '127.0.0.1',
+        blockType: blockData?.type || 'account',
+        note: blockData?.note || 'Banned account',
+        appealText: textReason,
+        status: 'pending',
+        timestamp: new Date().toISOString(),
+        createdAt: serverTimestamp(),
+      });
+      success = true;
+    } catch (fsErr) {
+      console.warn('[DeviceBlockGuard] Direct Firestore write warning:', fsErr);
+    }
+
+    // 2. Dispatch Serverless Appeal API (Handles Telegram alert notification)
+    try {
       const res = await fetch('/api/submit-appeal', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -119,24 +138,15 @@ const DeviceBlockGuard = ({ children }) => {
         })
       });
 
-      if (!res.ok) throw new Error('API unavailable');
-      setAppealSent(true);
+      if (res.ok) {
+        success = true;
+      } else {
+        throw new Error('API route returned status ' + res.status);
+      }
     } catch (err) {
-      // 2. Fallback: Write directly to Firestore and attempt Telegram alert
+      console.warn('[DeviceBlockGuard] API dispatch error, attempting client Telegram alert:', err);
+      // Fallback: Client-side Telegram Alert
       try {
-        await addDoc(collection(db, 'ban_appeals'), {
-          email: targetEmail,
-          deviceId,
-          ip: userIP || 'unknown',
-          blockType: blockData?.type || 'account',
-          note: blockData?.note || 'Banned account',
-          appealText: textReason,
-          status: 'pending',
-          timestamp: new Date().toISOString(),
-          createdAt: serverTimestamp(),
-        });
-        setAppealSent(true);
-
         const alertMsg = `
 ✉️ <b>NEW UNBLOCK APPEAL SUBMITTED</b>
 ─────────────────────────────
@@ -156,11 +166,15 @@ const DeviceBlockGuard = ({ children }) => {
           [{ text: '✉️ View All Appeals', callback_data: 'appeals' }]
         ];
 
-        sendTelegramAlert(alertMsg, getMasterControlKeyboard(inlineButtons)).catch(() => {});
+        await sendTelegramAlert(alertMsg, getMasterControlKeyboard(inlineButtons));
+        success = true;
       } catch (e) {
-        console.error('Fallback appeal failed:', e);
+        console.error('Fallback Telegram alert failed:', e);
       }
     } finally {
+      if (success) {
+        setAppealSent(true);
+      }
       setSendingAppeal(false);
     }
   };

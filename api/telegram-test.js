@@ -40,13 +40,45 @@ export default async function handler(req, res) {
         reply_markup: {
           inline_keyboard: [
             [
-              { text: '📊 System Status', callback_data: 'status' },
-              { text: '🚫 Blocked List',  callback_data: 'blocked_list' }
+              { text: '🕵️‍♂️ Check Registration Date', callback_data: 'check_reg_date' }
             ],
             [
-              { text: '✉️ View Appeals', callback_data: 'appeals' }
+              { text: '🚀 Share ID', switch_inline_query: '' }
             ]
           ]
+        }
+      })
+    });
+
+    // Send persistent bottom Reply Keyboard matching the custom menu
+    await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: cleanChatId,
+        text: '👇 <b>Select an option from the main menu below:</b>',
+        parse_mode: 'HTML',
+        reply_markup: {
+          keyboard: [
+            [
+              { text: '👤 User', request_user: { request_id: 1, user_is_bot: false } },
+              { text: '🤖 Bot', request_user: { request_id: 2, user_is_bot: true } }
+            ],
+            [
+              { text: '📢 Channel', request_chat: { request_id: 3, chat_is_channel: true } },
+              { text: '👥 Group', request_chat: { request_id: 4, chat_is_channel: false } }
+            ],
+            [
+              { text: '🏠 My Channel', request_chat: { request_id: 5, chat_is_channel: true, bot_is_member: true } },
+              { text: '🏠 My Group', request_chat: { request_id: 6, chat_is_channel: false, bot_is_member: true } }
+            ],
+            [
+              { text: '💬 Forum', request_chat: { request_id: 7, chat_is_channel: false, is_forum: true } },
+              { text: '💬 My Forum', request_chat: { request_id: 8, chat_is_channel: false, is_forum: true, bot_is_member: true } }
+            ]
+          ],
+          resize_keyboard: true,
+          is_persistent: true
         }
       })
     });
@@ -63,7 +95,7 @@ export default async function handler(req, res) {
     // 2. Save settings to Firestore `settings/telegram` document via REST API
     try {
       const PROJECT_ID = process.env.VITE_FIREBASE_PROJECT_ID || 'login-form-49609';
-      const saveUrl = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/settings/telegram`;
+      const saveUrl = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/settings/telegram?updateMask.fieldPaths=token&updateMask.fieldPaths=chatId&updateMask.fieldPaths=updatedAt`;
       await fetch(saveUrl, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
