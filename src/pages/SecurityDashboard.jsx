@@ -7,7 +7,7 @@ import {
   Shield, AlertTriangle, Globe, MapPin, Monitor, Clock,
   User, Wifi, TrendingUp, Eye, Filter, RefreshCw, Download,
   XCircle, ChevronDown, ChevronUp, Activity, Lock, Zap,
-  Unlock, Ban, Trash2, CheckCircle
+  Unlock, Ban, Trash2, CheckCircle, Search, Plus, ShieldCheck, ShieldAlert, UserX
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AttackMap from '../components/AttackMap';
@@ -245,6 +245,9 @@ const SecurityDashboard = ({ user }) => {
   const [blockedEntities, setBlocked]  = useState([]);
   const [actionLoading, setActLoad]    = useState({}); // { [key]: true }
   const [modalConfig, setModalConfig]  = useState({ isOpen: false, title: '', message: '', confirmText: 'Confirm', onConfirm: null, type: 'danger' });
+  const [searchQuery, setSearchQuery]  = useState('');
+  const [manualInput, setManualInput]  = useState('');
+  const [manualType, setManualType]    = useState('ip');
 
   // ── Helper: manage user action with API + Firestore Fallback ────────────
   const safeDocId = (str) => (str || '').replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 100);
@@ -286,6 +289,14 @@ const SecurityDashboard = ({ user }) => {
         await Promise.all(snap.docs.map(d => deleteDoc(d.ref)));
         return `Cleared ${snap.docs.length} logs for IP ${ip}`;
       }
+    } else if (action === 'clear_all_logs') {
+      const snap = await getDocs(collection(db, 'security_logs'));
+      await Promise.all(snap.docs.map(d => deleteDoc(d.ref)));
+      return `Purged all ${snap.docs.length} security logs`;
+    } else if (action === 'unblock_all') {
+      const snap = await getDocs(collection(db, 'blocked_entities'));
+      await Promise.all(snap.docs.map(d => deleteDoc(d.ref)));
+      return `Unblocked all ${snap.docs.length} entities`;
     }
     return 'Action completed';
   };
@@ -375,7 +386,15 @@ const SecurityDashboard = ({ user }) => {
   const filtered = logs.filter(l => {
     const levelMatch = filterLevel === 'all' || getThreatLevel(l.threatScore || 0) === filterLevel;
     const eventMatch = filterEvent === 'all' || l.eventType === filterEvent;
-    return levelMatch && eventMatch;
+    const q = searchQuery.toLowerCase().trim();
+    const searchMatch = !q || (
+      (l.ip && l.ip.toLowerCase().includes(q)) ||
+      (l.country && l.country.toLowerCase().includes(q)) ||
+      (l.city && l.city.toLowerCase().includes(q)) ||
+      (l.isp && l.isp.toLowerCase().includes(q)) ||
+      (l.metaEmail && l.metaEmail.toLowerCase().includes(q))
+    );
+    return levelMatch && eventMatch && searchMatch;
   });
 
   // Export to CSV
@@ -411,17 +430,100 @@ const SecurityDashboard = ({ user }) => {
                 Real-time attack monitor · Last {total} events
               </p>
             </div>
-            <button
-              onClick={exportCSV}
-              style={{
-                display: 'flex', alignItems: 'center', gap: '8px',
-                background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
-                color: '#fff', border: 'none', padding: '12px 24px',
-                borderRadius: '14px', fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem',
-              }}
-            >
-              <Download size={16} /> Export CSV
-            </button>
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+              <button
+                onClick={exportCSV}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '8px',
+                  background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
+                  color: '#fff', border: 'none', padding: '12px 20px',
+                  borderRadius: '14px', fontWeight: 700, cursor: 'pointer', fontSize: '0.88rem',
+                }}
+              >
+                <Download size={16} /> Export CSV
+              </button>
+
+              <button
+                onClick={() =>
+                  setModalConfig({
+                    isOpen: true,
+                    title: 'Purge All Security Logs',
+                    message: 'Are you sure you want to delete ALL security logs from database? This action cannot be undone.',
+                    confirmText: 'Purge All Logs',
+                    type: 'danger',
+                    onConfirm: async () => {
+                      await manageUser('clear_all_logs', {}, 'clear_all');
+                      setModalConfig(prev => ({ ...prev, isOpen: false }));
+                    },
+                  })
+                }
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '8px',
+                  background: 'rgba(239, 68, 68, 0.12)', border: '1px solid rgba(239, 68, 68, 0.3)',
+                  color: '#ef4444', padding: '12px 20px',
+                  borderRadius: '14px', fontWeight: 700, cursor: 'pointer', fontSize: '0.88rem',
+                }}
+              >
+                <Trash2 size={16} /> Purge All Logs
+              </button>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Security Health Status Banner */}
+        <div style={{
+          background: bruteForces >= 5 || highThreats >= 10
+            ? 'linear-gradient(135deg, rgba(239,68,68,0.15), rgba(220,38,38,0.05))'
+            : bruteForces > 0 || highThreats >= 3
+            ? 'linear-gradient(135deg, rgba(245,158,11,0.15), rgba(217,119,6,0.05))'
+            : 'linear-gradient(135deg, rgba(34,197,94,0.15), rgba(16,185,129,0.05))',
+          border: `1px solid ${
+            bruteForces >= 5 || highThreats >= 10
+              ? 'rgba(239,68,68,0.3)'
+              : bruteForces > 0 || highThreats >= 3
+              ? 'rgba(245,158,11,0.3)'
+              : 'rgba(34,197,94,0.3)'
+          }`,
+          borderRadius: '20px', padding: '20px 24px', marginBottom: '28px',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div style={{
+              width: '48px', height: '48px', borderRadius: '16px',
+              background: bruteForces >= 5 || highThreats >= 10 ? '#ef4444' : bruteForces > 0 || highThreats >= 3 ? '#f59e0b' : '#22c55e',
+              display: 'grid', placeItems: 'center', color: '#fff', boxShadow: '0 8px 20px rgba(0,0,0,0.2)'
+            }}>
+              {bruteForces >= 5 || highThreats >= 10 ? <ShieldAlert size={26} /> : bruteForces > 0 || highThreats >= 3 ? <AlertTriangle size={26} /> : <ShieldCheck size={26} />}
+            </div>
+            <div>
+              <div style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)' }}>
+                System Security Posture
+              </div>
+              <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2px' }}>
+                {bruteForces >= 5 || highThreats >= 10 ? (
+                  <span style={{ color: '#ef4444' }}>CRITICAL THREAT LEVEL</span>
+                ) : bruteForces > 0 || highThreats >= 3 ? (
+                  <span style={{ color: '#f59e0b' }}>ELEVATED ATTACK ACTIVITY</span>
+                ) : (
+                  <span style={{ color: '#22c55e' }}>SYSTEM SECURE & PROTECTED</span>
+                )}
+              </div>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                {bruteForces > 0
+                  ? `${bruteForces} active brute-force attacker(s) detected. Recommendation: block malicious IPs.`
+                  : 'No active brute-force threats detected. Firewall & rate limiters active.'}
+              </p>
+            </div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{
+              padding: '6px 14px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 800,
+              background: 'var(--surface-badge)', border: '1px solid var(--surface-border)', color: 'var(--text-main)'
+            }}>
+              🔒 Firewall Active
+            </span>
+          </div>
+        </div>            </button>
           </div>
         </motion.div>
 
@@ -615,9 +717,93 @@ const SecurityDashboard = ({ user }) => {
         {/* ── BLOCKED TAB ─────────────────────────────────────────────── */}
         {activeView === 'blocked' && (
           <div>
-            <p style={{ color: 'var(--text-muted)', marginBottom: '20px', fontSize: '0.9rem' }}>
-              Currently blocked IPs and accounts. These entities are denied access to the app.
-            </p>
+            {/* Manual Block Form + Controls */}
+            <div style={{
+              background: 'var(--surface)', border: '1px solid var(--surface-border)',
+              borderRadius: '20px', padding: '24px', marginBottom: '24px',
+              display: 'flex', flexDirection: 'column', gap: '16px'
+            }}>
+              <div style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Plus size={18} color="var(--primary)" /> Add Entity to Blocklist
+              </div>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (!manualInput.trim()) return;
+                  const action = manualType === 'ip' ? 'block_ip' : 'block_email';
+                  const payload = manualType === 'ip' ? { ip: manualInput.trim(), note: 'Manually blocked by admin' } : { email: manualInput.trim(), note: 'Manually blocked by admin' };
+                  manageUser(action, payload, `manual_${manualInput.trim()}`);
+                  setManualInput('');
+                }}
+                style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}
+              >
+                <select
+                  value={manualType}
+                  onChange={(e) => setManualType(e.target.value)}
+                  style={{
+                    padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--surface-border)',
+                    background: 'var(--card-dark)', color: 'var(--text-main)', fontWeight: 700, outline: 'none'
+                  }}
+                >
+                  <option value="ip">🌐 Block IP Address</option>
+                  <option value="email">👤 Block Account Email</option>
+                </select>
+
+                <input
+                  type="text"
+                  placeholder={manualType === 'ip' ? 'Enter IP e.g. 175.100.52.174' : 'Enter email e.g. user@gmail.com'}
+                  value={manualInput}
+                  onChange={(e) => setManualInput(e.target.value)}
+                  style={{
+                    flex: 1, minWidth: '240px', padding: '12px 16px', borderRadius: '12px',
+                    border: '1px solid var(--surface-border)', background: 'var(--card-dark)',
+                    color: 'var(--text-main)', fontWeight: 600, outline: 'none'
+                  }}
+                />
+
+                <button
+                  type="submit"
+                  style={{
+                    padding: '12px 24px', borderRadius: '12px', border: 'none',
+                    background: 'linear-gradient(135deg, #ef4444, #dc2626)', color: '#fff',
+                    fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px'
+                  }}
+                >
+                  <Ban size={16} /> Add to Blocklist
+                </button>
+              </form>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                Currently blocked IPs and accounts ({blockedEntities.length}). These entities are denied access.
+              </p>
+              {blockedEntities.length > 0 && (
+                <button
+                  onClick={() =>
+                    setModalConfig({
+                      isOpen: true,
+                      title: 'Unblock All Entities',
+                      message: 'Are you sure you want to unblock ALL blocked IPs and accounts?',
+                      confirmText: 'Unblock All',
+                      type: 'warning',
+                      onConfirm: async () => {
+                        await manageUser('unblock_all', {}, 'unblock_all');
+                        setModalConfig(prev => ({ ...prev, isOpen: false }));
+                      },
+                    })
+                  }
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '6px',
+                    padding: '8px 16px', borderRadius: '10px',
+                    border: '1px solid #22c55e', background: 'rgba(34,197,94,0.1)',
+                    color: '#22c55e', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer'
+                  }}
+                >
+                  <Unlock size={14} /> Unblock All
+                </button>
+              )}
+            </div>
             {blockedEntities.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '60px', color: 'var(--text-muted)', background: 'var(--surface)', borderRadius: '20px', border: '1px solid var(--surface-border)' }}>
                 <CheckCircle size={48} style={{ opacity: 0.3, marginBottom: '16px', color: '#22c55e' }} />
@@ -677,6 +863,24 @@ const SecurityDashboard = ({ user }) => {
         {/* ── LOGS TAB ────────────────────────────────────────────────── */}
         {activeView === 'logs' && (<>
         <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', flexWrap: 'wrap', alignItems: 'center' }}>
+          {/* Live Search Input */}
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: '10px', background: 'var(--surface)',
+            padding: '10px 16px', borderRadius: '12px', border: '1px solid var(--surface-border)', flex: 1, minWidth: '260px'
+          }}>
+            <Search size={16} color="var(--text-muted)" />
+            <input
+              type="text"
+              placeholder="Search by IP, Email, Country, City, ISP..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{ border: 'none', background: 'transparent', color: 'var(--text-main)', fontWeight: 600, outline: 'none', width: '100%', fontSize: '0.9rem' }}
+            />
+            {searchQuery && (
+              <X size={16} color="var(--text-muted)" style={{ cursor: 'pointer' }} onClick={() => setSearchQuery('')} />
+            )}
+          </div>
+
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--surface)', padding: '10px 16px', borderRadius: '12px', border: '1px solid var(--surface-border)' }}>
             <Filter size={14} color="var(--text-muted)" />
             <select value={filterEvent} onChange={e => setFilterEvent(e.target.value)}
