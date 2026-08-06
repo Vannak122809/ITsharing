@@ -225,7 +225,7 @@ async function handleTelegramUpdate(update, token, adminChatId, db) {
     if (!message || !message.text) return;
 
     const chatId = String(message.chat.id);
-    let text = message.text.trim().replace(/@[a-zA-Z0-9_]+/i, '');
+    let text = message.text.trim().replace(/^(\/[a-zA-Z0-9_]+)@[a-zA-Z0-9_]+/i, '$1');
 
     if (text.startsWith('/start') || text.startsWith('/help')) {
       const helpMsg = `
