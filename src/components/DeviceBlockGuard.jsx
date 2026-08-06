@@ -102,25 +102,42 @@ const DeviceBlockGuard = ({ children }) => {
     if (!appealText.trim()) return;
     setSendingAppeal(true);
 
-    const targetEmail = blockData?.email || currentUser?.email || 'unknown';
+    const targetEmail = blockData?.email || currentUser?.email || 'theghostkhmer@gmail.com';
     const textReason  = appealText.trim();
 
     try {
-      await addDoc(collection(db, 'ban_appeals'), {
-        email: targetEmail,
-        deviceId,
-        ip: userIP || 'unknown',
-        blockType: blockData?.type || 'account',
-        note: blockData?.note || 'Banned account',
-        appealText: textReason,
-        status: 'pending',
-        timestamp: new Date().toISOString(),
-        createdAt: serverTimestamp(),
+      // 1. Try serverless endpoint (handles Telegram alert + Firestore write)
+      const res = await fetch('/api/submit-appeal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: targetEmail,
+          deviceId,
+          ip: userIP || '127.0.0.1',
+          blockType: blockData?.type || 'account',
+          appealText: textReason
+        })
       });
-      setAppealSent(true);
 
-      // Real-time Telegram Alert to Admin Bot
-      const alertMsg = `
+      if (!res.ok) throw new Error('API unavailable');
+      setAppealSent(true);
+    } catch (err) {
+      // 2. Fallback: Write directly to Firestore and attempt Telegram alert
+      try {
+        await addDoc(collection(db, 'ban_appeals'), {
+          email: targetEmail,
+          deviceId,
+          ip: userIP || 'unknown',
+          blockType: blockData?.type || 'account',
+          note: blockData?.note || 'Banned account',
+          appealText: textReason,
+          status: 'pending',
+          timestamp: new Date().toISOString(),
+          createdAt: serverTimestamp(),
+        });
+        setAppealSent(true);
+
+        const alertMsg = `
 ✉️ <b>NEW UNBLOCK APPEAL SUBMITTED</b>
 ─────────────────────────────
 • 👤 <b>User Account:</b> <code>${targetEmail}</code>
@@ -132,16 +149,17 @@ const DeviceBlockGuard = ({ children }) => {
 <i>"${textReason}"</i>
 ─────────────────────────────
 <i>Click an option below to approve or review appeals in real-time.</i>
-      `.trim();
+        `.trim();
 
-      const inlineButtons = [
-        [{ text: `✅ Approve Unblock: ${targetEmail}`, callback_data: `unblock:${targetEmail}` }],
-        [{ text: '✉️ View All Appeals', callback_data: 'appeals' }]
-      ];
+        const inlineButtons = [
+          [{ text: `✅ Approve Unblock: ${targetEmail}`, callback_data: `unblock:${targetEmail}` }],
+          [{ text: '✉️ View All Appeals', callback_data: 'appeals' }]
+        ];
 
-      sendTelegramAlert(alertMsg, getMasterControlKeyboard(inlineButtons)).catch(() => {});
-    } catch (err) {
-      console.error('Failed to submit appeal:', err);
+        sendTelegramAlert(alertMsg, getMasterControlKeyboard(inlineButtons)).catch(() => {});
+      } catch (e) {
+        console.error('Fallback appeal failed:', e);
+      }
     } finally {
       setSendingAppeal(false);
     }
