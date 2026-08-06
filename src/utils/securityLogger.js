@@ -84,3 +84,16 @@ export async function logSecurityEvent(eventType, metadata = {}) {
     }
   }
 }
+
+/** Helper aliases for specific security event logging */
+export async function logFailedLogin(email, metadata = {}) {
+  return logSecurityEvent('failed_login', { email, ...metadata });
+}
+
+export async function logBruteForce(email, metadata = {}) {
+  return logSecurityEvent('brute_force_detected', { email, ...metadata });
+}
+
+export async function logRateLimit(endpoint, metadata = {}) {
+  return logSecurityEvent('rate_limit_hit', { endpoint, ...metadata });
+}
