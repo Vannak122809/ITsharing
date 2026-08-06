@@ -113,6 +113,19 @@ export default async function handler(req, res) {
   const update = req.body || {};
 
   try {
+    if (!botToken) {
+      const tgSettings = await listBlockedEntitiesREST().catch(() => []);
+      const tgRes = await fetch(`https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/settings/telegram`).catch(() => null);
+      if (tgRes && tgRes.ok) {
+        const tgData = await tgRes.json();
+        botToken = tgData.fields?.token?.stringValue || '';
+      }
+    }
+
+    if (!botToken) {
+      return res.status(400).json({ error: 'Missing Telegram Bot Token' });
+    }
+
     const safeId = (str) => (str || '').toLowerCase().replace(/[^a-zA-Z0-9._-]/g, '_');
 
     // ── Handle Inline Button Clicks ───────────────────────────────────────────

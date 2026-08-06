@@ -65,17 +65,9 @@ export async function pollTelegramUpdates(token, chatId, db) {
 
   try {
     const cleanToken = String(token).trim();
-    let url = `https://api.telegram.org/bot${cleanToken}/getUpdates?offset=${lastUpdateId + 1}&limit=10&timeout=0`;
-    let res = await fetch(url);
-    let data = await res.json();
-
-    if (!data.ok && data.error_code === 409) {
-      // Webhook active: clear dead webhook so getUpdates works on localhost
-      await fetch(`https://api.telegram.org/bot${cleanToken}/deleteWebhook`).catch(() => {});
-      // Retry immediately
-      res = await fetch(url);
-      data = await res.json();
-    }
+    const url = `https://api.telegram.org/bot${cleanToken}/getUpdates?offset=${lastUpdateId + 1}&limit=10&timeout=0`;
+    const res = await fetch(url);
+    const data = await res.json();
 
     if (!data.ok || !data.result || !data.result.length) return;
 
