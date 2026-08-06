@@ -15,8 +15,8 @@ export function getTelegramConfig() {
 }
 
 export function saveTelegramConfig(token, chatId) {
-  if (token)  localStorage.setItem('itshare_telegram_token', token.trim());
-  if (chatId) localStorage.setItem('itshare_telegram_chat_id', chatId.trim());
+  if (token)  localStorage.setItem('itshare_telegram_token', String(token).trim());
+  if (chatId) localStorage.setItem('itshare_telegram_chat_id', String(chatId).trim());
 }
 
 /**
@@ -24,8 +24,8 @@ export function saveTelegramConfig(token, chatId) {
  */
 export async function sendTelegramAlert(text, replyMarkup = null, overrideToken = null, overrideChatId = null) {
   const config = getTelegramConfig();
-  const token  = (overrideToken || config.token || '').trim();
-  const chatId = (overrideChatId || config.chatId || '').trim();
+  const token  = String(overrideToken || config.token || '').trim();
+  const chatId = String(overrideChatId || config.chatId || '').trim();
 
   if (!token || !chatId) return { ok: false, error: 'Telegram Bot Token or Chat ID not configured' };
 
@@ -64,13 +64,14 @@ export async function pollTelegramUpdates(token, chatId, db) {
   if (!token || !chatId || !db) return;
 
   try {
-    let url = `https://api.telegram.org/bot${token.trim()}/getUpdates?offset=${lastUpdateId + 1}&limit=10&timeout=0`;
+    const cleanToken = String(token).trim();
+    let url = `https://api.telegram.org/bot${cleanToken}/getUpdates?offset=${lastUpdateId + 1}&limit=10&timeout=0`;
     let res = await fetch(url);
     let data = await res.json();
 
     if (!data.ok && data.error_code === 409) {
       // Webhook active: clear dead webhook so getUpdates works on localhost
-      await fetch(`https://api.telegram.org/bot${token.trim()}/deleteWebhook`).catch(() => {});
+      await fetch(`https://api.telegram.org/bot${cleanToken}/deleteWebhook`).catch(() => {});
       // Retry immediately
       res = await fetch(url);
       data = await res.json();
@@ -80,7 +81,7 @@ export async function pollTelegramUpdates(token, chatId, db) {
 
     for (const update of data.result) {
       lastUpdateId = Math.max(lastUpdateId, update.update_id);
-      await handleTelegramUpdate(update, token.trim(), chatId.trim(), db);
+      await handleTelegramUpdate(update, cleanToken, String(chatId).trim(), db);
     }
   } catch (e) {
     // Silent fail polling
@@ -92,7 +93,7 @@ async function handleTelegramUpdate(update, token, adminChatId, db) {
     // ── Handle Inline Buttons ─────────────────────────────────────────────────
     if (update.callback_query) {
       const cb = update.callback_query;
-      const chatId = cb.message.chat.id;
+      const chatId = String(cb.message.chat.id);
       const data = cb.data || '';
 
       const [action, ...args] = data.split(':');
@@ -125,21 +126,53 @@ async function handleTelegramUpdate(update, token, adminChatId, db) {
         await deleteDoc(doc(db, 'blocked_entities', `device_${safeId(clean)}`)).catch(() => {});
         await deleteDoc(doc(db, 'blocked_entities', `email_${safeId(clean)}`)).catch(() => {});
         await sendTelegramAlert(`✅ <b>UNBLOCKED</b>\nEntity <code>${target}</code> has been unblocked.`, null, token, chatId);
-      } else if (action === 'status') {
-        const [logsSnap, bansSnap, appealsSnap] = await Promise.all([
-          getDocs(query(collection(db, 'security_logs'), limit(100))),
-          getDocs(collection(db, 'blocked_entities')),
-          getDocs(collection(db, 'ban_appeals'))
-        ]);
-        const msg = `
+      } else if (action === 'status' || action === 'status:blocked_list' || action === 'status:appeals') {
+        if (action === 'status:blocked_list') {
+          const bansSnap = await getDocs(collection(db, 'blocked_entities'));
+          if (bansSnap.empty) {
+            await sendTelegramAlert('🟢 <b>No Active Blocked Entities</b>\nYour blocklist is currently empty.', null, token, chatId);
+          } else {
+            let listText = `🚫 <b>Active Blocked Entities (${bansSnap.docs.length})</b>\n\n`;
+            const buttons = [];
+            bansSnap.docs.forEach(d => {
+              const data = d.data();
+              const val = data.ip || data.email || data.deviceId || d.id;
+              const typeLabel = data.type === 'ip' ? '🌐 IP' : data.type === 'device' ? '📱 Device' : '👤 Account';
+              listText += `• ${typeLabel}: <code>${val}</code>\n`;
+              buttons.push([{ text: `✅ Unblock ${typeLabel}: ${val}`, callback_data: `unblock:${val}` }]);
+            });
+            await sendTelegramAlert(listText, { inline_keyboard: buttons.slice(0, 10) }, token, chatId);
+          }
+        } else if (action === 'status:appeals') {
+          const appealsSnap = await getDocs(query(collection(db, 'ban_appeals'), limit(10)));
+          if (appealsSnap.empty) {
+            await sendTelegramAlert('✉️ <b>No Pending Unblock Appeals</b>', null, token, chatId);
+          } else {
+            let msgText = `✉️ <b>Unblock Appeals (${appealsSnap.docs.length})</b>\n\n`;
+            const buttons = [];
+            appealsSnap.docs.forEach(d => {
+              const data = d.data();
+              msgText += `• <b>${data.email || 'User'}</b> (${data.deviceId || ''}):\n<i>"${data.appealText}"</i>\n\n`;
+              buttons.push([{ text: `✅ Approve Unblock: ${data.email || data.deviceId}`, callback_data: `unblock:${data.email || data.deviceId}` }]);
+            });
+            await sendTelegramAlert(msgText, { inline_keyboard: buttons.slice(0, 10) }, token, chatId);
+          }
+        } else {
+          const [logsSnap, bansSnap, appealsSnap] = await Promise.all([
+            getDocs(query(collection(db, 'security_logs'), limit(100))),
+            getDocs(collection(db, 'blocked_entities')),
+            getDocs(collection(db, 'ban_appeals'))
+          ]);
+          const msg = `
 📊 <b>ITShare Security Status</b>
 
 • 🛡️ <b>Total Logs:</b> ${logsSnap.docs.length}
 • 🚫 <b>Active Banned Entities:</b> ${bansSnap.docs.length}
 • ✉️ <b>Pending Appeals:</b> ${appealsSnap.docs.length}
 • 🟢 <b>Security Status:</b> ACTIVE & ENFORCING
-        `.trim();
-        await sendTelegramAlert(msg, null, token, chatId);
+          `.trim();
+          await sendTelegramAlert(msg, null, token, chatId);
+        }
       }
       return;
     }
@@ -148,8 +181,8 @@ async function handleTelegramUpdate(update, token, adminChatId, db) {
     const message = update.message;
     if (!message || !message.text) return;
 
-    const chatId = message.chat.id;
-    const text = message.text.trim();
+    const chatId = String(message.chat.id);
+    let text = message.text.trim().replace(/@[a-zA-Z0-9_]+/i, '');
 
     if (text.startsWith('/start') || text.startsWith('/help')) {
       const helpMsg = `
