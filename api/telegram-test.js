@@ -78,10 +78,17 @@ export default async function handler(req, res) {
         updatedAt: new Date().toISOString(),
       });
 
-      // 3. Register webhook automatically with Telegram
-      const host = req.headers.host || 'itsharing.vercel.app';
-      const webhookUrl = `https://${host}/api/telegram-webhook?token=${cleanToken}`;
-      await fetch(`https://api.telegram.org/bot${cleanToken}/setWebhook?url=${encodeURIComponent(webhookUrl)}`);
+      // 3. Register Webhook for Production or Delete Webhook for Localhost
+      const host = req.headers.host || '';
+      const isLocalhost = host.includes('localhost') || host.includes('127.0.0.1');
+
+      if (!isLocalhost && host) {
+        const webhookUrl = `https://${host}/api/telegram-webhook?token=${cleanToken}`;
+        await fetch(`https://api.telegram.org/bot${cleanToken}/setWebhook?url=${encodeURIComponent(webhookUrl)}`);
+      } else {
+        // Clear dead webhook on localhost so Telegram getUpdates long-polling works 100%
+        await fetch(`https://api.telegram.org/bot${cleanToken}/deleteWebhook`);
+      }
 
       // 4. Register Bot Menu Commands with Telegram
       await fetch(`https://api.telegram.org/bot${cleanToken}/setMyCommands`, {

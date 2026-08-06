@@ -64,19 +64,19 @@ export async function pollTelegramUpdates(token, chatId, db) {
   if (!token || !chatId || !db) return;
 
   try {
-    const url = `https://api.telegram.org/bot${token.trim()}/getUpdates?offset=${lastUpdateId + 1}&limit=10&timeout=0`;
-    const res = await fetch(url);
-    const data = await res.json();
+    let url = `https://api.telegram.org/bot${token.trim()}/getUpdates?offset=${lastUpdateId + 1}&limit=10&timeout=0`;
+    let res = await fetch(url);
+    let data = await res.json();
 
-    if (!data.ok) {
-      if (data.error_code === 409) {
-        // Webhook active: clear webhook so getUpdates works on localhost
-        await fetch(`https://api.telegram.org/bot${token.trim()}/deleteWebhook`).catch(() => {});
-      }
-      return;
+    if (!data.ok && data.error_code === 409) {
+      // Webhook active: clear dead webhook so getUpdates works on localhost
+      await fetch(`https://api.telegram.org/bot${token.trim()}/deleteWebhook`).catch(() => {});
+      // Retry immediately
+      res = await fetch(url);
+      data = await res.json();
     }
 
-    if (!data.result || !data.result.length) return;
+    if (!data.ok || !data.result || !data.result.length) return;
 
     for (const update of data.result) {
       lastUpdateId = Math.max(lastUpdateId, update.update_id);
