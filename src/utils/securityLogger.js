@@ -8,17 +8,21 @@
 
 import { db } from '../firebase';
 import { collection, addDoc } from 'firebase/firestore';
+import { getDeviceId } from './deviceFingerprint';
 
 /**
  * @param {string} eventType - One of the valid event types
  * @param {object} metadata  - Additional context (email, page, etc.)
  */
 export async function logSecurityEvent(eventType, metadata = {}) {
+  const deviceId = getDeviceId();
+  const fullMeta = { ...metadata, deviceId };
+
   try {
     const res = await fetch('/api/security-log', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ eventType, metadata }),
+      body: JSON.stringify({ eventType, metadata: fullMeta }),
     });
     if (res.ok) return;
   } catch {
@@ -36,6 +40,7 @@ export async function logSecurityEvent(eventType, metadata = {}) {
       isp: 'Local Development Server',
       threatScore: eventType === 'brute_force_detected' ? 50 : 15,
       timestamp: new Date().toISOString(),
+      deviceId,
       metaEmail: metadata.email || '',
       metaPage: metadata.page || '',
       metaNote: metadata.note || '',

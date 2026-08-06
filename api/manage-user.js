@@ -16,7 +16,7 @@ const PROJECT_ID   = process.env.VITE_FIREBASE_PROJECT_ID || 'login-form-49609';
 const API_KEY      = process.env.VITE_FIREBASE_API_KEY    || process.env.FIREBASE_API_KEY;
 const FIRESTORE    = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents`;
 
-const VALID_ACTIONS = ['block_ip', 'unblock_ip', 'block_email', 'unblock_email', 'clear_logs'];
+const VALID_ACTIONS = ['block_ip', 'unblock_ip', 'block_email', 'unblock_email', 'block_device', 'unblock_device', 'clear_logs'];
 
 // ── Firestore helpers ─────────────────────────────────────────────────────────
 
@@ -158,6 +158,26 @@ export default async function handler(req, res) {
         if (!email) return res.status(400).json({ error: 'email required' });
         await setAccountDisabled(email, false);
         return res.status(200).json({ ok: true, message: `Account ${email} unblocked` });
+      }
+
+      case 'block_device': {
+        const { deviceId } = req.body || {};
+        if (!deviceId) return res.status(400).json({ error: 'deviceId required' });
+        await firestoreWrite('blocked_entities', `device_${safeDocId(deviceId)}`, {
+          type:      'device',
+          deviceId,
+          blocked:   true,
+          blockedAt: new Date().toISOString(),
+          note:      note || 'Device blocked by admin',
+        });
+        return res.status(200).json({ ok: true, message: `Device ${deviceId} blocked` });
+      }
+
+      case 'unblock_device': {
+        const { deviceId } = req.body || {};
+        if (!deviceId) return res.status(400).json({ error: 'deviceId required' });
+        await firestoreDelete('blocked_entities', `device_${safeDocId(deviceId)}`);
+        return res.status(200).json({ ok: true, message: `Device ${deviceId} unblocked` });
       }
 
       case 'clear_logs': {

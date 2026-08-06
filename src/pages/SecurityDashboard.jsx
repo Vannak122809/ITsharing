@@ -282,6 +282,22 @@ const SecurityDashboard = ({ user }) => {
       const docId = `email_${safeDocId(email)}`;
       await deleteDoc(doc(db, 'blocked_entities', docId));
       return `Account ${email} unblocked`;
+    } else if (action === 'block_device') {
+      const { deviceId } = payload;
+      const docId = `device_${safeDocId(deviceId)}`;
+      await setDoc(doc(db, 'blocked_entities', docId), {
+        type: 'device',
+        deviceId,
+        blocked: true,
+        blockedAt: new Date().toISOString(),
+        note: note || 'Blocked by admin',
+      });
+      return `Device ${deviceId} blocked`;
+    } else if (action === 'unblock_device') {
+      const { deviceId } = payload;
+      const docId = `device_${safeDocId(deviceId)}`;
+      await deleteDoc(doc(db, 'blocked_entities', docId));
+      return `Device ${deviceId} unblocked`;
     } else if (action === 'clear_logs') {
       if (ip) {
         const q = query(collection(db, 'security_logs'), where('ip', '==', ip));
@@ -728,8 +744,12 @@ const SecurityDashboard = ({ user }) => {
                 onSubmit={(e) => {
                   e.preventDefault();
                   if (!manualInput.trim()) return;
-                  const action = manualType === 'ip' ? 'block_ip' : 'block_email';
-                  const payload = manualType === 'ip' ? { ip: manualInput.trim(), note: 'Manually blocked by admin' } : { email: manualInput.trim(), note: 'Manually blocked by admin' };
+                  const action = manualType === 'ip' ? 'block_ip' : manualType === 'email' ? 'block_email' : 'block_device';
+                  const payload = manualType === 'ip'
+                    ? { ip: manualInput.trim(), note: 'Manually blocked by admin' }
+                    : manualType === 'email'
+                    ? { email: manualInput.trim(), note: 'Manually blocked by admin' }
+                    : { deviceId: manualInput.trim(), note: 'Manually blocked by admin' };
                   manageUser(action, payload, `manual_${manualInput.trim()}`);
                   setManualInput('');
                 }}
@@ -745,11 +765,18 @@ const SecurityDashboard = ({ user }) => {
                 >
                   <option value="ip">🌐 Block IP Address</option>
                   <option value="email">👤 Block Account Email</option>
+                  <option value="device">📱 Block Device ID</option>
                 </select>
 
                 <input
                   type="text"
-                  placeholder={manualType === 'ip' ? 'Enter IP e.g. 175.100.52.174' : 'Enter email e.g. user@gmail.com'}
+                  placeholder={
+                    manualType === 'ip'
+                      ? 'Enter IP e.g. 175.100.52.174'
+                      : manualType === 'email'
+                      ? 'Enter email e.g. user@gmail.com'
+                      : 'Enter Device ID e.g. DEV-8A9B2C3D'
+                  }
                   value={manualInput}
                   onChange={(e) => setManualInput(e.target.value)}
                   style={{
@@ -774,7 +801,7 @@ const SecurityDashboard = ({ user }) => {
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-                Currently blocked IPs and accounts ({blockedEntities.length}). These entities are denied access.
+                Currently blocked IPs, devices, and accounts ({blockedEntities.length}). These entities are denied access.
               </p>
               {blockedEntities.length > 0 && (
                 <button
@@ -782,7 +809,7 @@ const SecurityDashboard = ({ user }) => {
                     setModalConfig({
                       isOpen: true,
                       title: 'Unblock All Entities',
-                      message: 'Are you sure you want to unblock ALL blocked IPs and accounts?',
+                      message: 'Are you sure you want to unblock ALL blocked IPs, devices, and accounts?',
                       confirmText: 'Unblock All',
                       type: 'warning',
                       onConfirm: async () => {
@@ -816,17 +843,17 @@ const SecurityDashboard = ({ user }) => {
                 {/* Type badge */}
                 <span style={{
                   padding: '4px 12px', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 800,
-                  background: b.type === 'ip' ? 'rgba(239,68,68,0.15)' : 'rgba(245,158,11,0.15)',
-                  color: b.type === 'ip' ? '#ef4444' : '#f59e0b',
-                  border: `1px solid ${b.type === 'ip' ? '#ef444440' : '#f59e0b40'}`,
+                  background: b.type === 'ip' ? 'rgba(239,68,68,0.15)' : b.type === 'device' ? 'rgba(168,85,247,0.15)' : 'rgba(245,158,11,0.15)',
+                  color: b.type === 'ip' ? '#ef4444' : b.type === 'device' ? '#a855f7' : '#f59e0b',
+                  border: `1px solid ${b.type === 'ip' ? '#ef444440' : b.type === 'device' ? '#a855f740' : '#f59e0b40'}`,
                   textTransform: 'uppercase',
                 }}>
-                  {b.type === 'ip' ? '🌐 IP' : '👤 Account'}
+                  {b.type === 'ip' ? '🌐 IP' : b.type === 'device' ? '📱 Device' : '👤 Account'}
                 </span>
                 {/* Identity */}
                 <div style={{ flex: 1 }}>
                   <div style={{ fontFamily: 'monospace', fontWeight: 800, fontSize: '0.95rem', color: 'var(--text-main)' }}>
-                    {b.ip || b.email || '—'}
+                    {b.ip || b.email || b.deviceId || '—'}
                   </div>
                   {b.note && <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '2px' }}>{b.note}</div>}
                 </div>
@@ -838,8 +865,8 @@ const SecurityDashboard = ({ user }) => {
                 <button
                   disabled={actionLoading[`unblock_b_${b.id}`]}
                   onClick={() => {
-                    const action = b.type === 'ip' ? 'unblock_ip' : 'unblock_email';
-                    const payload = b.type === 'ip' ? { ip: b.ip } : { email: b.email };
+                    const action = b.type === 'ip' ? 'unblock_ip' : b.type === 'device' ? 'unblock_device' : 'unblock_email';
+                    const payload = b.type === 'ip' ? { ip: b.ip } : b.type === 'device' ? { deviceId: b.deviceId } : { email: b.email };
                     manageUser(action, payload, `unblock_b_${b.id}`);
                   }}
                   style={{

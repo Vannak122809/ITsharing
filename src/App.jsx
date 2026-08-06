@@ -29,6 +29,7 @@ const SecurityDashboard = lazy(() => import('./pages/SecurityDashboard'));
 import ProtectedRoute from './components/ProtectedRoute';
 import CoffeeDonate from './components/CoffeeDonate';
 import AIAgent from './components/AIAgent';
+import DeviceBlockGuard from './components/DeviceBlockGuard';
 import { useLanguage } from './LanguageContext';
 
 function App() {
@@ -156,7 +157,7 @@ function App() {
     path !== '/' && location.pathname.startsWith(path) ? 'active' : location.pathname === path ? 'active' : '';
 
   return (
-    <>
+    <DeviceBlockGuard>
       {/* ─── NAVBAR ─── */}
       <nav className="navbar">
         <div className="container nav-container">
@@ -458,7 +459,7 @@ function App() {
           },
         }}
       />
-    </>
+    </DeviceBlockGuard>
   );
 }
 
