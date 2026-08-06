@@ -10,7 +10,7 @@ import React, { useState, useEffect } from 'react';
 import { db } from '../firebase';
 import { collection, query, onSnapshot } from 'firebase/firestore';
 import { getDeviceId } from '../utils/deviceFingerprint';
-import { ShieldAlert, Lock, AlertTriangle, RefreshCw } from 'lucide-react';
+import { ShieldAlert, Lock, AlertTriangle, RefreshCw, Smartphone, Globe, Shield } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const DeviceBlockGuard = ({ children }) => {
@@ -70,6 +70,8 @@ const DeviceBlockGuard = ({ children }) => {
   }, [deviceId, userIP]);
 
   if (isBlocked) {
+    const isIPBlock = blockData?.type === 'ip';
+
     return (
       <div style={{
         position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
@@ -77,73 +79,107 @@ const DeviceBlockGuard = ({ children }) => {
         background: 'linear-gradient(135deg, #090d16 0%, #0f172a 100%)',
         color: '#f8fafc',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: '24px', fontFamily: 'Inter, system-ui, sans-serif'
+        padding: '16px', fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
+        overflowY: 'auto',
       }}>
         <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.3 }}
+          initial={{ opacity: 0, scale: 0.94, y: 10 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.3, ease: 'easeOut' }}
           style={{
-            maxWidth: '520px', width: '100%',
-            background: 'rgba(30, 41, 59, 0.7)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            border: '1px solid rgba(239, 68, 68, 0.3)',
-            borderRadius: '28px', padding: '40px 32px',
+            maxWidth: '460px', width: '100%',
+            background: 'rgba(30, 41, 59, 0.75)',
+            backdropFilter: 'blur(24px)',
+            WebkitBackdropFilter: 'blur(24px)',
+            border: '1px solid rgba(239, 68, 68, 0.35)',
+            borderRadius: '24px', padding: '32px 20px',
             textAlign: 'center',
-            boxShadow: '0 25px 50px -12px rgba(0,0,0,0.7), 0 0 50px rgba(239, 68, 68, 0.2)'
+            boxShadow: '0 25px 50px -12px rgba(0,0,0,0.8), 0 0 50px rgba(239, 68, 68, 0.25)',
+            boxSizing: 'border-box',
           }}
         >
           {/* Glowing Red Shield Icon */}
           <div style={{
-            width: '84px', height: '84px', borderRadius: '50%',
-            background: 'linear-gradient(135deg, rgba(239,68,68,0.25), rgba(220,38,38,0.1))',
+            width: '76px', height: '76px', borderRadius: '50%',
+            background: 'linear-gradient(135deg, rgba(239,68,68,0.22), rgba(220,38,38,0.08))',
             border: '1px solid rgba(239, 68, 68, 0.4)',
             display: 'grid', placeItems: 'center',
-            margin: '0 auto 24px auto',
-            boxShadow: '0 0 35px rgba(239, 68, 68, 0.35)'
+            margin: '0 auto 20px auto',
+            boxShadow: '0 0 30px rgba(239, 68, 68, 0.35)'
           }}>
-            <ShieldAlert size={42} color="#ef4444" />
+            <ShieldAlert size={38} color="#ef4444" style={{ display: 'block' }} />
           </div>
 
-          <h2 style={{ fontSize: '1.8rem', fontWeight: 900, color: '#f8fafc', marginBottom: '12px', letterSpacing: '-0.02em' }}>
+          <h2 style={{ fontSize: '1.65rem', fontWeight: 900, color: '#f8fafc', marginBottom: '10px', letterSpacing: '-0.02em' }}>
             Access Denied
           </h2>
 
+          {/* Warning Badge */}
           <div style={{
-            background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.25)',
+            background: 'rgba(239,68,68,0.14)', border: '1px solid rgba(239,68,68,0.3)',
             color: '#ef4444', borderRadius: '12px', padding: '8px 16px',
-            fontSize: '0.85rem', fontWeight: 800, textTransform: 'uppercase',
-            letterSpacing: '0.06em', display: 'inline-block', marginBottom: '20px'
+            fontSize: '0.8rem', fontWeight: 800, textTransform: 'uppercase',
+            letterSpacing: '0.06em', display: 'inline-flex', alignItems: 'center', gap: '6px',
+            marginBottom: '20px'
           }}>
-            🚫 Device Access Banned
+            {isIPBlock ? <Globe size={14} /> : <Smartphone size={14} />}
+            {isIPBlock ? 'IP ACCESS BANNED' : 'DEVICE ACCESS BANNED'}
           </div>
 
-          <p style={{ color: '#94a3b8', fontSize: '0.95rem', lineHeight: '1.6', marginBottom: '28px' }}>
-            This device has been flagged and blocked from accessing ITShare due to multiple security policy violations or automated attack activity.
+          <p style={{ color: '#94a3b8', fontSize: '0.9rem', lineHeight: '1.6', marginBottom: '24px', padding: '0 6px' }}>
+            This {isIPBlock ? 'IP address' : 'device'} has been flagged and blocked from accessing ITShare due to multiple security policy violations or automated attack activity.
           </p>
 
-          {/* Block Details Box */}
+          {/* Responsive Block Details Card (Bootstrap-Style) */}
           <div style={{
-            background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255,255,255,0.08)',
-            borderRadius: '16px', padding: '16px 20px', marginBottom: '28px',
-            textAlign: 'left', fontSize: '0.85rem'
+            background: 'rgba(15, 23, 42, 0.65)', border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: '16px', padding: '16px 18px', marginBottom: '24px',
+            textAlign: 'left', fontSize: '0.85rem',
+            display: 'flex', flexDirection: 'column', gap: '12px'
           }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <span style={{ color: '#64748b' }}>Device ID:</span>
-              <span style={{ fontFamily: 'monospace', fontWeight: 700, color: '#ef4444' }}>{deviceId}</span>
+            {/* Device ID Row */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
+              <span style={{ color: '#64748b', fontWeight: 600 }}>Device ID:</span>
+              <span style={{
+                fontFamily: 'monospace', fontWeight: 700, color: '#ef4444',
+                background: 'rgba(239,68,68,0.12)', padding: '3px 8px', borderRadius: '6px',
+                fontSize: '0.82rem', border: '1px solid rgba(239,68,68,0.2)'
+              }}>
+                {deviceId}
+              </span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <span style={{ color: '#64748b' }}>Reason:</span>
-              <span style={{ fontWeight: 600, color: '#e2e8f0' }}>{blockData?.note || 'Security Policy Violation'}</span>
+
+            {/* IP Address Row (if available) */}
+            {userIP && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
+                <span style={{ color: '#64748b', fontWeight: 600 }}>IP Address:</span>
+                <span style={{ fontFamily: 'monospace', fontWeight: 700, color: '#cbd5e1', fontSize: '0.82rem' }}>
+                  {userIP}
+                </span>
+              </div>
+            )}
+
+            {/* Reason Row (Stacked layout for clean mobile reading) */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', paddingTop: '4px', borderTop: '1px dashed rgba(255,255,255,0.08)' }}>
+              <span style={{ color: '#64748b', fontWeight: 600 }}>Reason:</span>
+              <span style={{
+                fontWeight: 700, color: '#f8fafc', background: 'rgba(255,255,255,0.05)',
+                padding: '8px 12px', borderRadius: '8px', wordBreak: 'break-word', fontSize: '0.85rem'
+              }}>
+                {blockData?.note || 'Security Policy Violation'}
+              </span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: '#64748b' }}>Status:</span>
-              <span style={{ color: '#ef4444', fontWeight: 700 }}>PERMANENT BLOCK</span>
+
+            {/* Status Row */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '4px', borderTop: '1px dashed rgba(255,255,255,0.08)' }}>
+              <span style={{ color: '#64748b', fontWeight: 600 }}>Status:</span>
+              <span style={{ color: '#ef4444', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                PERMANENT BLOCK
+              </span>
             </div>
           </div>
 
-          <p style={{ color: '#64748b', fontSize: '0.8rem' }}>
+          <p style={{ color: '#64748b', fontSize: '0.8rem', margin: 0 }}>
             If you believe this is a mistake, please contact support with your Device ID.
           </p>
         </motion.div>
