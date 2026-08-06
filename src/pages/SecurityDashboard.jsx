@@ -267,6 +267,11 @@ const SecurityDashboard = ({ user }) => {
   const [modalConfig, setModalConfig]  = useState({ isOpen: false, title: '', message: '', confirmText: 'Confirm', onConfirm: null, type: 'danger' });
   const [searchQuery, setSearchQuery]  = useState('');
   const [manualInput, setManualInput]  = useState('');
+
+  // Telegram bot configuration state
+  const [tgToken, setTgToken]     = useState(localStorage.getItem('itshare_telegram_token') || '');
+  const [tgChatId, setTgChatId]   = useState(localStorage.getItem('itshare_telegram_chat_id') || '');
+  const [testingTg, setTestingTg] = useState(false);
   const [manualType, setManualType]    = useState('ip');
 
   // ── Helper: manage user action with API + Firestore Fallback ────────────
@@ -571,12 +576,13 @@ const SecurityDashboard = ({ user }) => {
         </div>
 
         {/* Tabs */}
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '32px', background: 'var(--surface)', padding: '6px', borderRadius: '16px', border: '1px solid var(--surface-border)', width: 'fit-content' }}>
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '32px', background: 'var(--surface)', padding: '6px', borderRadius: '16px', border: '1px solid var(--surface-border)', width: 'fit-content', flexWrap: 'wrap' }}>
           {[
-            { id: 'logs',    label: '📋 Event Logs' },
-            { id: 'map',     label: '🗺️ Attack Map' },
-            { id: 'brute',   label: `⚠️ Brute Force (${bruteByIP.length})` },
-            { id: 'blocked', label: `🚫 Blocked (${blockedEntities.length})` },
+            { id: 'logs',     label: '📋 Event Logs' },
+            { id: 'map',      label: '🗺️ Attack Map' },
+            { id: 'brute',    label: `⚠️ Brute Force (${bruteByIP.length})` },
+            { id: 'blocked',  label: `🚫 Blocked (${blockedEntities.length})` },
+            { id: 'telegram', label: '✈️ Telegram Bot' },
           ].map(tab => (
             <button key={tab.id} onClick={() => setActiveView(tab.id)}
               style={{
@@ -934,6 +940,140 @@ const SecurityDashboard = ({ user }) => {
                 </button>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* ── TELEGRAM TAB ────────────────────────────────────────────── */}
+        {activeView === 'telegram' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div style={{
+              background: 'var(--surface)', border: '1px solid var(--surface-border)',
+              borderRadius: '20px', padding: '28px', display: 'flex', flexDirection: 'column', gap: '20px'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ background: 'rgba(59,130,246,0.15)', padding: '10px', borderRadius: '14px' }}>
+                  <Send size={24} color="#3b82f6" />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-main)', margin: 0 }}>
+                    Telegram Security Bot Integration
+                  </h3>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: '4px 0 0 0' }}>
+                    Receive real-time attack notifications, unblock appeals, and run ban/unblock commands directly from Telegram.
+                  </p>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '8px' }}>
+                    Telegram Bot Token:
+                  </label>
+                  <input
+                    type="password"
+                    value={tgToken}
+                    onChange={(e) => setTgToken(e.target.value)}
+                    placeholder="123456789:ABCdefGHIjklMNOpqr..."
+                    style={{
+                      width: '100%', padding: '12px 16px', borderRadius: '12px',
+                      background: 'var(--card-dark)', border: '1px solid var(--surface-border)',
+                      color: 'var(--text-main)', fontFamily: 'monospace', fontSize: '0.85rem'
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '8px' }}>
+                    Admin Telegram Chat ID:
+                  </label>
+                  <input
+                    type="text"
+                    value={tgChatId}
+                    onChange={(e) => setTgChatId(e.target.value)}
+                    placeholder="987654321"
+                    style={{
+                      width: '100%', padding: '12px 16px', borderRadius: '12px',
+                      background: 'var(--card-dark)', border: '1px solid var(--surface-border)',
+                      color: 'var(--text-main)', fontFamily: 'monospace', fontSize: '0.85rem'
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                <button
+                  onClick={async () => {
+                    const { saveTelegramConfig } = await import('../utils/telegramNotify');
+                    saveTelegramConfig(tgToken, tgChatId);
+                    const { toast } = await import('react-hot-toast');
+                    toast.success('Telegram Bot settings saved!');
+                  }}
+                  style={{
+                    padding: '12px 20px', borderRadius: '12px', background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+                    color: '#fff', border: 'none', fontWeight: 800, cursor: 'pointer', fontSize: '0.88rem'
+                  }}
+                >
+                  Save Settings
+                </button>
+
+                <button
+                  disabled={testingTg}
+                  onClick={async () => {
+                    setTestingTg(true);
+                    const { sendTelegramAlert, saveTelegramConfig } = await import('../utils/telegramNotify');
+                    saveTelegramConfig(tgToken, tgChatId);
+                    const { toast } = await import('react-hot-toast');
+                    const res = await sendTelegramAlert('🚨 <b>ITShare Security Bot Connected!</b>\nYou will now receive live alerts and unblock appeals in this chat.');
+                    if (res.ok) {
+                      toast.success('Test alert sent to Telegram!');
+                    } else {
+                      toast.error(`Telegram Alert Failed: ${res.error || 'Check Bot Token & Chat ID'}`);
+                    }
+                    setTestingTg(false);
+                  }}
+                  style={{
+                    padding: '12px 20px', borderRadius: '12px', background: 'rgba(59,130,246,0.15)',
+                    border: '1px solid rgba(59,130,246,0.3)', color: '#3b82f6', fontWeight: 800,
+                    cursor: 'pointer', fontSize: '0.88rem'
+                  }}
+                >
+                  {testingTg ? 'Sending Test Alert...' : '🚀 Send Test Alert to Telegram'}
+                </button>
+              </div>
+            </div>
+
+            {/* Telegram Bot Commands Reference Guide */}
+            <div style={{
+              background: 'var(--surface)', border: '1px solid var(--surface-border)',
+              borderRadius: '20px', padding: '28px'
+            }}>
+              <h4 style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-main)', marginTop: 0, marginBottom: '16px' }}>
+                🤖 Telegram Admin Bot Commands
+              </h4>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '14px' }}>
+                {[
+                  { cmd: '/status', desc: 'View real-time security stats, attack counts & active bans' },
+                  { cmd: '/ban_ip <IP>', desc: 'Ban an IP address directly from Telegram (e.g. /ban_ip 175.100.52.181)' },
+                  { cmd: '/ban_device <DevID>', desc: 'Ban a Device ID directly from Telegram (e.g. /ban_device DEV-8F92A1B4)' },
+                  { cmd: '/ban_account <Email>', desc: 'Ban a User Account directly from Telegram (e.g. /ban_account user@gmail.com)' },
+                  { cmd: '/unblock <Target>', desc: 'Unblock any IP, Device ID, or Email (e.g. /unblock 175.100.52.181)' },
+                  { cmd: '/help', desc: 'Display all available Telegram Bot commands' },
+                ].map(({ cmd, desc }) => (
+                  <div key={cmd} style={{
+                    background: 'var(--card-dark)', border: '1px solid var(--surface-border)',
+                    borderRadius: '14px', padding: '14px'
+                  }}>
+                    <div style={{ fontFamily: 'monospace', fontWeight: 800, color: '#3b82f6', fontSize: '0.9rem', marginBottom: '4px' }}>
+                      {cmd}
+                    </div>
+                    <div style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>
+                      {desc}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         )}
 

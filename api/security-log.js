@@ -190,6 +190,41 @@ export default async function handler(req, res) {
 
   try {
     await writeToFirestore(logEntry);
+
+    // Send Telegram alert if bot is configured
+    const botToken = process.env.TELEGRAM_BOT_TOKEN;
+    const chatId   = process.env.TELEGRAM_CHAT_ID;
+    if (botToken && chatId) {
+      const text = `
+🚨 <b>ITShare Security Alert</b>
+
+<b>Event:</b> ${eventType.toUpperCase().replace(/_/g, ' ')}
+<b>Account:</b> <code>${targetEmail || 'None'}</code>
+<b>Device ID:</b> <code>${metadata.deviceId || 'Unknown'}</code>
+<b>IP:</b> <code>${ip}</code> (${geo.country || 'Unknown'})
+<b>Threat Score:</b> <b>${threatScore}</b>
+      `.trim();
+
+      fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text,
+          parse_mode: 'HTML',
+          reply_markup: {
+            inline_keyboard: [
+              [
+                { text: '🚫 Ban IP', callback_data: `ban_ip:${ip}` },
+                { text: '📱 Ban Device', callback_data: `ban_device:${metadata.deviceId || ''}` }
+              ],
+              ...(targetEmail ? [[{ text: '👤 Ban Account', callback_data: `ban_account:${targetEmail}` }]] : [])
+            ]
+          }
+        })
+      }).catch(() => {});
+    }
+
     return res.status(200).json({ ok: true });
   } catch (err) {
     console.error('[security-log] Firestore write failed:', err);
