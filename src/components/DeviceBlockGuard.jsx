@@ -11,6 +11,7 @@ import { db, auth } from '../firebase';
 import { collection, query, onSnapshot, addDoc, serverTimestamp } from 'firebase/firestore';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { getDeviceId } from '../utils/deviceFingerprint';
+import { sendTelegramAlert, getMasterControlKeyboard } from '../utils/telegramNotify';
 import { ShieldAlert, UserX, Globe, Smartphone, Send, LogOut, CheckCircle, Mail, User, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -101,19 +102,44 @@ const DeviceBlockGuard = ({ children }) => {
     if (!appealText.trim()) return;
     setSendingAppeal(true);
 
+    const targetEmail = blockData?.email || currentUser?.email || 'unknown';
+    const textReason  = appealText.trim();
+
     try {
       await addDoc(collection(db, 'ban_appeals'), {
-        email: blockData?.email || currentUser?.email || 'unknown',
+        email: targetEmail,
         deviceId,
         ip: userIP || 'unknown',
         blockType: blockData?.type || 'account',
         note: blockData?.note || 'Banned account',
-        appealText: appealText.trim(),
+        appealText: textReason,
         status: 'pending',
         timestamp: new Date().toISOString(),
         createdAt: serverTimestamp(),
       });
       setAppealSent(true);
+
+      // Real-time Telegram Alert to Admin Bot
+      const alertMsg = `
+✉️ <b>NEW UNBLOCK APPEAL SUBMITTED</b>
+─────────────────────────────
+• 👤 <b>User Account:</b> <code>${targetEmail}</code>
+• 📱 <b>Device ID:</b> <code>${deviceId || 'Unknown'}</code>
+• 🌐 <b>IP Address:</b> <code>${userIP || 'Unknown'}</code>
+• 🚫 <b>Block Type:</b> <code>${(blockData?.type || 'account').toUpperCase()}</code>
+
+<b>Submitted Reason:</b>
+<i>"${textReason}"</i>
+─────────────────────────────
+<i>Click an option below to approve or review appeals in real-time.</i>
+      `.trim();
+
+      const inlineButtons = [
+        [{ text: `✅ Approve Unblock: ${targetEmail}`, callback_data: `unblock:${targetEmail}` }],
+        [{ text: '✉️ View All Appeals', callback_data: 'appeals' }]
+      ];
+
+      sendTelegramAlert(alertMsg, getMasterControlKeyboard(inlineButtons)).catch(() => {});
     } catch (err) {
       console.error('Failed to submit appeal:', err);
     } finally {
