@@ -16,7 +16,21 @@ import { motion, AnimatePresence } from 'framer-motion';
 const DeviceBlockGuard = ({ children }) => {
   const [isBlocked, setIsBlocked] = useState(false);
   const [blockData, setBlockData] = useState(null);
-  const deviceId = getDeviceId();
+  const [userIP, setUserIP]       = useState('');
+  const deviceId                  = getDeviceId();
+
+  // Fetch client IP address for IP block enforcement
+  useEffect(() => {
+    fetch('https://api.ipify.org?format=json')
+      .then(res => res.json())
+      .then(data => setUserIP(data.ip || ''))
+      .catch(() => {
+        fetch('https://ip-api.com/json/')
+          .then(res => res.json())
+          .then(data => setUserIP(data.query || ''))
+          .catch(() => {});
+      });
+  }, []);
 
   useEffect(() => {
     // Listen to blocked_entities collection
@@ -24,11 +38,22 @@ const DeviceBlockGuard = ({ children }) => {
     const unsub = onSnapshot(q, (snap) => {
       const blockedList = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-      // Check if current deviceId or device_doc matching this deviceId is blocked
-      const matched = blockedList.find(b =>
-        b.deviceId === deviceId ||
-        b.id === `device_${deviceId.replace(/[^a-zA-Z0-9._-]/g, '_')}`
-      );
+      const safeId = (str) => (str || '').replace(/[^a-zA-Z0-9._-]/g, '_');
+
+      // Check if current deviceId OR client IP is blocked
+      const matched = blockedList.find(b => {
+        // Device ID match
+        if (b.deviceId && b.deviceId === deviceId) return true;
+        if (b.type === 'device' && b.id === `device_${safeId(deviceId)}`) return true;
+
+        // IP Address match
+        if (userIP) {
+          if (b.type === 'ip' && b.ip && b.ip.trim() === userIP.trim()) return true;
+          if (b.id === `ip_${safeId(userIP)}`) return true;
+        }
+
+        return false;
+      });
 
       if (matched) {
         setIsBlocked(true);
@@ -42,7 +67,7 @@ const DeviceBlockGuard = ({ children }) => {
     });
 
     return () => unsub();
-  }, [deviceId]);
+  }, [deviceId, userIP]);
 
   if (isBlocked) {
     return (
