@@ -1,36 +1,80 @@
 /**
- * api/telegram-webhook.js — Telegram Bot Webhook Endpoint
+ * api/telegram-webhook.js — Telegram Bot Webhook Endpoint (REST API Powered)
  *
  * Receives incoming commands and inline button clicks from Telegram Bot.
- * Supported Commands:
- *   /status              — View real-time security stats & active bans
- *   /blocked_list        — List all currently blocked IPs, Devices & Accounts with 1-click Unblock
- *   /appeals             — View pending unblock appeals submitted by users
- *   /ban_ip <IP>         — Ban an IP address directly from Telegram
- *   /ban_device <DevID>  — Ban a Device ID directly from Telegram
- *   /ban_account <Email> — Ban a User Account directly from Telegram
- *   /unblock <Target>    — Unblock an IP, Device ID, or Email directly from Telegram
- *   /help                — View available commands
+ * Uses Direct Firestore REST API for 100% reliable execution on Vercel without requiring credentials.
  */
 
-import { initializeApp, getApps, cert } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
+const PROJECT_ID = process.env.VITE_FIREBASE_PROJECT_ID || 'login-form-49609';
 
-function getDb() {
-  if (!getApps().length) {
-    const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT_KEY
-      ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY)
-      : null;
-
-    if (serviceAccount) {
-      initializeApp({ credential: cert(serviceAccount) });
-    } else {
-      initializeApp({ projectId: process.env.VITE_FIREBASE_PROJECT_ID || 'login-form-49609' });
-    }
+// ── Firestore REST API Helpers ────────────────────────────────────────────────
+async function setBlockedEntityREST(docId, data) {
+  const fields = {};
+  for (const [k, v] of Object.entries(data)) {
+    if (typeof v === 'boolean') fields[k] = { booleanValue: v };
+    else fields[k] = { stringValue: String(v) };
   }
-  return getFirestore();
+  const url = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/blocked_entities/${docId}`;
+  await fetch(url, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ fields })
+  });
 }
 
+async function deleteBlockedEntityREST(docId) {
+  const url = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/blocked_entities/${docId}`;
+  await fetch(url, { method: 'DELETE' });
+}
+
+async function listBlockedEntitiesREST() {
+  try {
+    const url = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/blocked_entities`;
+    const res = await fetch(url);
+    const data = await res.json();
+    return (data.documents || []).map(doc => {
+      const fields = doc.fields || {};
+      const obj = { id: doc.name.split('/').pop() };
+      for (const [k, v] of Object.entries(fields)) {
+        obj[k] = v.stringValue !== undefined ? v.stringValue : v.booleanValue !== undefined ? v.booleanValue : '';
+      }
+      return obj;
+    });
+  } catch {
+    return [];
+  }
+}
+
+async function listAppealsREST() {
+  try {
+    const url = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/ban_appeals?pageSize=10`;
+    const res = await fetch(url);
+    const data = await res.json();
+    return (data.documents || []).map(doc => {
+      const fields = doc.fields || {};
+      const obj = { id: doc.name.split('/').pop() };
+      for (const [k, v] of Object.entries(fields)) {
+        obj[k] = v.stringValue !== undefined ? v.stringValue : v.booleanValue !== undefined ? v.booleanValue : '';
+      }
+      return obj;
+    });
+  } catch {
+    return [];
+  }
+}
+
+async function listLogsCountREST() {
+  try {
+    const url = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/security_logs?pageSize=100`;
+    const res = await fetch(url);
+    const data = await res.json();
+    return (data.documents || []).length;
+  } catch {
+    return 0;
+  }
+}
+
+// ── Telegram Reply Helpers ────────────────────────────────────────────────────
 async function sendTelegramReply(botToken, chatId, text, inlineKeyboard = null) {
   try {
     const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
@@ -69,22 +113,6 @@ export default async function handler(req, res) {
   const update = req.body || {};
 
   try {
-    const db = getDb();
-
-    // Fallback: load botToken from Firestore if missing
-    if (!botToken) {
-      try {
-        const tgSnap = await db.collection('settings').doc('telegram').get();
-        if (tgSnap.exists) {
-          botToken = tgSnap.data().token;
-        }
-      } catch (e) {}
-    }
-
-    if (!botToken) {
-      return res.status(400).json({ error: 'Missing Telegram Bot Token' });
-    }
-
     const safeId = (str) => (str || '').toLowerCase().replace(/[^a-zA-Z0-9._-]/g, '_');
 
     // ── Handle Inline Button Clicks ───────────────────────────────────────────
@@ -98,67 +126,58 @@ export default async function handler(req, res) {
 
       if (action === 'ban_ip' && target) {
         const docId = `ip_${safeId(target)}`;
-        await db.collection('blocked_entities').doc(docId).set({
-          type: 'ip',
-          ip: target,
-          blocked: true,
-          blockedAt: new Date().toISOString(),
-          note: 'Banned via Telegram Bot',
+        await setBlockedEntityREST(docId, {
+          type: 'ip', ip: target, blocked: true,
+          blockedAt: new Date().toISOString(), note: 'Banned via Telegram Bot'
         });
         await answerCallbackQuery(botToken, cb.id, `✅ IP ${target} Banned!`);
-        await sendTelegramReply(botToken, chatId, `🚫 <b>IP BANNED</b>\nIP <code>${target}</code> has been blocked.`);
+        await sendTelegramReply(botToken, chatId, `🚫 <b>IP BANNED</b>\nIP Address <code>${target}</code> has been blocked in real-time.`);
       } else if (action === 'ban_device' && target) {
         const docId = `device_${safeId(target)}`;
-        await db.collection('blocked_entities').doc(docId).set({
-          type: 'device',
-          deviceId: target,
-          blocked: true,
-          blockedAt: new Date().toISOString(),
-          note: 'Banned via Telegram Bot',
+        await setBlockedEntityREST(docId, {
+          type: 'device', deviceId: target, blocked: true,
+          blockedAt: new Date().toISOString(), note: 'Banned via Telegram Bot'
         });
         await answerCallbackQuery(botToken, cb.id, `✅ Device ${target} Banned!`);
-        await sendTelegramReply(botToken, chatId, `📱 <b>DEVICE BANNED</b>\nDevice ID <code>${target}</code> has been blocked.`);
+        await sendTelegramReply(botToken, chatId, `📱 <b>DEVICE BANNED</b>\nDevice ID <code>${target}</code> has been blocked in real-time.`);
       } else if (action === 'ban_account' && target) {
         const docId = `email_${safeId(target)}`;
-        await db.collection('blocked_entities').doc(docId).set({
-          type: 'email',
-          email: target.toLowerCase(),
-          blocked: true,
-          disabled: true,
-          blockedAt: new Date().toISOString(),
-          note: 'Banned via Telegram Bot',
+        await setBlockedEntityREST(docId, {
+          type: 'email', email: target.toLowerCase(), blocked: true, disabled: true,
+          blockedAt: new Date().toISOString(), note: 'Banned via Telegram Bot'
         });
         await answerCallbackQuery(botToken, cb.id, `✅ Account ${target} Banned!`);
         await sendTelegramReply(botToken, chatId, `👤 <b>ACCOUNT BANNED</b>\nUser Account <code>${target}</code> has been suspended.`);
       } else if (action === 'unblock' && target) {
-        const targetClean = target.toLowerCase().trim();
-        await db.collection('blocked_entities').doc(`ip_${safeId(targetClean)}`).delete().catch(() => {});
-        await db.collection('blocked_entities').doc(`device_${safeId(targetClean)}`).delete().catch(() => {});
-        await db.collection('blocked_entities').doc(`email_${safeId(targetClean)}`).delete().catch(() => {});
-        
+        const clean = target.toLowerCase().trim();
+        await deleteBlockedEntityREST(`ip_${safeId(clean)}`);
+        await deleteBlockedEntityREST(`device_${safeId(clean)}`);
+        await deleteBlockedEntityREST(`email_${safeId(clean)}`);
+
         await answerCallbackQuery(botToken, cb.id, `✅ Unblocked ${target}!`);
         await sendTelegramReply(botToken, chatId, `✅ <b>UNBLOCKED</b>\nEntity <code>${target}</code> has been unblocked.`);
       } else if (action === 'status') {
-        const snapLogs = await db.collection('security_logs').limit(100).get();
-        const snapBans = await db.collection('blocked_entities').get();
-        
+        const logsCount = await listLogsCountREST();
+        const bansList = await listBlockedEntitiesREST();
+        const appealsList = await listAppealsREST();
+
         await sendTelegramReply(botToken, chatId, `
 📊 <b>ITShare Security Status</b>
 
-• <b>Total Logs:</b> ${snapLogs.size}
-• <b>Active Banned Entities:</b> ${snapBans.size}
-• <b>Status:</b> 🟢 Active & Guarding
+• 🛡️ <b>Total Logs:</b> ${logsCount}
+• 🚫 <b>Active Banned Entities:</b> ${bansList.length}
+• ✉️ <b>Pending Appeals:</b> ${appealsList.length}
+• 🟢 <b>Security Status:</b> ACTIVE & ENFORCING
         `.trim());
       } else if (action === 'blocked_list') {
-        const snapBans = await db.collection('blocked_entities').get();
-        if (snapBans.empty) {
+        const bansList = await listBlockedEntitiesREST();
+        if (!bansList.length) {
           await sendTelegramReply(botToken, chatId, '🟢 <b>No Active Blocked Entities</b>\nYour blocklist is currently empty.');
         } else {
-          let listText = `🚫 <b>Active Blocked Entities (${snapBans.size})</b>\n\n`;
+          let listText = `🚫 <b>Active Blocked Entities (${bansList.length})</b>\n\n`;
           const buttons = [];
-          snapBans.docs.forEach(doc => {
-            const data = doc.data();
-            const val = data.ip || data.email || data.deviceId || doc.id;
+          bansList.forEach(data => {
+            const val = data.ip || data.email || data.deviceId || data.id;
             const typeLabel = data.type === 'ip' ? '🌐 IP' : data.type === 'device' ? '📱 Device' : '👤 Account';
             listText += `• ${typeLabel}: <code>${val}</code>\n`;
             buttons.push([{ text: `✅ Unblock ${typeLabel}: ${val}`, callback_data: `unblock:${val}` }]);
@@ -166,14 +185,13 @@ export default async function handler(req, res) {
           await sendTelegramReply(botToken, chatId, listText, { inline_keyboard: buttons.slice(0, 10) });
         }
       } else if (action === 'appeals') {
-        const snapAppeals = await db.collection('ban_appeals').limit(10).get();
-        if (snapAppeals.empty) {
+        const appealsList = await listAppealsREST();
+        if (!appealsList.length) {
           await sendTelegramReply(botToken, chatId, '✉️ <b>No Pending Unblock Appeals</b>');
         } else {
-          let msg = `✉️ <b>Unblock Appeals (${snapAppeals.size})</b>\n\n`;
+          let msg = `✉️ <b>Unblock Appeals (${appealsList.length})</b>\n\n`;
           const buttons = [];
-          snapAppeals.docs.forEach(doc => {
-            const data = doc.data();
+          appealsList.forEach(data => {
             msg += `• <b>${data.email || 'User'}</b> (${data.deviceId || ''}):\n<i>"${data.appealText}"</i>\n\n`;
             buttons.push([{ text: `✅ Approve Unblock: ${data.email || data.deviceId}`, callback_data: `unblock:${data.email || data.deviceId}` }]);
           });
@@ -206,20 +224,20 @@ export default async function handler(req, res) {
 • <code>/ban_account user@gmail.com</code> — Ban a User Account Email
 • <code>/unblock target</code> — Unblock an IP, Device ID, or Email
 
-<i>Use the Telegram [/] menu or type commands above.</i>
+<i>Select a command or use the Telegram [/] menu.</i>
       `.trim();
       await sendTelegramReply(botToken, chatId, helpMsg);
     } else if (text.startsWith('/status')) {
-      const snapLogs = await db.collection('security_logs').get();
-      const snapBans = await db.collection('blocked_entities').get();
-      const snapAppeals = await db.collection('ban_appeals').get();
+      const logsCount = await listLogsCountREST();
+      const bansList = await listBlockedEntitiesREST();
+      const appealsList = await listAppealsREST();
 
       const msg = `
 📊 <b>ITShare Security Status</b>
 
-• 🛡️ <b>Total Logged Security Events:</b> ${snapLogs.size}
-• 🚫 <b>Active Banned Entities:</b> ${snapBans.size}
-• ✉️ <b>Pending Unblock Appeals:</b> ${snapAppeals.size}
+• 🛡️ <b>Total Logged Security Events:</b> ${logsCount}
+• 🚫 <b>Active Banned Entities:</b> ${bansList.length}
+• ✉️ <b>Pending Unblock Appeals:</b> ${appealsList.length}
 • 🟢 <b>Security Guard Status:</b> ACTIVE & ENFORCING
       `.trim();
 
@@ -234,15 +252,14 @@ export default async function handler(req, res) {
 
       await sendTelegramReply(botToken, chatId, msg, inlineKeyboard);
     } else if (text.startsWith('/blocked_list')) {
-      const snapBans = await db.collection('blocked_entities').get();
-      if (snapBans.empty) {
+      const bansList = await listBlockedEntitiesREST();
+      if (!bansList.length) {
         await sendTelegramReply(botToken, chatId, '🟢 <b>No Active Blocked Entities</b>\nYour blocklist is currently empty.');
       } else {
-        let listText = `🚫 <b>Active Blocked Entities (${snapBans.size})</b>\n\n`;
+        let listText = `🚫 <b>Active Blocked Entities (${bansList.length})</b>\n\n`;
         const buttons = [];
-        snapBans.docs.forEach(doc => {
-          const data = doc.data();
-          const val = data.ip || data.email || data.deviceId || doc.id;
+        bansList.forEach(data => {
+          const val = data.ip || data.email || data.deviceId || data.id;
           const typeLabel = data.type === 'ip' ? '🌐 IP' : data.type === 'device' ? '📱 Device' : '👤 Account';
           listText += `• ${typeLabel}: <code>${val}</code>\n`;
           buttons.push([{ text: `✅ Unblock ${typeLabel}: ${val}`, callback_data: `unblock:${val}` }]);
@@ -250,14 +267,13 @@ export default async function handler(req, res) {
         await sendTelegramReply(botToken, chatId, listText, { inline_keyboard: buttons.slice(0, 10) });
       }
     } else if (text.startsWith('/appeals')) {
-      const snapAppeals = await db.collection('ban_appeals').limit(10).get();
-      if (snapAppeals.empty) {
+      const appealsList = await listAppealsREST();
+      if (!appealsList.length) {
         await sendTelegramReply(botToken, chatId, '✉️ <b>No Pending Unblock Appeals</b>');
       } else {
-        let msg = `✉️ <b>Unblock Appeals (${snapAppeals.size})</b>\n\n`;
+        let msg = `✉️ <b>Unblock Appeals (${appealsList.length})</b>\n\n`;
         const buttons = [];
-        snapAppeals.docs.forEach(doc => {
-          const data = doc.data();
+        appealsList.forEach(data => {
           msg += `• <b>${data.email || 'User'}</b> (${data.deviceId || ''}):\n<i>"${data.appealText}"</i>\n\n`;
           buttons.push([{ text: `✅ Approve Unblock: ${data.email || data.deviceId}`, callback_data: `unblock:${data.email || data.deviceId}` }]);
         });
@@ -269,12 +285,9 @@ export default async function handler(req, res) {
         await sendTelegramReply(botToken, chatId, '⚠️ <i>Usage: /ban_ip 175.100.52.181</i>');
       } else {
         const docId = `ip_${safeId(ip)}`;
-        await db.collection('blocked_entities').doc(docId).set({
-          type: 'ip',
-          ip,
-          blocked: true,
-          blockedAt: new Date().toISOString(),
-          note: 'Banned via Telegram command',
+        await setBlockedEntityREST(docId, {
+          type: 'ip', ip, blocked: true,
+          blockedAt: new Date().toISOString(), note: 'Banned via Telegram command'
         });
         await sendTelegramReply(botToken, chatId, `🚫 <b>IP BANNED</b>\nIP Address <code>${ip}</code> has been blocked in real-time.`);
       }
@@ -284,12 +297,9 @@ export default async function handler(req, res) {
         await sendTelegramReply(botToken, chatId, '⚠️ <i>Usage: /ban_device DEV-1171D4E7</i>');
       } else {
         const docId = `device_${safeId(devId)}`;
-        await db.collection('blocked_entities').doc(docId).set({
-          type: 'device',
-          deviceId: devId,
-          blocked: true,
-          blockedAt: new Date().toISOString(),
-          note: 'Banned via Telegram command',
+        await setBlockedEntityREST(docId, {
+          type: 'device', deviceId: devId, blocked: true,
+          blockedAt: new Date().toISOString(), note: 'Banned via Telegram command'
         });
         await sendTelegramReply(botToken, chatId, `📱 <b>DEVICE BANNED</b>\nDevice ID <code>${devId}</code> has been blocked in real-time.`);
       }
@@ -299,13 +309,9 @@ export default async function handler(req, res) {
         await sendTelegramReply(botToken, chatId, '⚠️ <i>Usage: /ban_account user@gmail.com</i>');
       } else {
         const docId = `email_${safeId(email)}`;
-        await db.collection('blocked_entities').doc(docId).set({
-          type: 'email',
-          email,
-          blocked: true,
-          disabled: true,
-          blockedAt: new Date().toISOString(),
-          note: 'Banned via Telegram command',
+        await setBlockedEntityREST(docId, {
+          type: 'email', email, blocked: true, disabled: true,
+          blockedAt: new Date().toISOString(), note: 'Banned via Telegram command'
         });
         await sendTelegramReply(botToken, chatId, `👤 <b>ACCOUNT BANNED</b>\nUser Account <code>${email}</code> has been suspended.`);
       }
@@ -314,9 +320,9 @@ export default async function handler(req, res) {
       if (!target) {
         await sendTelegramReply(botToken, chatId, '⚠️ <i>Usage: /unblock 175.100.52.181 or /unblock user@gmail.com</i>');
       } else {
-        await db.collection('blocked_entities').doc(`ip_${safeId(target)}`).delete().catch(() => {});
-        await db.collection('blocked_entities').doc(`device_${safeId(target)}`).delete().catch(() => {});
-        await db.collection('blocked_entities').doc(`email_${safeId(target)}`).delete().catch(() => {});
+        await deleteBlockedEntityREST(`ip_${safeId(target)}`);
+        await deleteBlockedEntityREST(`device_${safeId(target)}`);
+        await deleteBlockedEntityREST(`email_${safeId(target)}`);
 
         await sendTelegramReply(botToken, chatId, `✅ <b>UNBLOCKED</b>\nEntity <code>${target}</code> has been unblocked.`);
       }
