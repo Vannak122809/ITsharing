@@ -11,6 +11,7 @@ import {
   List, Search, File, Loader2, MoreHorizontal 
 } from 'lucide-react';
 import AuthModal from '../components/AuthModal';
+import PdfSlideViewerModal from '../components/PdfSlideViewerModal';
 import { checkDownloadLimit, formatRetryTime } from '../utils/rateLimiter';
 import { logRateLimit } from '../utils/securityLogger';
 
@@ -82,6 +83,8 @@ const Documents = () => {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [selectedPdfDoc, setSelectedPdfDoc] = useState(null);
+  const [pdfViewerOpen, setPdfViewerOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -144,11 +147,10 @@ const Documents = () => {
     }
   };
 
-  const handleViewFile = (url) => {
+  const handleViewFile = (docItem) => {
     if (authLoading) return;
     if (isGuest) { setAuthModalOpen(true); return; }
 
-    // Rate limiting — shares download budget
     const uid = user?.uid || 'anon';
     const { allowed, retryAfterMs } = checkDownloadLimit(uid);
     if (!allowed) {
@@ -158,7 +160,10 @@ const Documents = () => {
       return;
     }
 
-    if (url) window.open(url, '_blank');
+    if (docItem) {
+      setSelectedPdfDoc(docItem);
+      setPdfViewerOpen(true);
+    }
   };
 
   const docData = [
@@ -301,6 +306,7 @@ const Documents = () => {
       `}</style>
 
       <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} message="You need to be logged in to download or view documents." />
+      <PdfSlideViewerModal isOpen={pdfViewerOpen} onClose={() => setPdfViewerOpen(false)} document={selectedPdfDoc} />
       
       <div className="container" style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: '32px', maxWidth: '1440px', margin: '0 auto', padding: '0 24px' }}>
         
@@ -605,7 +611,7 @@ const Documents = () => {
                         )}
                         <div style={{ display: 'flex', gap: '10px' }}>
                           <button 
-                            onClick={() => handleViewFile(doc.url)}
+                            onClick={() => handleViewFile(doc)}
                             style={{ 
                               padding: '10px', borderRadius: '12px', border: '1px solid var(--surface-border)', 
                               background: 'var(--surface-badge)', color: 'var(--text-main)', cursor: 'pointer', transition: 'all 0.2s',
