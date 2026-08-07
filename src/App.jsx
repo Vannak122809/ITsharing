@@ -78,6 +78,11 @@ function App() {
     }
   }, [isLoggedIn, location.pathname]);
 
+  // Smooth scroll reset to top on route switch
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, [location.pathname]);
+
   // Block Inspect Element and Developer Tools
   useEffect(() => {
     const handleContextMenu = (e) => e.preventDefault();
@@ -371,17 +376,19 @@ function App() {
       <CommandPalette />
       <main>
         <Suspense fallback={
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
-            <div className="loader-spinner"></div>
+          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', minHeight: '65vh', gap: '16px' }}>
+            <div style={{ width: '44px', height: '44px', borderRadius: '50%', border: '3px solid var(--surface-border)', borderTopColor: 'var(--primary)', animation: 'spin 0.8s linear infinite' }} />
+            <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>{t('loading') || 'Loading...'}</span>
           </div>
         }>
-          <AnimatePresence mode="wait">
+          <AnimatePresence mode="popLayout" initial={false}>
             <motion.div
               key={location.pathname}
-              initial={{ opacity: 0, y: 12 }}
+              className="page-transition-wrapper"
+              initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={{ duration: 0.25, ease: 'easeInOut' }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
             >
               <Routes location={location}>
                 <Route path="/" element={<Home />} />
