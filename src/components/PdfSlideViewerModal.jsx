@@ -1,43 +1,44 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, ChevronLeft, ChevronRight, Download, Maximize2, Minimize2, 
   RotateCw, ZoomIn, ZoomOut, FileText, Play, Pause, Layers,
   ExternalLink, Printer, Share2, Copy, Check, Sun, Moon,
-  BookOpen, Eye, Sparkles, RefreshCw
+  BookOpen, Eye, Sparkles, RefreshCw, Zap
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const PdfSlideViewerModal = ({ isOpen, onClose, document: docItem }) => {
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(15);
+  const [totalPages, setTotalPages] = useState(20);
   const [inputPageStr, setInputPageStr] = useState('1');
   const [zoom, setZoom] = useState(100);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isAutoPlay, setIsAutoPlay] = useState(false);
-  const [viewerMode, setViewerMode] = useState('direct'); // 'direct', 'google', 'mozilla'
+  const [viewerMode, setViewerMode] = useState('native'); // 'native', 'google', 'mozilla'
   const [readingTheme, setReadingTheme] = useState('dark'); // 'dark', 'light', 'sepia'
   const [copiedLink, setCopiedLink] = useState(false);
-  const [isIframeLoading, setIsIframeLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
 
   const pdfUrl = docItem?.url || '';
+  const frameRef = useRef(null);
 
-  // Sync page input string when currentPage changes
+  // Sync page string
   useEffect(() => {
     setInputPageStr(currentPage.toString());
   }, [currentPage]);
 
-  // Reset state when docItem changes or modal opens
+  // Reset when docItem or modal state changes
   useEffect(() => {
     if (isOpen) {
       setCurrentPage(1);
       setZoom(100);
       setIsAutoPlay(false);
-      setIsIframeLoading(true);
+      setIsLoading(true);
     }
-  }, [isOpen, docItem]);
+  }, [isOpen, docItem?.id]);
 
-  // Slideshow auto-play effect
+  // Slideshow timer
   useEffect(() => {
     let timer;
     if (isAutoPlay && isOpen) {
@@ -48,15 +49,13 @@ const PdfSlideViewerModal = ({ isOpen, onClose, document: docItem }) => {
     return () => clearInterval(timer);
   }, [isAutoPlay, isOpen, totalPages]);
 
-  // Keyboard navigation & shortcuts
+  // Keyboard Navigation
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (!isOpen) return;
-      if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') {
-        e.preventDefault();
+      if (e.key === 'ArrowRight' || e.key === 'PageDown') {
         setCurrentPage(prev => Math.min(totalPages, prev + 1));
       } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
-        e.preventDefault();
         setCurrentPage(prev => Math.max(1, prev - 1));
       } else if (e.key === 'Escape') {
         onClose();
@@ -86,7 +85,7 @@ const PdfSlideViewerModal = ({ isOpen, onClose, document: docItem }) => {
     const link = document.createElement('a');
     link.href = pdfUrl;
     link.target = '_blank';
-    link.download = (docItem.title || 'document').replace(/[^a-zA-Z0-9 ]/g, '') + '.pdf';
+    link.download = (docItem.title || 'document').replace(/[^a-zA-Z0-9 ]/g, '_') + '.pdf';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -107,16 +106,6 @@ const PdfSlideViewerModal = ({ isOpen, onClose, document: docItem }) => {
     }
   };
 
-  const handlePrint = () => {
-    if (pdfUrl) {
-      const printWindow = window.open(pdfUrl, '_blank');
-      if (printWindow) {
-        printWindow.focus();
-        printWindow.print();
-      }
-    }
-  };
-
   const handlePageSubmit = (e) => {
     e.preventDefault();
     const pageNum = parseInt(inputPageStr, 10);
@@ -127,23 +116,29 @@ const PdfSlideViewerModal = ({ isOpen, onClose, document: docItem }) => {
     }
   };
 
-  // Determine actual iframe src based on selected viewer engine
-  const getEmbedUrl = () => {
+  // Determine viewing URL
+  const getEmbedSource = () => {
     if (!pdfUrl) return '';
     if (viewerMode === 'google') {
       return `https://docs.google.com/gview?url=${encodeURIComponent(pdfUrl)}&embedded=true`;
     }
     if (viewerMode === 'mozilla') {
-      return `https://mozilla.github.io/pdf.js/web/viewer.html?file=${encodeURIComponent(pdfUrl)}#page=${currentPage}`;
+      return `https://mozilla.github.io/pdf.js/web/viewer.html?file=${encodeURIComponent(pdfUrl)}`;
     }
-    // Direct embed with page parameter
-    return `${pdfUrl}#page=${currentPage}&toolbar=0&navpanes=0&scrollbar=1&view=FitH`;
+    // High-speed Native PDF URL - Load PDF ONCE into browser memory
+    return pdfUrl;
   };
 
-  // Theme background colors for canvas
+  // CSS Filters for dark/sepia reading themes without re-fetching
+  const getThemeFilter = () => {
+    if (readingTheme === 'dark') return 'invert(0.88) hue-rotate(180deg) contrast(1.1)';
+    if (readingTheme === 'sepia') return 'sepia(0.35) contrast(0.95)';
+    return 'none';
+  };
+
   const canvasBgColors = {
     dark: '#090d16',
-    light: '#f1f5f9',
+    light: '#f8fafc',
     sepia: '#fbf0d9'
   };
 
@@ -156,60 +151,56 @@ const PdfSlideViewerModal = ({ isOpen, onClose, document: docItem }) => {
         style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
           zIndex: 999999,
-          background: 'rgba(5, 8, 15, 0.94)',
+          background: 'rgba(4, 7, 13, 0.95)',
           backdropFilter: 'blur(24px)',
           WebkitBackdropFilter: 'blur(24px)',
           display: 'flex', flexDirection: 'column',
           color: '#f8fafc', fontFamily: "'Inter', system-ui, sans-serif"
         }}
       >
-        {/* TOP HEADER TOOLBAR */}
+        {/* TOP HEADER BAR */}
         <header style={{
-          height: '72px', padding: '0 24px',
-          background: 'rgba(15, 23, 42, 0.9)',
+          height: '68px', padding: '0 20px',
+          background: 'rgba(15, 23, 42, 0.92)',
           borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          flexShrink: 0, gap: '16px', flexWrap: 'nowrap'
+          flexShrink: 0, gap: '14px'
         }}>
-          {/* Document Title & Category Info */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px', minWidth: 0 }}>
+          {/* Document Meta Info */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
             <div style={{
-              width: '44px', height: '44px', borderRadius: '14px',
+              width: '42px', height: '42px', borderRadius: '12px',
               background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 6px 20px rgba(59, 130, 246, 0.35)', flexShrink: 0
+              boxShadow: '0 4px 15px rgba(59, 130, 246, 0.4)', flexShrink: 0
             }}>
-              <FileText size={22} color="#fff" />
+              <FileText size={20} color="#fff" />
             </div>
             <div style={{ minWidth: 0 }}>
               <h3 style={{
-                fontSize: '1.05rem', fontWeight: 800, margin: 0, color: '#f8fafc',
+                fontSize: '1.02rem', fontWeight: 800, margin: 0, color: '#f8fafc',
                 whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
               }}>
                 {docItem.title}
               </h3>
-              <div style={{ fontSize: '0.78rem', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2px' }}>
+              <div style={{ fontSize: '0.75rem', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
                 <span style={{ background: 'rgba(59,130,246,0.15)', color: '#60a5fa', padding: '2px 8px', borderRadius: '6px', fontWeight: 600 }}>
                   {docItem.category || 'Document'}
                 </span>
-                {docItem.subfolder && (
-                  <>
-                    <span>&bull;</span>
-                    <span style={{ color: '#cbd5e1' }}>{docItem.subfolder}</span>
-                  </>
-                )}
                 <span>&bull;</span>
                 <span>{docItem.size || 'PDF'}</span>
+                <span style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', padding: '2px 6px', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '3px' }}>
+                  <Zap size={10} /> Fast Render
+                </span>
               </div>
             </div>
           </div>
 
-          {/* PAGE NAVIGATION & SLIDESHOW CONTROL */}
+          {/* PAGE NAVIGATION CONTROLS */}
           <div style={{
-            display: 'flex', alignItems: 'center', gap: '10px',
-            background: 'rgba(30, 41, 59, 0.75)', padding: '6px 14px',
-            borderRadius: '16px', border: '1px solid rgba(255, 255, 255, 0.12)',
-            boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
+            display: 'flex', alignItems: 'center', gap: '8px',
+            background: 'rgba(30, 41, 59, 0.8)', padding: '5px 12px',
+            borderRadius: '14px', border: '1px solid rgba(255, 255, 255, 0.12)'
           }}>
             <button
               onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
@@ -218,29 +209,28 @@ const PdfSlideViewerModal = ({ isOpen, onClose, document: docItem }) => {
                 background: currentPage <= 1 ? 'transparent' : 'rgba(255,255,255,0.1)',
                 border: 'none', color: currentPage <= 1 ? '#475569' : '#fff',
                 cursor: currentPage <= 1 ? 'not-allowed' : 'pointer',
-                padding: '6px 10px', borderRadius: '10px',
-                display: 'flex', alignItems: 'center', transition: 'all 0.2s'
+                padding: '5px 8px', borderRadius: '8px', display: 'flex', alignItems: 'center'
               }}
-              title="Previous Page (Left Arrow)"
+              title="Previous Page"
             >
               <ChevronLeft size={18} />
             </button>
 
-            <form onSubmit={handlePageSubmit} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Page</span>
+            <form onSubmit={handlePageSubmit} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <span style={{ fontSize: '0.78rem', color: '#94a3b8', fontWeight: 600 }}>Page</span>
               <input
                 type="text"
                 value={inputPageStr}
                 onChange={(e) => setInputPageStr(e.target.value)}
                 onBlur={handlePageSubmit}
                 style={{
-                  width: '42px', height: '28px', borderRadius: '8px',
+                  width: '38px', height: '26px', borderRadius: '6px',
                   border: '1px solid rgba(255, 255, 255, 0.2)',
                   background: 'rgba(15, 23, 42, 0.8)', color: '#fff',
-                  textAlign: 'center', fontWeight: 700, fontSize: '0.85rem', outline: 'none'
+                  textAlign: 'center', fontWeight: 700, fontSize: '0.82rem', outline: 'none'
                 }}
               />
-              <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#94a3b8' }}>/ {totalPages}</span>
+              <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#94a3b8' }}>/ {totalPages}</span>
             </form>
 
             <button
@@ -250,239 +240,247 @@ const PdfSlideViewerModal = ({ isOpen, onClose, document: docItem }) => {
                 background: currentPage >= totalPages ? 'transparent' : 'rgba(255,255,255,0.1)',
                 border: 'none', color: currentPage >= totalPages ? '#475569' : '#fff',
                 cursor: currentPage >= totalPages ? 'not-allowed' : 'pointer',
-                padding: '6px 10px', borderRadius: '10px',
-                display: 'flex', alignItems: 'center', transition: 'all 0.2s'
+                padding: '5px 8px', borderRadius: '8px', display: 'flex', alignItems: 'center'
               }}
-              title="Next Page (Right Arrow)"
+              title="Next Page"
             >
               <ChevronRight size={18} />
             </button>
 
-            <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.15)', margin: '0 4px' }} />
+            <div style={{ width: '1px', height: '18px', background: 'rgba(255,255,255,0.15)', margin: '0 2px' }} />
 
-            {/* Auto Play Presentation Mode */}
             <button
               onClick={() => setIsAutoPlay(!isAutoPlay)}
               style={{
-                background: isAutoPlay ? 'linear-gradient(135deg, #3b82f6, #2563eb)' : 'rgba(255,255,255,0.08)',
-                color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '10px',
-                cursor: 'pointer', fontWeight: 700, fontSize: '0.78rem',
-                display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s'
+                background: isAutoPlay ? '#2563eb' : 'rgba(255,255,255,0.08)',
+                color: '#fff', border: 'none', padding: '5px 10px', borderRadius: '8px',
+                cursor: 'pointer', fontWeight: 700, fontSize: '0.75rem',
+                display: 'flex', alignItems: 'center', gap: '4px'
               }}
-              title="Auto Play Slideshow Presentation"
+              title="Auto Play Slideshow"
             >
-              {isAutoPlay ? <Pause size={14} /> : <Play size={14} />} 
+              {isAutoPlay ? <Pause size={12} /> : <Play size={12} />} 
               {isAutoPlay ? 'Playing' : 'Slideshow'}
             </button>
           </div>
 
-          {/* VIEW CONTROLS & UTILITIES */}
+          {/* VIEW CONTROLS & FAST ACTIONS */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             {/* Zoom Controls */}
             <div style={{
-              display: 'flex', alignItems: 'center', gap: '4px',
+              display: 'flex', alignItems: 'center', gap: '2px',
               background: 'rgba(30,41,59,0.7)', border: '1px solid rgba(255,255,255,0.1)',
-              borderRadius: '12px', padding: '2px 8px'
+              borderRadius: '10px', padding: '2px 6px'
             }}>
               <button
-                onClick={() => setZoom(prev => Math.max(50, prev - 25))}
-                style={{ background: 'transparent', border: 'none', color: '#fff', padding: '6px', cursor: 'pointer' }}
+                onClick={() => setZoom(prev => Math.max(60, prev - 20))}
+                style={{ background: 'transparent', border: 'none', color: '#fff', padding: '4px', cursor: 'pointer' }}
                 title="Zoom Out"
               >
-                <ZoomOut size={16} />
+                <ZoomOut size={15} />
               </button>
-              <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#cbd5e1', minWidth: '40px', textAlign: 'center' }}>{zoom}%</span>
+              <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#cbd5e1', minWidth: '38px', textAlign: 'center' }}>{zoom}%</span>
               <button
-                onClick={() => setZoom(prev => Math.min(200, prev + 25))}
-                style={{ background: 'transparent', border: 'none', color: '#fff', padding: '6px', cursor: 'pointer' }}
+                onClick={() => setZoom(prev => Math.min(180, prev + 20))}
+                style={{ background: 'transparent', border: 'none', color: '#fff', padding: '4px', cursor: 'pointer' }}
                 title="Zoom In"
               >
-                <ZoomIn size={16} />
+                <ZoomIn size={15} />
               </button>
             </div>
 
-            {/* Engine Switcher Dropdown */}
+            {/* Engine Selector */}
             <select
               value={viewerMode}
-              onChange={(e) => { setViewerMode(e.target.value); setIsIframeLoading(true); }}
+              onChange={(e) => { setViewerMode(e.target.value); setIsLoading(true); }}
               style={{
-                background: 'rgba(30, 41, 59, 0.85)',
-                border: '1px solid rgba(255, 255, 255, 0.15)',
-                color: '#60a5fa', padding: '8px 12px', borderRadius: '12px',
-                cursor: 'pointer', fontSize: '0.78rem', fontWeight: 700, outline: 'none'
+                background: 'rgba(30, 41, 59, 0.9)',
+                border: '1px solid rgba(59, 130, 246, 0.3)',
+                color: '#60a5fa', padding: '7px 10px', borderRadius: '10px',
+                cursor: 'pointer', fontSize: '0.75rem', fontWeight: 700, outline: 'none'
               }}
-              title="Switch Rendering Engine"
+              title="Rendering Engine"
             >
-              <option value="direct" style={{ background: '#0f172a', color: '#fff' }}>⚡ Direct Engine</option>
+              <option value="native" style={{ background: '#0f172a', color: '#fff' }}>⚡ High-Speed Native</option>
               <option value="google" style={{ background: '#0f172a', color: '#fff' }}>🌐 Google Docs Engine</option>
               <option value="mozilla" style={{ background: '#0f172a', color: '#fff' }}>📄 PDF.js Web Engine</option>
             </select>
 
-            {/* Theme Canvas Switcher */}
+            {/* Reading Theme */}
             <button
               onClick={() => setReadingTheme(prev => prev === 'dark' ? 'light' : prev === 'light' ? 'sepia' : 'dark')}
               style={{
                 background: 'rgba(30,41,59,0.7)', border: '1px solid rgba(255,255,255,0.1)',
-                color: '#fff', padding: '8px', borderRadius: '12px', cursor: 'pointer'
+                color: '#fff', padding: '7px', borderRadius: '10px', cursor: 'pointer'
               }}
-              title={`Reading Theme: ${readingTheme.toUpperCase()}`}
+              title={`Theme: ${readingTheme.toUpperCase()}`}
             >
-              {readingTheme === 'dark' ? <Moon size={16} /> : readingTheme === 'light' ? <Sun size={16} /> : <BookOpen size={16} color="#d97706" />}
+              {readingTheme === 'dark' ? <Moon size={15} /> : readingTheme === 'light' ? <Sun size={15} /> : <BookOpen size={15} color="#d97706" />}
             </button>
 
-            {/* Fullscreen Toggle */}
-            <button
-              onClick={toggleFullscreen}
-              style={{ background: 'rgba(30,41,59,0.7)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '8px', borderRadius: '12px', cursor: 'pointer' }}
-              title="Toggle Fullscreen"
-            >
-              {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
-            </button>
-
-            {/* Open in New Tab */}
+            {/* Open in Full Browser Tab */}
             <button
               onClick={handleOpenExternal}
-              style={{ background: 'rgba(30,41,59,0.7)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '8px', borderRadius: '12px', cursor: 'pointer' }}
-              title="Open PDF in New Browser Tab"
+              style={{
+                background: 'rgba(59, 130, 246, 0.2)', border: '1px solid rgba(59, 130, 246, 0.4)',
+                color: '#60a5fa', padding: '7px 12px', borderRadius: '10px', cursor: 'pointer',
+                fontWeight: 700, fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '5px'
+              }}
+              title="Open Full PDF in New Tab"
             >
-              <ExternalLink size={16} />
+              <ExternalLink size={14} /> Open Full PDF
             </button>
 
-            {/* Share / Copy Link */}
-            <button
-              onClick={handleCopyLink}
-              style={{ background: 'rgba(30,41,59,0.7)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '8px', borderRadius: '12px', cursor: 'pointer' }}
-              title="Copy PDF Link"
-            >
-              {copiedLink ? <Check size={16} color="#10b981" /> : <Share2 size={16} />}
-            </button>
-
-            {/* Download Button */}
+            {/* Download */}
             <button
               onClick={handleDownload}
               style={{
                 background: 'linear-gradient(135deg, #2563eb, #1d4ed8)', border: 'none',
-                color: '#fff', padding: '8px 16px', borderRadius: '12px', cursor: 'pointer',
-                fontWeight: 700, fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '6px',
-                boxShadow: '0 4px 15px rgba(37, 99, 235, 0.4)'
+                color: '#fff', padding: '7px 14px', borderRadius: '10px', cursor: 'pointer',
+                fontWeight: 700, fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '5px',
+                boxShadow: '0 4px 12px rgba(37, 99, 235, 0.4)'
               }}
             >
-              <Download size={16} /> Download
+              <Download size={14} /> Download
             </button>
 
-            {/* Close Button */}
+            {/* Close Modal */}
             <button
               onClick={onClose}
               style={{
-                background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.3)',
-                color: '#ef4444', width: '38px', height: '38px', borderRadius: '50%',
+                background: 'rgba(239, 68, 68, 0.18)', border: '1px solid rgba(239, 68, 68, 0.4)',
+                color: '#ef4444', width: '36px', height: '36px', borderRadius: '50%',
                 cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                 marginLeft: '4px', transition: 'all 0.2s'
               }}
-              title="Close Viewer"
+              title="Close PDF Viewer"
             >
-              <X size={20} />
+              <X size={18} />
             </button>
           </div>
         </header>
 
-        {/* MAIN CANVAS DISPLAY AREA */}
+        {/* MAIN DISPLAY CANVAS */}
         <main style={{
           flex: 1, position: 'relative', display: 'flex', alignItems: 'center',
-          justifyContent: 'center', padding: '20px', overflow: 'auto',
+          justifyContent: 'center', padding: '16px', overflow: 'hidden',
           background: canvasBgColors[readingTheme], transition: 'background 0.3s'
         }}>
 
-          {/* Left Arrow Navigation Overlay */}
+          {/* Left Floating Nav Arrow */}
           <button
             onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
             disabled={currentPage <= 1}
             style={{
-              position: 'fixed', left: '24px', top: '50%', transform: 'translateY(-50%)',
-              zIndex: 100, width: '56px', height: '56px', borderRadius: '50%',
-              background: 'rgba(15, 23, 42, 0.85)', border: '1px solid rgba(255,255,255,0.18)',
+              position: 'fixed', left: '20px', top: '50%', transform: 'translateY(-50%)',
+              zIndex: 100, width: '52px', height: '52px', borderRadius: '50%',
+              background: 'rgba(15, 23, 42, 0.85)', border: '1px solid rgba(255,255,255,0.2)',
               color: currentPage <= 1 ? '#475569' : '#fff', cursor: currentPage <= 1 ? 'not-allowed' : 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              backdropFilter: 'blur(12px)', boxShadow: '0 12px 30px rgba(0,0,0,0.6)',
-              transition: 'all 0.2s'
+              backdropFilter: 'blur(12px)', boxShadow: '0 10px 25px rgba(0,0,0,0.6)'
             }}
-            title="Previous Page"
           >
-            <ChevronLeft size={30} />
+            <ChevronLeft size={28} />
           </button>
 
-          {/* PDF Viewer Frame Container */}
-          <motion.div
-            key={docItem.id + '_' + currentPage + '_' + zoom + '_' + viewerMode + '_' + readingTheme}
-            initial={{ opacity: 0, scale: 0.97 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.3, ease: 'easeOut' }}
+          {/* PDF VIEW CONTAINER - BOUND ONLY TO docItem.id & viewerMode TO AVOID UNNECESSARY RE-FETCHING */}
+          <div
             style={{
-              width: `${zoom}%`, maxWidth: '1280px', height: '100%',
-              borderRadius: '24px', overflow: 'hidden', position: 'relative',
-              boxShadow: '0 30px 70px -15px rgba(0, 0, 0, 0.8), 0 0 50px rgba(59, 130, 246, 0.12)',
+              width: '100%', maxWidth: `${zoom * 12.8}px`, height: '100%',
+              borderRadius: '20px', overflow: 'hidden', position: 'relative',
+              boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.85), 0 0 40px rgba(59, 130, 246, 0.15)',
               border: '1px solid rgba(255, 255, 255, 0.12)',
-              background: readingTheme === 'light' ? '#ffffff' : readingTheme === 'sepia' ? '#fffbf2' : '#0f172a'
+              background: readingTheme === 'light' ? '#ffffff' : readingTheme === 'sepia' ? '#fffbf2' : '#0f172a',
+              transition: 'width 0.2s ease-out'
             }}
           >
-            {/* Loading Overlay */}
-            {isIframeLoading && (
+            {/* Loading Indicator */}
+            {isLoading && (
               <div style={{
                 position: 'absolute', inset: 0, zIndex: 10,
-                background: 'rgba(15, 23, 42, 0.9)',
+                background: 'rgba(15, 23, 42, 0.95)',
                 display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                gap: '16px', color: '#94a3b8'
+                gap: '14px', color: '#94a3b8'
               }}>
-                <RefreshCw size={36} className="spin" color="#3b82f6" />
-                <p style={{ fontSize: '0.95rem', fontWeight: 600 }}>Loading PDF Document...</p>
+                <RefreshCw size={32} className="spin" color="#3b82f6" />
+                <p style={{ fontSize: '0.9rem', fontWeight: 600 }}>Opening PDF Viewer...</p>
               </div>
             )}
 
-            <iframe
-              src={getEmbedUrl()}
-              title={docItem.title}
-              onLoad={() => setIsIframeLoading(false)}
-              style={{
-                width: '100%', height: '100%', border: 'none',
-                background: 'transparent'
-              }}
-            />
-          </motion.div>
+            {/* HIGH PERFORMANCE NATIVE PDF OBJECT WITH IFRAME FALLBACK */}
+            {viewerMode === 'native' ? (
+              <object
+                key={docItem.id + '_native'}
+                data={pdfUrl}
+                type="application/pdf"
+                width="100%"
+                height="100%"
+                onLoad={() => setIsLoading(false)}
+                style={{
+                  width: '100%', height: '100%', border: 'none',
+                  filter: getThemeFilter(), transition: 'filter 0.3s'
+                }}
+              >
+                <iframe
+                  src={pdfUrl}
+                  title={docItem.title}
+                  onLoad={() => setIsLoading(false)}
+                  style={{
+                    width: '100%', height: '100%', border: 'none',
+                    filter: getThemeFilter()
+                  }}
+                />
+              </object>
+            ) : (
+              <iframe
+                key={docItem.id + '_' + viewerMode}
+                src={getEmbedSource()}
+                title={docItem.title}
+                onLoad={() => setIsLoading(false)}
+                style={{
+                  width: '100%', height: '100%', border: 'none',
+                  filter: getThemeFilter()
+                }}
+              />
+            )}
+          </div>
 
-          {/* Right Arrow Navigation Overlay */}
+          {/* Right Floating Nav Arrow */}
           <button
             onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
             disabled={currentPage >= totalPages}
             style={{
-              position: 'fixed', right: '24px', top: '50%', transform: 'translateY(-50%)',
-              zIndex: 100, width: '56px', height: '56px', borderRadius: '50%',
-              background: 'rgba(15, 23, 42, 0.85)', border: '1px solid rgba(255,255,255,0.18)',
+              position: 'fixed', right: '20px', top: '50%', transform: 'translateY(-50%)',
+              zIndex: 100, width: '52px', height: '52px', borderRadius: '50%',
+              background: 'rgba(15, 23, 42, 0.85)', border: '1px solid rgba(255,255,255,0.2)',
               color: currentPage >= totalPages ? '#475569' : '#fff', cursor: currentPage >= totalPages ? 'not-allowed' : 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              backdropFilter: 'blur(12px)', boxShadow: '0 12px 30px rgba(0,0,0,0.6)',
-              transition: 'all 0.2s'
+              backdropFilter: 'blur(12px)', boxShadow: '0 10px 25px rgba(0,0,0,0.6)'
             }}
-            title="Next Page"
           >
-            <ChevronRight size={30} />
+            <ChevronRight size={28} />
           </button>
         </main>
 
-        {/* BOTTOM QUICK FOOTER BAR */}
+        {/* BOTTOM STATUS BAR */}
         <footer style={{
-          height: '42px', padding: '0 24px',
-          background: 'rgba(15, 23, 42, 0.9)',
+          height: '38px', padding: '0 20px',
+          background: 'rgba(15, 23, 42, 0.92)',
           borderTop: '1px solid rgba(255, 255, 255, 0.08)',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          fontSize: '0.78rem', color: '#94a3b8'
+          fontSize: '0.75rem', color: '#94a3b8'
         }}>
-          <div>
-            Press <kbd style={{ background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: '4px', color: '#fff' }}>&rarr;</kbd> or <kbd style={{ background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: '4px', color: '#fff' }}>Space</kbd> for next page, <kbd style={{ background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: '4px', color: '#fff' }}>Esc</kbd> to close.
-          </div>
-          <div style={{ display: 'flex', gap: '16px' }}>
+          <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
             <span>Engine: <strong style={{ color: '#60a5fa' }}>{viewerMode.toUpperCase()}</strong></span>
-            <span>Theme: <strong style={{ color: '#f59e0b' }}>{readingTheme.toUpperCase()}</strong></span>
+            <span>&bull;</span>
+            <span>Press <kbd style={{ background: 'rgba(255,255,255,0.1)', padding: '1px 5px', borderRadius: '3px', color: '#fff' }}>Esc</kbd> to exit</span>
           </div>
+          <button
+            onClick={handleOpenExternal}
+            style={{ background: 'transparent', border: 'none', color: '#3b82f6', cursor: 'pointer', fontWeight: 700, fontSize: '0.75rem' }}
+          >
+            Having trouble? Click to open PDF directly &rarr;
+          </button>
         </footer>
       </motion.div>
     </AnimatePresence>
