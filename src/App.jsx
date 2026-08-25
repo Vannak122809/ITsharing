@@ -215,11 +215,12 @@ function App() {
           </div>
 
           {/* Desktop actions */}
-          <div className="nav-actions" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div className="nav-actions" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
 
             <button
               onClick={() => setLang(lang === 'km' ? 'en' : 'km')}
-              style={{ background: 'var(--surface-badge)', border: '1px solid var(--surface-border)', color: 'var(--text-main)', borderRadius: '12px', padding: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              className="desktop-only-action"
+              style={{ background: 'var(--surface-badge)', border: '1px solid var(--surface-border)', color: 'var(--text-main)', borderRadius: '12px', padding: '9px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               title={lang === 'km' ? 'Switch to English' : 'ប្តូរទៅភាសាខ្មែរ'}
             >
               <Globe size={18} />
@@ -227,37 +228,39 @@ function App() {
 
             <button
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              className="desktop-only-action"
               style={{ background: 'none', border: 'none', color: 'var(--text-main)', cursor: 'pointer', padding: '8px', display: 'flex', alignItems: 'center' }}
               title="Toggle Theme"
             >
               {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
             </button>
             {user ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginLeft: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <Link to="/profile" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }} title={userProfile?.nickname || 'Account Settings'}>
-                  <div style={{ width: '36px', height: '36px', borderRadius: '50%', border: '2px solid var(--primary)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--surface-badge)', transition: '0.3s' }}>
+                  <div style={{ width: '34px', height: '34px', borderRadius: '50%', border: '2px solid var(--secondary)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--surface-badge)', transition: '0.3s' }}>
                     {userProfile?.avatarUrl ? (
                       <img src={userProfile.avatarUrl} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
-                      <User size={20} color="var(--primary)" />
+                      <User size={18} color="var(--secondary)" />
                     )}
                   </div>
                 </Link>
                 <button 
                   onClick={handleSignOut} 
+                  className="desktop-only-action"
                   style={{ 
                     background: 'none', border: '1px solid var(--surface-border)', borderRadius: '20px', 
-                    padding: '8px 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                    padding: '6px 12px', display: 'flex', alignItems: 'center', justifyContent: 'center', 
                     cursor: 'pointer', color: 'var(--text-main)', transition: '0.3s' 
                   }}
                   onMouseOver={(e) => e.currentTarget.style.background = 'var(--surface-badge)'}
                   onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
                 >
-                  <LogOut size={20} />
+                  <LogOut size={18} />
                 </button>
               </div>
             ) : (
-              <Link to="/login" className="btn btn-outline" style={{ padding: '8px 20px', borderRadius: '12px' }}>
+              <Link to="/login" className="btn btn-outline desktop-only-action" style={{ padding: '8px 18px', borderRadius: '12px' }}>
                 {t('signin')}
               </Link>
             )}

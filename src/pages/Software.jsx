@@ -426,18 +426,69 @@ const Software = () => {
           color: #fff !important;
           background: rgba(255,255,255,0.05);
         }
+        .software-page-container {
+          display: grid;
+          grid-template-columns: 280px 1fr;
+          gap: 32px;
+          max-width: 1440px;
+          margin: 0 auto;
+          padding: 0 24px;
+          width: 100%;
+          box-sizing: border-box;
+        }
+        .software-sidebar-col {
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+          height: calc(100vh - 120px);
+          position: sticky;
+          top: 100px;
+        }
+        .software-header-bar {
+          padding: 20px 32px;
+          border-radius: 24px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 20px;
+        }
+        .software-search-box {
+          position: relative;
+          width: 280px;
+        }
+        @media (max-width: 992px) {
+          .software-page-container {
+            grid-template-columns: 1fr;
+            gap: 20px;
+            padding: 0 16px;
+          }
+          .software-sidebar-col {
+            height: auto !important;
+            position: static !important;
+            width: 100% !important;
+          }
+          .software-header-bar {
+            padding: 16px 18px !important;
+            flex-direction: column !important;
+            align-items: stretch !important;
+          }
+          .software-search-box {
+            width: 100% !important;
+          }
+        }
       `}</style>
 
       <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} message="You need to be logged in to download software packages." />
 
-      <div className="container" style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: '32px', maxWidth: '1440px', margin: '0 auto', padding: '0 24px' }}>
+      <div className="container software-page-container">
         
         {/* ENHANCED SIDEBAR EXPLORER */}
         <motion.aside 
           initial={{ opacity: 0, x: -30 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
-          style={{ display: 'flex', flexDirection: 'column', gap: '20px', height: 'calc(100vh - 120px)', position: 'sticky', top: '100px' }}
+          className="software-sidebar-col"
         >
           <div className="glass-panel-new custom-scrollbar" style={{ padding: '24px', borderRadius: '24px', flex: 1, overflowY: 'auto' }}>
             
@@ -559,26 +610,25 @@ const Software = () => {
         </motion.aside>
 
         {/* ENHANCED MAIN CONTENT AREA */}
-        <main style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+        <main style={{ display: 'flex', flexDirection: 'column', gap: '32px', minWidth: 0 }}>
           
           {/* HEADER TOOLBAR */}
           <motion.div 
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="glass-panel-new" 
-            style={{ padding: '20px 32px', borderRadius: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}
+            className="glass-panel-new software-header-bar" 
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', minWidth: 0 }}>
               {currentFolder ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div style={{ background: `${softwareStructure[currentFolder]?.color || '#3b82f6'}20`, padding: '12px', borderRadius: '16px', color: softwareStructure[currentFolder]?.color || '#3b82f6' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
+                  <div style={{ background: `${softwareStructure[currentFolder]?.color || '#3b82f6'}20`, padding: '12px', borderRadius: '16px', color: softwareStructure[currentFolder]?.color || '#3b82f6', flexShrink: 0 }}>
                     {softwareStructure[currentFolder]?.icon || <Folder size={20} />}
                   </div>
-                  <div>
-                    <h1 style={{ fontSize: '1.4rem', fontWeight: 800, margin: 0 }}>{currentFolder}</h1>
+                  <div style={{ minWidth: 0, overflow: 'hidden' }}>
+                    <h1 style={{ fontSize: '1.3rem', fontWeight: 800, margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{currentFolder}</h1>
                     {currentSubfolder && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.9rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.88rem', color: 'var(--text-muted)', marginTop: '4px' }}>
                         <ChevronRight size={14} /> {currentSubfolder}
                       </div>
                     )}
@@ -586,16 +636,16 @@ const Software = () => {
                 </div>
               ) : (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div style={{ background: 'rgba(37, 99, 235, 0.1)', padding: '12px', borderRadius: '16px', color: '#2563eb' }}>
+                  <div style={{ background: 'rgba(37, 99, 235, 0.1)', padding: '12px', borderRadius: '16px', color: '#2563eb', flexShrink: 0 }}>
                     <LayoutGrid size={24} />
                   </div>
-                  <h1 style={{ fontSize: '1.4rem', fontWeight: 800, margin: 0 }}>{activeOS === 'windows' ? 'Windows Repository' : 'macOS Repository'}</h1>
+                  <h1 style={{ fontSize: '1.3rem', fontWeight: 800, margin: 0 }}>{activeOS === 'windows' ? 'Windows Repository' : 'macOS Repository'}</h1>
                 </div>
               )}
             </div>
 
-            <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-              <div style={{ position: 'relative', width: '280px' }}>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap', width: '100%', maxWidth: '420px', justifyContent: 'flex-end' }}>
+              <div className="software-search-box" style={{ flexGrow: 1, minWidth: '180px' }}>
                 <Search size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                 <input 
                   className="search-input"
@@ -606,11 +656,11 @@ const Software = () => {
                   style={{ 
                     width: '100%', padding: '14px 14px 14px 48px', borderRadius: '16px', 
                     border: '1px solid var(--surface-border)', background: 'var(--card-dark)', 
-                    color: 'var(--text-main)', outline: 'none', transition: 'all 0.3s', fontSize: '0.95rem'
+                    color: 'var(--text-main)', outline: 'none', transition: 'all 0.3s', fontSize: '0.95rem', boxSizing: 'border-box'
                   }}
                 />
               </div>
-              <div style={{ display: 'flex', background: 'var(--card-dark)', padding: '6px', borderRadius: '16px', border: '1px solid var(--surface-border)' }}>
+              <div style={{ display: 'flex', background: 'var(--card-dark)', padding: '4px', borderRadius: '16px', border: '1px solid var(--surface-border)', flexShrink: 0 }}>
                 <button className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`} onClick={() => setViewMode('grid')} style={{ border: 'none', background: viewMode === 'grid' ? 'rgba(255,255,255,0.1)' : 'transparent', padding: '10px', borderRadius: '12px', cursor: 'pointer', color: viewMode === 'grid' ? '#fff' : '#64748b' }}><LayoutGrid size={18} /></button>
                 <button className={`view-btn ${viewMode === 'list' ? 'active' : ''}`} onClick={() => setViewMode('list')} style={{ border: 'none', background: viewMode === 'list' ? 'rgba(255,255,255,0.1)' : 'transparent', padding: '10px', borderRadius: '12px', cursor: 'pointer', color: viewMode === 'list' ? '#fff' : '#64748b' }}><List size={18} /></button>
               </div>
@@ -620,22 +670,22 @@ const Software = () => {
           {/* FILTERS TOOLBAR */}
           <motion.div 
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}
-            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 10px' }}
+            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 4px', flexWrap: 'wrap', gap: '10px' }}
           >
-            <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--card-dark)', padding: '8px 16px', borderRadius: '12px', border: '1px solid var(--surface-border)' }}>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--card-dark)', padding: '8px 14px', borderRadius: '12px', border: '1px solid var(--surface-border)' }}>
                 <ArrowUpDown size={16} color="var(--text-muted)" />
                 <select 
                   value={sortBy} 
                   onChange={(e) => setSortBy(e.target.value)}
-                  style={{ border: 'none', background: 'transparent', fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-main)', cursor: 'pointer', outline: 'none' }}
+                  style={{ border: 'none', background: 'transparent', fontSize: '0.88rem', fontWeight: 600, color: 'var(--text-main)', cursor: 'pointer', outline: 'none' }}
                 >
                   <option value="name" style={{ background: 'var(--card-dark)' }}>Name (A-Z)</option>
                   <option value="size" style={{ background: 'var(--card-dark)' }}>Size (Largest)</option>
                 </select>
               </div>
             </div>
-            <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>
               Showing {processedData.length} packages
             </div>
           </motion.div>
@@ -648,20 +698,20 @@ const Software = () => {
                 transition={{ duration: 0.4 }}
               >
                 <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '20px', color: 'var(--text-main)' }}>{t('quick_access') || 'Quick Access Categories'}</h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '20px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 180px), 1fr))', gap: '16px' }}>
                   {Object.entries(softwareStructure).map(([folderName, folderData], idx) => (
                     <motion.div 
                       key={folderName} 
                       initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 + idx * 0.05 }}
                       onClick={() => { setCurrentFolder(folderName); toggleFolder(folderName); }}
                       className="glass-panel-new file-card" 
-                      style={{ padding: '28px 24px', borderRadius: '24px', textAlign: 'center', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+                      style={{ padding: '24px 18px', borderRadius: '20px', textAlign: 'center', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center' }}
                     >
-                      <div style={{ marginBottom: '20px' }}>
-                        <ModernFolderIcon size={72} color={folderData.color} />
+                      <div style={{ marginBottom: '16px' }}>
+                        <ModernFolderIcon size={64} color={folderData.color} />
                       </div>
-                      <h4 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '6px', color: 'var(--text-main)' }}>{folderName}</h4>
-                      <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: 500 }}>{folderData.subfolders.length} Subcategories</p>
+                      <h4 style={{ fontSize: '1.05rem', fontWeight: 700, marginBottom: '4px', color: 'var(--text-main)' }}>{folderName}</h4>
+                      <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem', fontWeight: 500 }}>{folderData.subfolders.length} Subcategories</p>
                     </motion.div>
                   ))}
                 </div>
@@ -687,7 +737,7 @@ const Software = () => {
                 key={viewMode + currentFolder + searchQuery + activeOS + sortBy}
                 style={{ 
                   display: 'grid', 
-                  gridTemplateColumns: viewMode === 'grid' ? 'repeat(auto-fill, minmax(340px, 1fr))' : '1fr', 
+                  gridTemplateColumns: viewMode === 'grid' ? 'repeat(auto-fill, minmax(min(100%, 280px), 1fr))' : '1fr', 
                   gap: '20px' 
                 }}
               >

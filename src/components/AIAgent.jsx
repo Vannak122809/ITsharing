@@ -66,6 +66,7 @@ const AIAgent = () => {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
+          className="ai-floating-trigger"
           style={{
             position: 'fixed',
             bottom: '30px',

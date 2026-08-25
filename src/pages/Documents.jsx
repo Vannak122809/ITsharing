@@ -450,19 +450,70 @@ const Documents = () => {
           opacity: 1;
           filter: blur(12px);
         }
+        .documents-page-container {
+          display: grid;
+          grid-template-columns: 290px 1fr;
+          gap: 32px;
+          max-width: 1440px;
+          margin: 0 auto;
+          padding: 0 24px;
+          width: 100%;
+          box-sizing: border-box;
+        }
+        .documents-sidebar-col {
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+          height: calc(100vh - 120px);
+          position: sticky;
+          top: 100px;
+        }
+        .documents-header-bar {
+          padding: 20px 32px;
+          border-radius: 24px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 20px;
+        }
+        .documents-search-box {
+          position: relative;
+          width: 290px;
+        }
+        @media (max-width: 992px) {
+          .documents-page-container {
+            grid-template-columns: 1fr;
+            gap: 20px;
+            padding: 0 16px;
+          }
+          .documents-sidebar-col {
+            height: auto !important;
+            position: static !important;
+            width: 100% !important;
+          }
+          .documents-header-bar {
+            padding: 16px 18px !important;
+            flex-direction: column !important;
+            align-items: stretch !important;
+          }
+          .documents-search-box {
+            width: 100% !important;
+          }
+        }
       `}</style>
 
       <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} message="You need to be logged in to view or download documents." />
       <PdfSlideViewerModal isOpen={pdfViewerOpen} onClose={() => setPdfViewerOpen(false)} document={selectedPdfDoc} />
       
-      <div className="container" style={{ display: 'grid', gridTemplateColumns: '290px 1fr', gap: '32px', maxWidth: '1440px', margin: '0 auto', padding: '0 24px' }}>
+      <div className="container documents-page-container">
         
         {/* ENHANCED SIDEBAR EXPLORER */}
         <motion.aside 
           initial={{ opacity: 0, x: -30 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
-          style={{ display: 'flex', flexDirection: 'column', gap: '20px', height: 'calc(100vh - 120px)', position: 'sticky', top: '100px' }}
+          className="documents-sidebar-col"
         >
           <div className="glass-panel-new custom-scrollbar" style={{ padding: '24px', borderRadius: '24px', flex: 1, overflowY: 'auto' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '28px' }}>
@@ -631,21 +682,21 @@ const Documents = () => {
           </motion.div>
 
           {/* SEARCH & CONTROLS HEADER BAR */}
+          {/* HEADER TOOLBAR */}
           <motion.div 
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.1 }}
-            className="glass-panel-new" 
-            style={{ padding: '20px 28px', borderRadius: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}
+            className="glass-panel-new documents-header-bar" 
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', minWidth: 0 }}>
               {currentFolder ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div style={{ background: `${documentStructure[currentFolder]?.color}20`, padding: '12px', borderRadius: '16px', color: documentStructure[currentFolder]?.color }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
+                  <div style={{ background: `${documentStructure[currentFolder]?.color}20`, padding: '12px', borderRadius: '16px', color: documentStructure[currentFolder]?.color, flexShrink: 0 }}>
                     {documentStructure[currentFolder]?.icon}
                   </div>
-                  <div>
-                    <h1 style={{ fontSize: '1.35rem', fontWeight: 800, margin: 0 }}>{currentFolder}</h1>
+                  <div style={{ minWidth: 0, overflow: 'hidden' }}>
+                    <h1 style={{ fontSize: '1.3rem', fontWeight: 800, margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{currentFolder}</h1>
                     {currentSubfolder && (
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '2px' }}>
                         <ChevronRight size={14} /> {currentSubfolder}
@@ -655,11 +706,11 @@ const Documents = () => {
                 </div>
               ) : (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div style={{ background: 'rgba(59, 130, 246, 0.15)', padding: '12px', borderRadius: '16px', color: '#3b82f6' }}>
+                  <div style={{ background: 'rgba(59, 130, 246, 0.15)', padding: '12px', borderRadius: '16px', color: '#3b82f6', flexShrink: 0 }}>
                     <LayoutGrid size={24} />
                   </div>
                   <div>
-                    <h1 style={{ fontSize: '1.35rem', fontWeight: 800, margin: 0 }}>Document Library</h1>
+                    <h1 style={{ fontSize: '1.3rem', fontWeight: 800, margin: 0 }}>Document Library</h1>
                     <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0 }}>Explore & View Technical PDF Guides</p>
                   </div>
                 </div>
@@ -667,8 +718,8 @@ const Documents = () => {
             </div>
 
             {/* SEARCH BOX & VIEW TOGGLE */}
-            <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-              <div style={{ position: 'relative', width: '290px' }}>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap', width: '100%', maxWidth: '420px', justifyContent: 'flex-end' }}>
+              <div className="documents-search-box" style={{ flexGrow: 1, minWidth: '180px' }}>
                 <Search size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                 <input 
                   className="search-input"
@@ -679,7 +730,7 @@ const Documents = () => {
                   style={{ 
                     width: '100%', padding: '12px 14px 12px 46px', borderRadius: '16px', 
                     border: '1px solid var(--surface-border)', background: 'var(--card-dark)', 
-                    color: 'var(--text-main)', outline: 'none', transition: 'all 0.3s', fontSize: '0.92rem'
+                    color: 'var(--text-main)', outline: 'none', transition: 'all 0.3s', fontSize: '0.92rem', boxSizing: 'border-box'
                   }}
                 />
                 {searchQuery && (
@@ -692,7 +743,7 @@ const Documents = () => {
                 )}
               </div>
               
-              <div style={{ display: 'flex', background: 'var(--card-dark)', padding: '4px', borderRadius: '14px', border: '1px solid var(--surface-border)' }}>
+              <div style={{ display: 'flex', background: 'var(--card-dark)', padding: '4px', borderRadius: '14px', border: '1px solid var(--surface-border)', flexShrink: 0 }}>
                 <button className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`} onClick={() => setViewMode('grid')} style={{ border: 'none', background: viewMode === 'grid' ? 'rgba(59,130,246,0.2)' : 'transparent', padding: '8px 12px', borderRadius: '10px', cursor: 'pointer', color: viewMode === 'grid' ? '#3b82f6' : 'var(--text-muted)' }}>
                   <LayoutGrid size={18} />
                 </button>
@@ -706,11 +757,11 @@ const Documents = () => {
           {/* FILTERS TOOLBAR */}
           <motion.div 
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }}
-            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 8px', flexWrap: 'wrap', gap: '14px' }}
+            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 4px', flexWrap: 'wrap', gap: '12px' }}
           >
-            <div style={{ display: 'flex', gap: '14px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
               {/* Language Filter */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--card-dark)', padding: '8px 16px', borderRadius: '14px', border: '1px solid var(--surface-border)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--card-dark)', padding: '8px 14px', borderRadius: '14px', border: '1px solid var(--surface-border)' }}>
                 <Globe size={16} color="var(--text-muted)" />
                 <select 
                   value={activeLang} 
@@ -724,7 +775,7 @@ const Documents = () => {
               </div>
 
               {/* Sort Filter */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--card-dark)', padding: '8px 16px', borderRadius: '14px', border: '1px solid var(--surface-border)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--card-dark)', padding: '8px 14px', borderRadius: '14px', border: '1px solid var(--surface-border)' }}>
                 <ArrowUpDown size={16} color="var(--text-muted)" />
                 <select 
                   value={sortBy} 
@@ -739,7 +790,7 @@ const Documents = () => {
               </div>
             </div>
 
-            <div style={{ fontSize: '0.88rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>
               Showing <span style={{ color: 'var(--primary)', fontWeight: 800 }}>{processedData.length}</span> documents
             </div>
           </motion.div>
@@ -757,7 +808,7 @@ const Documents = () => {
                   </h3>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '18px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 160px), 1fr))', gap: '16px' }}>
                   {Object.entries(documentStructure).map(([folderName, folderData], idx) => {
                     const count = docData.filter(d => d.category === folderName).length;
                     return (
@@ -766,13 +817,13 @@ const Documents = () => {
                         initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.05 + idx * 0.04 }}
                         onClick={() => { setCurrentFolder(folderName); toggleFolder(folderName); }}
                         className="glass-panel-new file-card" 
-                        style={{ padding: '24px 20px', borderRadius: '22px', textAlign: 'center', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+                        style={{ padding: '22px 16px', borderRadius: '20px', textAlign: 'center', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center' }}
                       >
-                        <div style={{ marginBottom: '16px' }}>
-                          <ModernFolderIcon size={64} color={folderData.color} />
+                        <div style={{ marginBottom: '14px' }}>
+                          <ModernFolderIcon size={56} color={folderData.color} />
                         </div>
-                        <h4 style={{ fontSize: '1.05rem', fontWeight: 800, marginBottom: '4px', color: 'var(--text-main)' }}>{folderName}</h4>
-                        <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem', fontWeight: 600, margin: 0 }}>{count} PDF Guides</p>
+                        <h4 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '4px', color: 'var(--text-main)' }}>{folderName}</h4>
+                        <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: 600, margin: 0 }}>{count} PDF Guides</p>
                       </motion.div>
                     );
                   })}
@@ -805,7 +856,7 @@ const Documents = () => {
                 key={viewMode + (currentFolder || '') + searchQuery + activeLang + sortBy}
                 style={{ 
                   display: 'grid', 
-                  gridTemplateColumns: viewMode === 'grid' ? 'repeat(auto-fill, minmax(340px, 1fr))' : '1fr', 
+                  gridTemplateColumns: viewMode === 'grid' ? 'repeat(auto-fill, minmax(min(100%, 280px), 1fr))' : '1fr', 
                   gap: '20px' 
                 }}
               >
