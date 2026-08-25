@@ -75,19 +75,19 @@ const AIAgent = () => {
             borderRadius: '30px',
             background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
             color: '#fff',
-            border: 'none',
-            boxShadow: '0 10px 25px rgba(37, 99, 235, 0.4)',
+            border: '2px solid rgba(212, 175, 55, 0.4)',
+            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(212, 175, 55, 0.3)',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             zIndex: 9999,
-            transition: 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+            transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
           }}
-          onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
-          onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+          onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-3px) scale(1.05)'}
+          onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0) scale(1)'}
         >
-          <Bot size={30} />
+          <Bot size={28} />
         </button>
       )}
 
@@ -97,13 +97,13 @@ const AIAgent = () => {
           position: 'fixed',
           bottom: isExpanded ? '0' : '30px',
           left: isExpanded ? '0' : '30px',
-          width: isExpanded ? '100vw' : '400px',
-          height: isExpanded ? '100vh' : '600px',
+          width: isExpanded ? '100vw' : '420px',
+          height: isExpanded ? '100vh' : '620px',
           maxWidth: '100vw',
           maxHeight: '100vh',
-          background: 'var(--surface, #1a1a2e)',
+          background: 'var(--surface)',
           borderRadius: isExpanded ? '0' : '24px',
-          boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
+          boxShadow: 'var(--shadow-glass)',
           border: isExpanded ? 'none' : '1px solid var(--surface-border)',
           display: 'flex',
           flexDirection: 'column',
@@ -113,7 +113,7 @@ const AIAgent = () => {
         }}>
           {/* Header */}
           <div style={{
-            padding: '20px',
+            padding: '18px 22px',
             background: 'rgba(255,255,255,0.03)',
             borderBottom: '1px solid var(--surface-border)',
             display: 'flex',
@@ -123,60 +123,62 @@ const AIAgent = () => {
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <div style={{
                 background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
-                padding: '10px',
+                padding: '9px',
                 borderRadius: '12px',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center'
+                justifyContent: 'center',
+                border: '1px solid rgba(212, 175, 55, 0.3)'
               }}>
-                <Sparkles size={20} color="#fff" />
+                <Sparkles size={18} color="#fff" />
               </div>
               <div>
-                <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-main, #fff)' }}>ITsharing AI</h3>
-                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Online & Ready</span>
+                <h3 style={{ margin: 0, fontSize: '1.08rem', fontWeight: 700, fontFamily: 'Playfair Display, serif' }} className="text-gold-gradient">ITsharing AI Concierge</h3>
+                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Online & Technical Support</span>
               </div>
             </div>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button onClick={() => setIsExpanded(!isExpanded)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '8px', borderRadius: '8px' }}>
-                {isExpanded ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
+            <div style={{ display: 'flex', gap: '6px' }}>
+              <button onClick={() => setIsExpanded(!isExpanded)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '6px', borderRadius: '8px' }}>
+                {isExpanded ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
               </button>
-              <button onClick={() => setIsOpen(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '8px', borderRadius: '8px' }}>
-                <X size={20} />
+              <button onClick={() => setIsOpen(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '6px', borderRadius: '8px' }}>
+                <X size={18} />
               </button>
             </div>
           </div>
 
           {/* Messages */}
-          <div style={{ flex: 1, padding: '20px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ flex: 1, padding: '20px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '14px' }}>
             {messages.map((m, idx) => (
               <div key={idx} style={{
                 alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start',
                 maxWidth: '85%'
               }}>
                 <div style={{
-                  background: m.role === 'user' ? 'var(--primary)' : 'rgba(255,255,255,0.05)',
-                  color: m.role === 'user' ? '#fff' : 'var(--text-main, #fff)',
-                  padding: '14px 18px',
-                  borderRadius: m.role === 'user' ? '20px 20px 4px 20px' : '20px 20px 20px 4px',
-                  fontSize: '0.95rem',
-                  lineHeight: 1.5,
+                  background: m.role === 'user' ? 'linear-gradient(135deg, var(--primary), #1e40af)' : 'rgba(255,255,255,0.04)',
+                  color: m.role === 'user' ? '#fff' : 'var(--text-main)',
+                  padding: '12px 16px',
+                  borderRadius: m.role === 'user' ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
+                  fontSize: '0.92rem',
+                  lineHeight: 1.55,
                   border: m.role === 'user' ? 'none' : '1px solid var(--surface-border)',
-                  whiteSpace: 'pre-wrap'
+                  whiteSpace: 'pre-wrap',
+                  boxShadow: m.role === 'user' ? '0 4px 14px rgba(30, 58, 138, 0.3)' : '0 2px 8px rgba(0,0,0,0.05)'
                 }}>
                   {m.text}
                 </div>
               </div>
             ))}
             {loading && (
-              <div style={{ alignSelf: 'flex-start', background: 'rgba(255,255,255,0.05)', padding: '14px 18px', borderRadius: '20px 20px 20px 4px', border: '1px solid var(--surface-border)' }}>
-                <Loader2 size={20} className="spin" color="var(--primary)" />
+              <div style={{ alignSelf: 'flex-start', background: 'rgba(255,255,255,0.05)', padding: '12px 16px', borderRadius: '18px 18px 18px 4px', border: '1px solid var(--surface-border)' }}>
+                <Loader2 size={18} className="spin" color="var(--secondary)" />
               </div>
             )}
             <div ref={messagesEndRef} />
           </div>
 
           {/* Input */}
-          <div style={{ padding: '20px', borderTop: '1px solid var(--surface-border)', background: 'var(--surface)', display: 'flex', gap: '12px' }}>
+          <div style={{ padding: '16px 20px', borderTop: '1px solid var(--surface-border)', background: 'var(--surface)', display: 'flex', gap: '10px' }}>
             <input
               type="text"
               value={input}
@@ -185,12 +187,12 @@ const AIAgent = () => {
               placeholder="សរសេរសំណួររបស់អ្នកនៅទីនេះ..."
               style={{
                 flex: 1,
-                background: 'rgba(255,255,255,0.03)',
+                background: 'rgba(255,255,255,0.04)',
                 border: '1px solid var(--surface-border)',
-                borderRadius: '16px',
-                padding: '0 20px',
-                color: 'var(--text-main, #fff)',
-                fontSize: '0.95rem',
+                borderRadius: '12px',
+                padding: '12px 16px',
+                color: 'var(--text-main)',
+                fontSize: '0.92rem',
                 outline: 'none'
               }}
             />
@@ -198,11 +200,11 @@ const AIAgent = () => {
               onClick={handleSend}
               disabled={loading || !input.trim()}
               style={{
-                background: 'var(--primary)',
+                background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
                 border: 'none',
-                width: '50px',
-                height: '50px',
-                borderRadius: '16px',
+                width: '46px',
+                height: '46px',
+                borderRadius: '12px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -212,7 +214,7 @@ const AIAgent = () => {
                 transition: '0.2s'
               }}
             >
-              <Send size={20} style={{ marginLeft: '4px' }} />
+              <Send size={18} />
             </button>
           </div>
         </div>

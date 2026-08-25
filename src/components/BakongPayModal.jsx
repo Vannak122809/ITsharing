@@ -121,26 +121,26 @@ const BakongPayModal = ({
         </div>
 
         <p className="bk-minimal-hint">Scan to Pay or Tap to Download</p>
-
         <style>{`
           .bk-minimal-overlay {
             position: fixed; inset: 0; z-index: 9999;
-            background: rgba(2, 6, 23, 0.9); backdrop-filter: blur(25px) saturate(200%);
+            background: rgba(13, 17, 23, 0.88); backdrop-filter: blur(20px) saturate(180%);
             display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px;
           }
           .bk-minimal-content {
-            width: 100%; max-width: 420px; display: flex; flex-direction: column; align-items: center; gap: 24px;
-            animation: bkFadeScale 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            width: 100%; max-width: 420px; display: flex; flex-direction: column; align-items: center; gap: 20px;
+            animation: bkFadeScale 0.4s cubic-bezier(0.16, 1, 0.3, 1);
           }
-          @keyframes bkFadeScale { from { transform: scale(0.9) translateY(20px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+          @keyframes bkFadeScale { from { transform: scale(0.94) translateY(15px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
 
           .bk-qr-frame {
-            width: 100%; min-height: 200px; background: #fff; border-radius: 32px; position: relative;
+            width: 100%; min-height: 200px; background: #ffffff; border-radius: 24px; position: relative;
             display: flex; align-items: center; justify-content: center; overflow: hidden;
-            box-shadow: 0 40px 100px rgba(0,0,0,0.6), 0 0 20px rgba(99, 102, 241, 0.2); 
-            cursor: pointer; transition: transform 0.3s cubic-bezier(0.17, 0.67, 0.83, 0.67);
+            border: 2px solid rgba(212, 175, 55, 0.4);
+            box-shadow: 0 25px 60px -10px rgba(0,0,0,0.6), 0 0 0 1px rgba(212, 175, 55, 0.3); 
+            cursor: pointer; transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
           }
-          .bk-qr-frame:hover { transform: translateY(-5px); }
+          .bk-qr-frame:hover { transform: translateY(-4px); box-shadow: 0 30px 70px -10px rgba(0,0,0,0.7), 0 0 0 2px var(--secondary); }
           .bk-qr-box { width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
           .bk-qr-main { width: 100%; height: auto; object-fit: contain; }
           
@@ -149,32 +149,32 @@ const BakongPayModal = ({
             display: flex; justify-content: space-between; align-items: center;
           }
           .bk-qr-amt { 
-            background: #e52e2a; color: #fff; padding: 6px 16px; border-radius: 14px; 
-            font-weight: 900; font-size: 1rem; box-shadow: 0 8px 20px rgba(229, 46, 42, 0.4); 
+            background: linear-gradient(135deg, #1e3a8a, #0f172a); color: #d4af37; padding: 7px 18px; border-radius: 12px; 
+            font-weight: 800; font-size: 1.05rem; border: 1px solid rgba(212, 175, 55, 0.5); box-shadow: 0 8px 20px rgba(0,0,0,0.4); 
+            font-family: 'Playfair Display', serif;
           }
           .bk-hover-download { 
-            width: 44px; height: 44px; border-radius: 14px; border: none; 
-            background: #0f172a; color: #fff; display: flex; align-items: center; 
+            width: 42px; height: 42px; border-radius: 12px; border: 1px solid rgba(212, 175, 55, 0.3); 
+            background: #0f172a; color: #d4af37; display: flex; align-items: center; 
             justify-content: center; cursor: pointer; box-shadow: 0 8px 20px rgba(0,0,0,0.3); 
             transition: all 0.2s; 
           }
-          .bk-hover-download:hover { transform: translateY(-3px) scale(1.1); background: #1e293b; }
+          .bk-hover-download:hover { transform: translateY(-2px) scale(1.08); background: #1e293b; color: #fff; }
 
           .bk-close-minimal { 
-            position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.1); 
-            border: 1px solid rgba(255,255,255,0.1); color: #fff; width: 40px; height: 40px; 
+            position: absolute; top: 16px; right: 16px; background: rgba(0,0,0,0.4); 
+            border: 1px solid rgba(255,255,255,0.2); color: #fff; width: 36px; height: 36px; 
             border-radius: 50%; cursor: pointer; display: flex; align-items: center; 
             justify-content: center; transition: all 0.3s; 
           }
           .bk-close-minimal:hover { transform: rotate(90deg); background: #e52e2a; border-color: #e52e2a; }
 
           .bk-minimal-loader { display: flex; flex-direction: column; align-items: center; gap: 16px; color: #94a3b8; }
-          .bk-spinner-ring { width: 48px; height: 48px; border: 4px solid rgba(255,255,255,0.1); border-top-color: #6366f1; border-radius: 50%; animation: bkSpin 0.8s linear infinite; }
+          .bk-spinner-ring { width: 44px; height: 44px; border: 3px solid rgba(255,255,255,0.1); border-top-color: #d4af37; border-radius: 50%; animation: bkSpin 0.8s linear infinite; }
           @keyframes bkSpin { to { transform: rotate(360deg); } }
 
           .bk-minimal-hint { 
-            color: rgba(255,255,255,0.4); font-size: 0.9rem; font-weight: 600; 
-            letter-spacing: 0.5px; text-transform: uppercase; 
+            font-size: 0.88rem; color: #94a3b8; letter-spacing: 0.04em; text-transform: uppercase; font-weight: 600;
           }
         `}</style>
       </div>
@@ -183,4 +183,3 @@ const BakongPayModal = ({
 };
 
 export default BakongPayModal;
-

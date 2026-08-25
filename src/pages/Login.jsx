@@ -51,6 +51,8 @@ const Login = () => {
   const [loading, setLoading]             = useState(false);
   const [attempts, setAttempts]           = useState(0); // Rate limiting
   const [botField, setBotField]           = useState(''); // Honeypot
+  const [unverifiedEmail, setUnverifiedEmail] = useState('');
+  const [resendingVerification, setResendingVerification] = useState(false);
 
   // Pre-fill remembered email
   useEffect(() => {
@@ -61,6 +63,7 @@ const Login = () => {
   const switchView = (v) => {
     setError(''); setSuccess('');
     setPassword(''); setConfirm('');
+    setUnverifiedEmail('');
     setView(v);
   };
 
@@ -88,7 +91,7 @@ const Login = () => {
 
   // ── Handlers ──────────────────────────────────────────────────────
   const handleLogin = async (e) => {
-    e.preventDefault(); setError(''); 
+    e.preventDefault(); setError(''); setUnverifiedEmail('');
     
     // 1. Honeypot check
     if (botField) return; 
@@ -124,7 +127,8 @@ const Login = () => {
       
       // Enforce email verification
       if (!userCredential.user.emailVerified) {
-        setError('Your email is not verified. Please check your inbox to verify your account.');
+        setUnverifiedEmail(email.trim());
+        setError('Your email is not verified yet. Please check your inbox or click below to resend the verification link.');
         await auth.signOut();
         return;
       }
@@ -141,6 +145,24 @@ const Login = () => {
       if (newAttempts >= 3) logBruteForce(email.trim());
     }
     finally { setLoading(false); }
+  };
+
+  const handleResendVerification = async () => {
+    if (!unverifiedEmail) return;
+    setResendingVerification(true);
+    try {
+      // We authenticate temporarily to send verification
+      const userCredential = await signInWithEmailAndPassword(auth, unverifiedEmail, password);
+      await sendEmailVerification(userCredential.user);
+      await auth.signOut();
+      setSuccess('Verification link resent! Please check your email inbox.');
+      setError('');
+      setUnverifiedEmail('');
+    } catch (err) {
+      setError('Could not resend email: ' + (err.message || 'Please check your password.'));
+    } finally {
+      setResendingVerification(false);
+    }
   };
 
   const handleSignup = async (e) => {
@@ -218,22 +240,25 @@ const Login = () => {
 
   // ── Render ─────────────────────────────────────────────────────────
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '80px 16px 40px' }}>
-      <div className="form-panel" style={{ width: '100%', maxWidth: '440px' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '90px 16px 50px' }}>
+      <div className="form-panel classic-card" style={{ width: '100%', maxWidth: '450px' }}>
 
         {/* Header */}
-        <div className="form-header">
+        <div className="form-header" style={{ marginBottom: '28px' }}>
           {view !== 'login' && (
             <button onClick={() => switchView('login')} className="form-back-btn">
               <ArrowLeft size={14} /> {t('back_to')} {t('signin')}
             </button>
           )}
-          <h1 className="text-gradient">
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '5px 12px', borderRadius: '16px', background: 'var(--surface-badge)', color: 'var(--secondary)', fontSize: '0.76rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>
+            <LogIn size={13} /> ITsharing Portal
+          </div>
+          <h1 className="text-gold-gradient" style={{ fontSize: '2rem', marginBottom: '6px' }}>
             {view === 'login'  && t('welcome_back')}
             {view === 'signup' && t('create_account')}
             {view === 'forgot' && t('reset_password')}
           </h1>
-          <p>
+          <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>
             {view === 'login'  && t('sign_in_desc')}
             {view === 'signup' && t('sign_up_desc')}
             {view === 'forgot' && t('forgot_desc')}
@@ -242,8 +267,31 @@ const Login = () => {
 
         {/* Alerts */}
         {error && (
-          <div className="form-alert form-alert-error">
-            <AlertCircle size={16} /> {error}
+          <div className="form-alert form-alert-error" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <AlertCircle size={16} /> <span>{error}</span>
+            </div>
+            {unverifiedEmail && (
+              <button
+                type="button"
+                onClick={handleResendVerification}
+                disabled={resendingVerification}
+                style={{
+                  alignSelf: 'flex-start',
+                  marginTop: '4px',
+                  background: 'var(--secondary)',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '6px',
+                  padding: '6px 12px',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}
+              >
+                {resendingVerification ? 'Sending link...' : 'Resend Verification Email'}
+              </button>
+            )}
           </div>
         )}
         {success && (
