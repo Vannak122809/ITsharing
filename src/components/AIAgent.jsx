@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Bot, X, Send, Sparkles, Loader2, Maximize2, Minimize2 } from 'lucide-react';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { checkAILimit, formatRetryTime } from '../utils/rateLimiter';
+
 
 // Initialize Gemini - needs VITE_GEMINI_API_KEY in .env
 // We handle it gracefully below if missing.
@@ -32,6 +34,17 @@ const AIAgent = () => {
     if (!input.trim()) return;
     if (!genAI || !model) {
       setMessages(prev => [...prev, { role: 'user', text: input }, { role: 'model', text: 'Error: VITE_GEMINI_API_KEY is missing in .env. Fuck, add the key first so I can process this.' }]);
+      setInput('');
+      return;
+    }
+
+    // Rate limit: max 3 AI requests per 30 seconds
+    const rateCheck = checkAILimit('ai_agent');
+    if (!rateCheck.allowed) {
+      setMessages(prev => [...prev,
+        { role: 'user', text: input },
+        { role: 'model', text: `⚠️ សូមរង់ចាំ ${formatRetryTime(rateCheck.retryAfterMs)} មុននឹងអ្នកអាចផ្ញើម្ដងទៀតបាន។ (Rate limit: 3 requests / 30s)` }
+      ]);
       setInput('');
       return;
     }

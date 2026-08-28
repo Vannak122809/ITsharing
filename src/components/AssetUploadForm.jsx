@@ -7,7 +7,8 @@ import {
 } from 'lucide-react';
 import { convertToWebP, uploadAssetToR2, ASSETS_PUBLIC_URL } from '../r2Assets';
 import { db } from '../firebase';
-import { collection, addDoc, serverTimestamp, doc, updateDoc, setDoc, arrayUnion, getDoc } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, doc, updateDoc, setDoc, arrayUnion, getDoc, getDocs, query, writeBatch } from 'firebase/firestore';
+
 import './AssetUploadForm.css';
 import toast from 'react-hot-toast';
 
@@ -78,6 +79,47 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
         };
         fetchCustomCollections();
     }, []);
+
+    /**
+     * After a collection is saved, find all existing assets whose tags or
+     * collection array match the new collection name, and add them to it.
+     */
+    const syncAssetsToCollection = async (collectionName) => {
+        try {
+            const q = query(collection(db, 'assets'));
+            const snap = await getDocs(q);
+            const batch = writeBatch(db);
+            let count = 0;
+
+            snap.forEach((docSnap) => {
+                const data = docSnap.data();
+                const tags = Array.isArray(data.tags) ? data.tags : [];
+                const cols = Array.isArray(data.collection) ? data.collection : (data.collection ? [data.collection] : []);
+
+                const alreadyInCollection = cols.includes(collectionName);
+                const nameMatches =
+                    tags.some(t => t.toLowerCase() === collectionName.toLowerCase()) ||
+                    data.type?.toLowerCase() === collectionName.toLowerCase();
+
+                if (!alreadyInCollection && nameMatches) {
+                    batch.update(docSnap.ref, {
+                        collection: arrayUnion(collectionName),
+                    });
+                    count++;
+                }
+            });
+
+            if (count > 0) {
+                await batch.commit();
+                toast.success(`Synced ${count} asset${count === 1 ? '' : 's'} into "${collectionName}"`, { icon: '🔄' });
+            } else {
+                toast(`Collection "${collectionName}" created. No existing assets matched for sync.`, { icon: '📁' });
+            }
+        } catch (err) {
+            console.warn('[CollectionSync] Failed:', err.message);
+        }
+    };
+
 
     useEffect(() => {
         const preset = bucketPresets.find(b => b.id === selectedBucket);
@@ -441,9 +483,11 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
                                                 setNewColTitle('');
                                                 setIsCreatingCol(false);
                                                 
-                                                // Save to firestore
+                                                // Save to firestore + sync existing assets
                                                 const docRef = doc(db, 'settings', 'assetsConfig');
-                                                setDoc(docRef, { collections: arrayUnion(name) }, { merge: true });
+                                                setDoc(docRef, { collections: arrayUnion(name) }, { merge: true })
+                                                    .then(() => syncAssetsToCollection(name));
+
                                             }
                                         } else if (e.key === 'Escape') {
                                             setIsCreatingCol(false);
@@ -465,9 +509,11 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
                                         setNewColTitle('');
                                         setIsCreatingCol(false);
                                         
-                                        // Save to firestore
+                                        // Save to firestore + sync existing assets
                                         const docRef = doc(db, 'settings', 'assetsConfig');
-                                        setDoc(docRef, { collections: arrayUnion(name) }, { merge: true });
+                                        setDoc(docRef, { collections: arrayUnion(name) }, { merge: true })
+                                            .then(() => syncAssetsToCollection(name));
+
                                     }
                                 }}>Add</button>
                             </div>
@@ -543,6 +589,67 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
                                 )}
                             </div>
                         </div>
+
+                        {/* ── Batch Pairing Preview Table ─────────────────────────────── */}
+                        {mainFiles.length > 1 && (
+                            <div className="batch-pairing-table" style={{
+                                background: 'rgba(255,255,255,0.03)',
+                                border: '1px solid var(--surface-border)',
+                                borderRadius: '14px',
+                                padding: '16px',
+                                marginTop: '0',
+                            }}>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                                    <h5 style={{ margin: 0, fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        <Layers size={14} /> Batch Pairing Preview ({mainFiles.length} files)
+                                    </h5>
+                                    {coverFiles.length > 0 && coverFiles.length !== mainFiles.length && (
+                                        <span style={{ fontSize: '0.75rem', color: '#f59e0b', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                            <AlertCircle size={12} /> Count mismatch — unpaired files will use source as cover
+                                        </span>
+                                    )}
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '260px', overflowY: 'auto' }}>
+                                    {Array.from(mainFiles).map((masterFile, i) => {
+                                        const previewFile = coverFiles[i] || null;
+                                        const previewUrl  = previewFile ? URL.createObjectURL(previewFile) : null;
+                                        return (
+                                            <div key={i} style={{
+                                                display: 'grid',
+                                                gridTemplateColumns: '28px 1fr 28px 80px',
+                                                alignItems: 'center',
+                                                gap: '10px',
+                                                padding: '8px 12px',
+                                                background: 'rgba(255,255,255,0.03)',
+                                                borderRadius: '10px',
+                                                border: '1px solid var(--surface-border)',
+                                            }}>
+                                                {/* Index */}
+                                                <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--primary)', textAlign: 'center' }}>
+                                                    {String(i + 1).padStart(2, '0')}
+                                                </span>
+                                                {/* Master filename */}
+                                                <span style={{ fontSize: '0.78rem', color: 'var(--text-main)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                    {masterFile.name}
+                                                </span>
+                                                {/* Arrow */}
+                                                <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)', textAlign: 'center' }}>→</span>
+                                                {/* Preview thumbnail or fallback */}
+                                                {previewUrl ? (
+                                                    <div style={{ width: '72px', height: '48px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--surface-border)' }}>
+                                                        <img src={previewUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                    </div>
+                                                ) : (
+                                                    <div style={{ width: '72px', height: '48px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', border: '1px dashed var(--surface-border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                        <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>self</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
 
                         <div className="master-input-group">
                             <label><Sparkles size={14} /> Keywords (Separated by comma)</label>

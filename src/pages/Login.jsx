@@ -20,6 +20,8 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '../LanguageContext';
 import { logFailedLogin, logBruteForce } from '../utils/securityLogger';
+import { checkLoginLimit, formatRetryTime } from '../utils/rateLimiter';
+
 
 const googleProvider = new GoogleAuthProvider();
 
@@ -96,7 +98,14 @@ const Login = () => {
     // 1. Honeypot check
     if (botField) return; 
 
-    // 2. Local Rate Limiting
+    // 2. Rate Limit: max 5 attempts per 15 minutes (survives page refresh)
+    const rateCheck = checkLoginLimit(email.trim() || 'anon');
+    if (!rateCheck.allowed) {
+      setError(`Too many login attempts. Try again in ${formatRetryTime(rateCheck.retryAfterMs)}.`);
+      return;
+    }
+
+    // 3. Local session counter (extra guard)
     if (attempts > 5) {
       setError('Too many login attempts from this session. Please wait or refresh.');
       return;

@@ -1,9 +1,22 @@
-import { PutObjectCommand, GetObjectCommand, ListObjectsV2Command, DeleteObjectCommand } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { r2Client, BUCKET_NAME } from "./r2";
 import { db } from "./firebase";
 import { collection, addDoc, getDocs, orderBy, query, serverTimestamp } from "firebase/firestore";
-import { multipartUpload } from "./r2Assets";
+import { uploadAssetToR2 } from "./r2Assets";
+
+const API_BASE = import.meta.env.DEV ? 'http://localhost:3000' : '';
+
+/** POST to /api/upload-url and get a signed PUT URL + public URL */
+async function getSignedUploadUrl({ bucket, key, contentType, size }) {
+  const res = await fetch(`${API_BASE}/api/upload-url`, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ bucket, key, contentType, size }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || `upload-url API error (${res.status})`);
+  }
+  return res.json(); // { uploadUrl, publicUrl }
+}
 
 // The Cloudflare R2 public URL base you configured in your dashboard
 // Example: "https://pub-xxxxxxxxxxxxx.r2.dev"
@@ -19,31 +32,9 @@ const R2_PUBLIC_URL = import.meta.env.VITE_R2_PUBLIC_URL; // Please replace with
  */
 export const uploadFileToR2 = async (file, folder = "documents", onProgress = null) => {
   try {
-    const fileExtension = file.name.split('.').pop();
-    const fileName = `${folder}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.\-_]/g, '')}`;
-
-    const MULTIPART_THRESHOLD = 10 * 1024 * 1024; // 10 MB threshold
-
-    if (file.size >= MULTIPART_THRESHOLD) {
-      await multipartUpload(r2Client, {
-        Bucket: BUCKET_NAME,
-        Key: fileName,
-        Body: file,
-        ContentType: file.type || 'application/octet-stream',
-        onProgress,
-      });
-    } else {
-      const command = new PutObjectCommand({
-        Bucket: BUCKET_NAME,
-        Key: fileName,
-        Body: file,
-        ContentType: file.type || 'application/octet-stream',
-      });
-
-      await r2Client.send(command);
-      if (onProgress) onProgress(100);
-    }
-    return fileName;
+    // Routes through /api/upload-asset — no client-side credentials needed
+    const key = await uploadAssetToR2(file, folder, null, onProgress);
+    return key;
   } catch (error) {
     console.error("Error uploading to R2:", error);
     throw error;
@@ -127,14 +118,12 @@ export const validateImageFile = (file, maxMB = 2) => {
 };
 
 /**
- * Delete an old object from the DOCUMENT bucket (best-effort)
+ * Delete an old object from R2 (best-effort — server-side only).
+ * Client-side delete is disabled for security; this is a no-op placeholder.
+ * Wire up a server-side /api/delete-object route if deletion is needed.
  */
 const deleteFromDocR2 = async (key) => {
-  try {
-    await r2Client.send(new DeleteObjectCommand({ Bucket: BUCKET_NAME, Key: key }));
-  } catch (e) {
-    console.warn('[R2] Could not delete old file:', key, e.message);
-  }
+  console.warn('[r2Utils] Client-side R2 delete is disabled. Key not deleted:', key);
 };
 
 /**
@@ -152,23 +141,27 @@ export const uploadAvatarToR2 = async (uid, file, oldKey = null) => {
   const err = validateImageFile(file, MAX_AVATAR_SIZE_MB);
   if (err) throw new Error(err);
 
-  // Store in document bucket under images/avatars/
   const ext = file.name.split('.').pop().toLowerCase();
   const key = `images/avatars/${uid}.${ext}`;
 
   if (oldKey && oldKey !== key) await deleteFromDocR2(oldKey);
 
-  const arrayBuffer = await file.arrayBuffer();
+  // Upload via server-signed URL — credentials never leave the server
+  const { uploadUrl, publicUrl } = await getSignedUploadUrl({
+    bucket:      'document',
+    key,
+    contentType: file.type,
+    size:        file.size,
+  });
 
-  // Upload → document bucket (public CDN: pub-564a73...r2.dev)
-  await r2Client.send(new PutObjectCommand({
-    Bucket: BUCKET_NAME,
-    Key: key,
-    Body: new Uint8Array(arrayBuffer),
-    ContentType: file.type,
-  }));
+  const res = await fetch(uploadUrl, {
+    method:  'PUT',
+    headers: { 'Content-Type': file.type },
+    body:    file,
+  });
+  if (!res.ok) throw new Error(`Avatar R2 PUT failed (${res.status})`);
 
-  const url = `${R2_PUBLIC_URL}/${key}?v=${Date.now()}`;
+  const url = `${publicUrl}`;
   return { url, key };
 };
 
@@ -187,23 +180,27 @@ export const uploadCoverToR2 = async (uid, file, oldKey = null) => {
   const err = validateImageFile(file, MAX_COVER_SIZE_MB);
   if (err) throw new Error(err);
 
-  // Store in document bucket under images/covers/
   const ext = file.name.split('.').pop().toLowerCase();
   const key = `images/covers/${uid}.${ext}`;
 
   if (oldKey && oldKey !== key) await deleteFromDocR2(oldKey);
 
-  const arrayBuffer = await file.arrayBuffer();
+  // Upload via server-signed URL — credentials never leave the server
+  const { uploadUrl, publicUrl } = await getSignedUploadUrl({
+    bucket:      'document',
+    key,
+    contentType: file.type,
+    size:        file.size,
+  });
 
-  // Upload → document bucket
-  await r2Client.send(new PutObjectCommand({
-    Bucket: BUCKET_NAME,
-    Key: key,
-    Body: new Uint8Array(arrayBuffer),
-    ContentType: file.type,
-  }));
+  const res = await fetch(uploadUrl, {
+    method:  'PUT',
+    headers: { 'Content-Type': file.type },
+    body:    file,
+  });
+  if (!res.ok) throw new Error(`Cover R2 PUT failed (${res.status})`);
 
-  const url = `${R2_PUBLIC_URL}/${key}?v=${Date.now()}`;
+  const url = `${publicUrl}`;
   return { url, key };
 };
 

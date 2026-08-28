@@ -152,12 +152,17 @@ export const softwareData = [
   { id: 'notepadpp', title: 'Notepad++ Source Editor', desc: 'Free source code editor for Windows.', os: 'windows', folder: 'Tools', size: '4 MB', version: 'v8.9.3', url: 'https://github.com/notepad-plus-plus/notepad-plus-plus/releases/download/v8.9.3/npp.8.9.3.Installer.x64.exe' },
 
   // === DRIVERS ===
-  { id: 'epson-l3110-win', title: 'Epson L3110 Printer Driver', desc: 'Official print & scan drivers for Epson L3110.', os: 'windows', folder: 'Driver', subfolder: 'Printer Driver', size: '30 MB', version: 'v2.60' },
+  { id: 'epson-l3110-win', title: 'Epson L3110 / L3210 Printer Driver', desc: 'Official print & scan drivers for Epson EcoTank series.', os: 'windows', folder: 'Driver', subfolder: 'Epson', size: '30 MB', version: 'v2.60', url: 'https://download.ebz.epson.net' },
+  { id: 'canon-c5235-win', title: 'Canon iR-ADV C5235 / Generic Plus UFR II', desc: 'Official Canon Color Multifunction Printer PCL6 / UFR II Driver.', os: 'windows', folder: 'Driver', subfolder: 'Canon', size: '48 MB', version: 'v3.05', url: 'https://pub-5961bc36cb774286a50691aa994b2653.r2.dev/Canon_UFRII_Driver.zip' },
+  { id: 'hp-laserjet-win', title: 'HP LaserJet Universal Print Driver PCL6', desc: 'Official Universal Print Driver for HP LaserJet & PageWide printers.', os: 'windows', folder: 'Driver', subfolder: 'HP', size: '18 MB', version: 'v7.0.1', url: 'https://ftp.hp.com/pub/softlib/software13/COL61220/ds-147814-2/upd-pcl6-x64-7.0.1.24923.exe' },
   { id: 'nvidia-win', title: 'NVIDIA GeForce Game Ready Driver', desc: 'Official graphic card driver for NVIDIA GPUs.', os: 'windows', folder: 'Driver', subfolder: 'Graphic Card', size: '600 MB', version: 'v537.13' },
   { id: 'realtek-win', title: 'Realtek High Definition Audio Driver', desc: 'High-definition audio codecs for Windows sound cards.', os: 'windows', folder: 'Driver', subfolder: 'Audio', size: '250 MB', version: 'v2.82' },
 
   // === DOWNLOAD & MEDIA ===
-  { id: 'idm', title: 'Internet Download Manager (IDM)', desc: 'High-speed download accelerator for Windows.', os: 'windows', folder: 'Download', size: '12 MB', version: 'v6.42', url: 'https://pub-5961bc36cb774286a50691aa994b2653.r2.dev/Internet.Download.Manager.6.42.63.0.zip' },
+  { id: 'idm', title: 'Internet Download Manager (IDM)', desc: 'High-speed download accelerator for Windows.', os: 'windows', folder: 'Download', subfolder: 'Accelerator', size: '12 MB', version: 'v6.42', url: 'https://pub-5961bc36cb774286a50691aa994b2653.r2.dev/Internet.Download.Manager.6.42.63.0.zip' },
+  { id: 'idm-cmd', title: 'IDM Free Reset Trial & Activator Script', desc: 'One-click automated trial reset and registry cleanup command.', os: 'windows', folder: 'Download', subfolder: 'Accelerator', size: '25 KB', version: 'Latest', url: 'https://pub-5961bc36cb774286a50691aa994b2653.r2.dev/IDM_Activation.cmd' },
+  { id: 'bandicam-repack', title: 'Bandicam 6.1.0 Repack', desc: 'High performance screen recorder with pre-activated license.', os: 'windows', folder: 'Media', subfolder: 'Screen Recorder', size: '32 MB', version: 'v6.1.0', url: 'https://pub-5961bc36cb774286a50691aa994b2653.r2.dev/Bandicam.6.1.0.2044.x64.Repack.rar' },
+  { id: 'zd-recorder', title: 'ZD Soft Screen Recorder 11.6.0', desc: 'Lightweight screen recording suite with hardware acceleration.', os: 'windows', folder: 'Media', subfolder: 'Screen Recorder', size: '28 MB', version: 'v11.6.0', url: 'https://pub-5961bc36cb774286a50691aa994b2653.r2.dev/ZD.Soft.Screen.Recorder.11.6.0.rar' },
   { id: 'vlc-win', title: 'VLC Media Player', desc: 'Multi-format video & audio player.', os: 'windows', folder: 'Media', subfolder: 'Video Player', size: '42 MB', version: 'v3.0.23', url: 'https://get.videolan.org/vlc/3.0.23/win64/vlc-3.0.23-win64.exe' },
   { id: 'obs-win', title: 'OBS Studio Live Streamer', desc: 'Free open source screen recording & live streaming.', os: 'windows', folder: 'Media', subfolder: 'Video Editor', size: '120 MB', version: 'v32.1', url: 'https://cdn-fastly.obsproject.com/downloads/OBS-Studio-32.1.0-Windows-x64-Installer.exe' },
 ];
@@ -206,7 +211,7 @@ const softwareStructure = {
   Driver: {
     icon: <Printer size={20} />,
     color: '#14b8a6',
-    subfolders: ['Printer Driver', 'Graphic Card', 'Audio', 'Network', 'Scanner Driver']
+    subfolders: ['Printer Driver', 'Canon', 'HP', 'Epson', 'Graphic Card', 'Audio', 'Network', 'Scanner Driver']
   }
 };
 
