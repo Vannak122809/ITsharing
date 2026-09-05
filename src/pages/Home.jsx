@@ -7,8 +7,6 @@ import {
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../LanguageContext';
 import { motion } from 'framer-motion';
-import Hero3DCanvas from '../components/Hero3DCanvas';
-
 
 const Home = () => {
   const { t } = useLanguage();
@@ -69,9 +67,9 @@ const Home = () => {
   return (
     <div className="container" style={{ paddingBottom: '120px', paddingTop: '20px' }}>
       
-      {/* ─── ULTRA-MODERN HERO SECTION WITH 3D WEBGL CORE ─── */}
+      {/* ─── ULTRA-MODERN HERO SECTION ─── */}
       <section className="hero" style={{ 
-        minHeight: '88vh', 
+        minHeight: '82vh', 
         display: 'flex', 
         flexDirection: 'column', 
         justifyContent: 'center', 
@@ -80,9 +78,6 @@ const Home = () => {
         position: 'relative',
         textAlign: 'center'
       }}>
-        {/* Interactive 3D WebGL Canvas */}
-        <Hero3DCanvas />
-
         {/* Animated Background Mesh & Glow */}
         <div style={{
           position: 'absolute',
