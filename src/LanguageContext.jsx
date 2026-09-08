@@ -218,6 +218,21 @@ const translations = {
     exp5_author: "Vannak",
     exp5_date: "2024",
     exp5_desc: "Construction work was another chapter in my life before IT. Carrying heavy cement bags, mixing concrete under the scorching sun, and laying bricks for hours — it was backbreaking work. But I learned discipline, teamwork, and how to solve problems on the fly. When a wall wasn't level, you had to figure it out right there. Those problem-solving instincts transferred directly to my career in technology. Now I build systems instead of walls, but the foundation of hard work remains the same.",
+    // Android Security Suite
+    android_security: "Android Security",
+    android_security_title: "Android Security Suite",
+    android_security_desc: "Scan, analyze, and protect your Android device directly from your browser. Remove viruses, adware, bloatware, and block ads — all via WebUSB.",
+    as_tab_scanner: "Device Scanner",
+    as_tab_analyzer: "APK Analyzer",
+    as_tab_adblocker: "Ad Blocker",
+    as_browser_warning: "WebUSB is not supported in this browser. Use Chrome, Edge, or Brave for Device Scanner and Ad Blocker features. APK Analyzer works in all browsers.",
+    as_connect_title: "Connect Your Android Device",
+    as_drop_title: "Drop APK File Here",
+    as_drop_desc: "Drag and drop an .apk file or click to browse. Analysis runs entirely in your browser — no file is uploaded to any server.",
+    as_dns_mode: "DNS Ad Blocking (No Root Required)",
+    as_dns_desc: "Set a privacy-focused DNS provider on your Android device that blocks ads and trackers at the network level. Works on Android 9+ without root access.",
+    as_categories: "Block Categories",
+    as_hosts_file: "Hosts File",
   },
   km: {
     software: "កម្មវិធី",
@@ -436,6 +451,21 @@ const translations = {
     exp5_author: "Vannak",
     exp5_date: "២០២៤",
     exp5_desc: "ការងារសំណង់គឺជាជំពូកមួយទៀតក្នុងជីវិតរបស់ខ្ញុំ មុនពេលចូលវិស័យ IT។ សែងស៊ីម៉ង់តូធ្ងន់ៗ លាយបេតុងក្រោមពន្លឺថ្ងៃក្ដៅ និងដាក់ឥដ្ឋជាច្រើនម៉ោង — វាជាការងារដែលធ្វើឱ្យដាច់ឆ្អឹងខ្នង។ ប៉ុន្តែខ្ញុំបានរៀនពីវិន័យ ការធ្វើការជាក្រុម និងរបៀបដោះស្រាយបញ្ហាភ្លាមៗ។ នៅពេលជញ្ជាំងមួយមិនស្មើ អ្នកត្រូវដោះស្រាយវានៅទីនោះ។ សញ្ជាតិញាណក្នុងការដោះស្រាយបញ្ហាទាំងនោះ បានផ្ទេរដោយផ្ទាល់ទៅកាន់អាជីពរបស់ខ្ញុំក្នុងវិស័យបច្ចេកវិទ្យា។ ឥឡូវនេះ ខ្ញុំសាងសង់ប្រព័ន្ធជំនួសឱ្យជញ្ជាំង ប៉ុន្តែគ្រឹះនៃការខិតខំធ្វើការនៅតែដដែល។",
+    // Android Security Suite
+    android_security: "សុវត្ថិភាព Android",
+    android_security_title: "ឧបករណ៍សុវត្ថិភាព Android",
+    android_security_desc: "ស្កេន វិភាគ និងការពារឧបករណ៍ Android របស់អ្នកផ្ទាល់ពីកម្មវិធីរុករកអ៊ិនធឺណិត។ លុបមេរោគ កម្មវិធីផ្សាយពាណិជ្ជកម្ម កម្មវិធីមិនចាំបាច់ និងទប់ស្កាត់ការផ្សាយពាណិជ្ជកម្ម។",
+    as_tab_scanner: "ស្កេនឧបករណ៍",
+    as_tab_analyzer: "វិភាគ APK",
+    as_tab_adblocker: "ទប់ស្កាត់ការផ្សាយពាណិជ្ជកម្ម",
+    as_browser_warning: "កម្មវិធីរុករកនេះមិនគាំទ្រ WebUSB ទេ។ សូមប្រើ Chrome, Edge ឬ Brave សម្រាប់មុខងារស្កេនឧបករណ៍ និងទប់ស្កាត់ការផ្សាយពាណិជ្ជកម្ម។",
+    as_connect_title: "ភ្ជាប់ឧបករណ៍ Android របស់អ្នក",
+    as_drop_title: "ទម្លាក់ឯកសារ APK នៅទីនេះ",
+    as_drop_desc: "អូស និងទម្លាក់ឯកសារ .apk ឬចុចដើម្បីរកមើល។ ការវិភាគដំណើរការទាំងស្រុងក្នុងកម្មវិធីរុករករបស់អ្នក — គ្មានឯកសារត្រូវបានផ្ញើទៅម៉ាស៊ីនមេណាមួយឡើយ។",
+    as_dns_mode: "ទប់ស្កាត់ការផ្សាorg/ពាណិជ្ជកម្មតាម DNS (មិនត្រូវការ Root)",
+    as_dns_desc: "កំណត់ DNS ឯកជនលើឧបករណ៍ Android របស់អ្នក ដែលទប់ស្កាត់ការផ្សាorg/ពាណិជ្ជកម្ម និងការតាមដាន។ ដំណើរការលើ Android 9+ ដោយមិនត្រូវការ Root។",
+    as_categories: "ប្រភេទដែលត្រូវទប់ស្កាត់",
+    as_hosts_file: "ឯកសារ Hosts",
   }
 
 };

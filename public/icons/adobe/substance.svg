@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 234" width="240" height="234">
+  <path fill="#1A1817" stroke="#FF6600" stroke-width="4" d="M42.5,2h155C219.9,2,238,20.1,238,42.5v149c0,22.4-18.1,40.5-40.5,40.5h-155C20.1,232,2,213.9,2,191.5v-149C2,20.1,20.1,2,42.5,2z"/>
+  <!-- 3D cube accent badge in top right -->
+  <g transform="translate(165, 30) scale(0.65)" stroke="#FF6600" stroke-width="3" fill="none" opacity="0.8">
+    <path d="M20 0 L40 10 L20 20 L0 10 Z" fill="#FF6600" fill-opacity="0.2"/>
+    <path d="M0 10 L0 32 L20 42 L20 20 Z"/>
+    <path d="M40 10 L40 32 L20 42 L20 20 Z"/>
+  </g>
+  <text x="110" y="152" font-family="'Adobe Clean', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="108" font-weight="800" fill="#FF6600" text-anchor="middle" letter-spacing="-2">Pt</text>
+</svg>

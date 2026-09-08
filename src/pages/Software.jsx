@@ -8,7 +8,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Download as DownloadIcon, Eye, Folder, ChevronRight, ArrowLeft, Cloud,
   Terminal, Database, ShieldCheck, ArrowUpDown, LayoutGrid, 
-  List, Search, File, Loader2, Monitor, Apple, Cpu, Settings, Briefcase, Globe, Code, PlayCircle, Printer, Ghost, Sparkles, Layers
+  List, Search, File, Loader2, Monitor, Apple, Cpu, Settings, Briefcase, Globe, Code, PlayCircle, Printer, Ghost, Sparkles, Layers,
+  Palette, PenTool
 } from 'lucide-react';
 import AuthModal from '../components/AuthModal';
 import { checkDownloadLimit, formatRetryTime } from '../utils/rateLimiter';
@@ -62,8 +63,52 @@ export const ModernScriptIcon = ({ size = 42 }) => (
 
 export const SoftwareIcon = ({ id, os, size = 32, iconUrl = null }) => {
   if (iconUrl) {
-    return <img src={iconUrl} className="software-real-icon" alt={id} style={{ width: size, height: size, objectFit: 'contain' }} />;
+    return <img src={iconUrl} className="software-real-icon" alt={id} style={{ width: size, height: size, objectFit: 'contain', borderRadius: 4 }} />;
   }
+
+  // Real authentic local SVG vector icons for Adobe Creative Cloud & Designer applications
+  const localSvgMap = {
+    // Adobe Family
+    'photoshop-win': '/icons/adobe/photoshop.svg',
+    'photoshop-mac': '/icons/adobe/photoshop.svg',
+    'illustrator-win': '/icons/adobe/illustrator.svg',
+    'illustrator-mac': '/icons/adobe/illustrator.svg',
+    'aftereffects-win': '/icons/adobe/aftereffects.svg',
+    'aftereffects-mac': '/icons/adobe/aftereffects.svg',
+    'premiere-win': '/icons/adobe/premiere.svg',
+    'premiere-mac': '/icons/adobe/premiere.svg',
+    'indesign-win': '/icons/adobe/indesign.svg',
+    'xd-win': '/icons/adobe/xd.svg',
+    'lightroom-win': '/icons/adobe/lightroom.svg',
+    'lightroom-mac': '/icons/adobe/lightroom.svg',
+    'acrobat-pro-win': '/icons/adobe/acrobat.svg',
+    'audition-win': '/icons/adobe/audition.svg',
+    'animate-win': '/icons/adobe/animate.svg',
+    'dreamweaver-win': '/icons/adobe/dreamweaver.svg',
+    'dimension-win': '/icons/adobe/dimension.svg',
+    'substance-painter': '/icons/adobe/substance.svg',
+    'media-encoder-win': '/icons/adobe/mediaencoder.svg',
+    'adobe-cc': '/icons/adobe/creativecloud.svg',
+    // Designer suite
+    'figma-win': '/icons/adobe/figma.svg',
+    'figma-mac': '/icons/adobe/figma.svg',
+    'blender-win': '/icons/adobe/blender.svg',
+    'blender-mac': '/icons/adobe/blender.svg',
+    'sketch-mac': '/icons/adobe/sketch.svg',
+  };
+
+  const localSvg = localSvgMap[id];
+  if (localSvg) {
+    return (
+      <img 
+        src={localSvg} 
+        className="software-real-icon" 
+        alt={id} 
+        style={{ width: size, height: size, objectFit: 'contain', borderRadius: 4 }} 
+      />
+    );
+  }
+
   const iconMap = {
     'chrome-win': 'google.com',
     'chrome-mac': 'google.com',
@@ -99,6 +144,12 @@ export const SoftwareIcon = ({ id, os, size = 32, iconUrl = null }) => {
     'office-win': 'microsoft.com',
     'office-mac': 'microsoft.com',
     'idm': 'internetdownloadmanager.com',
+    // Designer
+    'coreldraw-win': 'coreldraw.com',
+    'canva-win': 'canva.com',
+    'canva-mac': 'canva.com',
+    'gimp-win': 'gimp.org',
+    'inkscape-win': 'inkscape.org',
   };
 
   const domain = iconMap[id];
@@ -165,7 +216,54 @@ export const softwareData = [
   { id: 'zd-recorder', title: 'ZD Soft Screen Recorder 11.6.0', desc: 'Lightweight screen recording suite with hardware acceleration.', os: 'windows', folder: 'Media', subfolder: 'Screen Recorder', size: '28 MB', version: 'v11.6.0', url: 'https://pub-5961bc36cb774286a50691aa994b2653.r2.dev/ZD.Soft.Screen.Recorder.11.6.0.rar' },
   { id: 'vlc-win', title: 'VLC Media Player', desc: 'Multi-format video & audio player.', os: 'windows', folder: 'Media', subfolder: 'Video Player', size: '42 MB', version: 'v3.0.23', url: 'https://get.videolan.org/vlc/3.0.23/win64/vlc-3.0.23-win64.exe' },
   { id: 'obs-win', title: 'OBS Studio Live Streamer', desc: 'Free open source screen recording & live streaming.', os: 'windows', folder: 'Media', subfolder: 'Video Editor', size: '120 MB', version: 'v32.1', url: 'https://cdn-fastly.obsproject.com/downloads/OBS-Studio-32.1.0-Windows-x64-Installer.exe' },
+
+  // === DESIGNER ===
+  // Adobe Creative Cloud
+  { id: 'photoshop-win', title: 'Adobe Photoshop 2025', desc: 'Industry-standard photo editing & digital art software.', os: 'windows', folder: 'Designer', subfolder: 'Adobe', size: '2.1 GB', version: 'v26.4', iconUrl: '/icons/adobe/photoshop.svg' },
+  { id: 'photoshop-mac', title: 'Adobe Photoshop 2025 (macOS)', desc: 'Industry-standard photo editing & digital art software.', os: 'mac', folder: 'Designer', subfolder: 'Adobe', size: '2.4 GB', version: 'v26.4', iconUrl: '/icons/adobe/photoshop.svg' },
+  { id: 'illustrator-win', title: 'Adobe Illustrator 2025', desc: 'Professional vector graphics editor for logos, icons & illustrations.', os: 'windows', folder: 'Designer', subfolder: 'Adobe', size: '1.8 GB', version: 'v29.3', iconUrl: '/icons/adobe/illustrator.svg' },
+  { id: 'illustrator-mac', title: 'Adobe Illustrator 2025 (macOS)', desc: 'Professional vector graphics editor for logos, icons & illustrations.', os: 'mac', folder: 'Designer', subfolder: 'Adobe', size: '2.0 GB', version: 'v29.3', iconUrl: '/icons/adobe/illustrator.svg' },
+  { id: 'aftereffects-win', title: 'Adobe After Effects 2025', desc: 'Motion graphics, VFX & cinematic visual effects compositing.', os: 'windows', folder: 'Designer', subfolder: 'Adobe', size: '2.8 GB', version: 'v25.2', iconUrl: '/icons/adobe/aftereffects.svg' },
+  { id: 'aftereffects-mac', title: 'Adobe After Effects 2025 (macOS)', desc: 'Motion graphics, VFX & cinematic visual effects compositing.', os: 'mac', folder: 'Designer', subfolder: 'Adobe', size: '3.0 GB', version: 'v25.2', iconUrl: '/icons/adobe/aftereffects.svg' },
+  { id: 'premiere-win', title: 'Adobe Premiere Pro 2025', desc: 'Professional video editing & production for film, TV & web.', os: 'windows', folder: 'Designer', subfolder: 'Adobe', size: '2.5 GB', version: 'v25.1', iconUrl: '/icons/adobe/premiere.svg' },
+  { id: 'premiere-mac', title: 'Adobe Premiere Pro 2025 (macOS)', desc: 'Professional video editing & production for film, TV & web.', os: 'mac', folder: 'Designer', subfolder: 'Adobe', size: '2.7 GB', version: 'v25.1', iconUrl: '/icons/adobe/premiere.svg' },
+  { id: 'indesign-win', title: 'Adobe InDesign 2025', desc: 'Page layout & publishing for print, digital magazines & eBooks.', os: 'windows', folder: 'Designer', subfolder: 'Adobe', size: '1.4 GB', version: 'v20.2', iconUrl: '/icons/adobe/indesign.svg' },
+  { id: 'xd-win', title: 'Adobe XD', desc: 'UI/UX design, prototyping & collaboration tool.', os: 'windows', folder: 'Designer', subfolder: 'Adobe', size: '550 MB', version: 'v57.0', iconUrl: '/icons/adobe/xd.svg' },
+  { id: 'lightroom-win', title: 'Adobe Lightroom Classic 2025', desc: 'Professional photo management, editing & batch processing.', os: 'windows', folder: 'Designer', subfolder: 'Adobe', size: '1.6 GB', version: 'v14.2', iconUrl: '/icons/adobe/lightroom.svg' },
+  { id: 'lightroom-mac', title: 'Adobe Lightroom Classic 2025 (macOS)', desc: 'Professional photo management, editing & batch processing.', os: 'mac', folder: 'Designer', subfolder: 'Adobe', size: '1.8 GB', version: 'v14.2', iconUrl: '/icons/adobe/lightroom.svg' },
+  { id: 'acrobat-pro-win', title: 'Adobe Acrobat Pro DC 2025', desc: 'Create, edit, sign & manage PDF documents professionally.', os: 'windows', folder: 'Designer', subfolder: 'Adobe', size: '1.1 GB', version: 'v25.001', iconUrl: '/icons/adobe/acrobat.svg' },
+  { id: 'audition-win', title: 'Adobe Audition 2025', desc: 'Professional audio workstation for mixing, editing & sound design.', os: 'windows', folder: 'Designer', subfolder: 'Adobe', size: '900 MB', version: 'v25.1', iconUrl: '/icons/adobe/audition.svg' },
+  { id: 'animate-win', title: 'Adobe Animate 2025', desc: 'Interactive animations, banners & multimedia content creation.', os: 'windows', folder: 'Designer', subfolder: 'Adobe', size: '1.2 GB', version: 'v25.0', iconUrl: '/icons/adobe/animate.svg' },
+  { id: 'dreamweaver-win', title: 'Adobe Dreamweaver 2025', desc: 'Web design IDE with visual editor and code support.', os: 'windows', folder: 'Designer', subfolder: 'Adobe', size: '800 MB', version: 'v22.0', iconUrl: '/icons/adobe/dreamweaver.svg' },
+  { id: 'dimension-win', title: 'Adobe Dimension 2025', desc: '3D design tool for product mockups & photorealistic renders.', os: 'windows', folder: 'Designer', subfolder: 'Adobe', size: '1.5 GB', version: 'v4.0', iconUrl: '/icons/adobe/dimension.svg' },
+  { id: 'substance-painter', title: 'Adobe Substance 3D Painter', desc: '3D texture painting for game assets & visual effects.', os: 'windows', folder: 'Designer', subfolder: 'Adobe', size: '2.0 GB', version: 'v10.1', iconUrl: '/icons/adobe/substance.svg' },
+  { id: 'media-encoder-win', title: 'Adobe Media Encoder 2025', desc: 'Batch media encoding & transcoding for all Adobe workflows.', os: 'windows', folder: 'Designer', subfolder: 'Adobe', size: '1.3 GB', version: 'v25.1', iconUrl: '/icons/adobe/mediaencoder.svg' },
+
+  // Figma
+  { id: 'figma-win', title: 'Figma Desktop (Windows)', desc: 'Collaborative UI/UX design & prototyping platform.', os: 'windows', folder: 'Designer', subfolder: 'Figma', size: '120 MB', version: 'Latest', url: 'https://desktop.figma.com/win/FigmaSetup.exe', iconUrl: '/icons/adobe/figma.svg' },
+  { id: 'figma-mac', title: 'Figma Desktop (macOS)', desc: 'Collaborative UI/UX design & prototyping platform.', os: 'mac', folder: 'Designer', subfolder: 'Figma', size: '140 MB', version: 'Latest', url: 'https://desktop.figma.com/mac/Figma.dmg', iconUrl: '/icons/adobe/figma.svg' },
+
+  // CorelDRAW
+  { id: 'coreldraw-win', title: 'CorelDRAW Graphics Suite 2025', desc: 'Professional vector illustration, layout & photo editing suite.', os: 'windows', folder: 'Designer', subfolder: 'CorelDRAW', size: '2.3 GB', version: '2025' },
+
+  // Sketch (macOS only)
+  { id: 'sketch-mac', title: 'Sketch (macOS)', desc: 'Digital design toolkit for UI, web & icon design.', os: 'mac', folder: 'Designer', subfolder: 'Sketch', size: '85 MB', version: 'v100', iconUrl: '/icons/adobe/sketch.svg' },
+
+  // Blender (3D)
+  { id: 'blender-win', title: 'Blender 3D (Windows)', desc: 'Free open-source 3D creation suite — modeling, animation, rendering.', os: 'windows', folder: 'Designer', subfolder: '3D Modeling', size: '350 MB', version: 'v4.2', url: 'https://download.blender.org/release/Blender4.2/blender-4.2.0-windows-x64.msi', iconUrl: '/icons/adobe/blender.svg' },
+  { id: 'blender-mac', title: 'Blender 3D (macOS)', desc: 'Free open-source 3D creation suite — modeling, animation, rendering.', os: 'mac', folder: 'Designer', subfolder: '3D Modeling', size: '400 MB', version: 'v4.2', url: 'https://download.blender.org/release/Blender4.2/blender-4.2.0-macos-arm64.dmg', iconUrl: '/icons/adobe/blender.svg' },
+
+  // Canva Pro Desktop
+  { id: 'canva-win', title: 'Canva Pro Desktop (Windows)', desc: 'Visual design platform for social media, presentations & marketing.', os: 'windows', folder: 'Designer', subfolder: 'Canva', size: '160 MB', version: 'Latest' },
+  { id: 'canva-mac', title: 'Canva Pro Desktop (macOS)', desc: 'Visual design platform for social media, presentations & marketing.', os: 'mac', folder: 'Designer', subfolder: 'Canva', size: '180 MB', version: 'Latest' },
+
+  // GIMP
+  { id: 'gimp-win', title: 'GIMP Image Editor', desc: 'Free open-source image editor — alternative to Photoshop.', os: 'windows', folder: 'Designer', subfolder: 'Photo Editor', size: '300 MB', version: 'v2.10.38', url: 'https://download.gimp.org/gimp/v2.10/windows/gimp-2.10.38-setup.exe' },
+
+  // Inkscape
+  { id: 'inkscape-win', title: 'Inkscape Vector Editor', desc: 'Free open-source SVG editor — alternative to Illustrator.', os: 'windows', folder: 'Designer', subfolder: 'Vector Editor', size: '120 MB', version: 'v1.4', url: 'https://inkscape.org/gallery/item/44616/inkscape-1.4_2024-10-10_86a8ad7-x64.exe' },
 ];
+
 
 const softwareStructure = {
   Windows: {
@@ -212,6 +310,11 @@ const softwareStructure = {
     icon: <Printer size={20} />,
     color: '#14b8a6',
     subfolders: ['Printer Driver', 'Canon', 'HP', 'Epson', 'Graphic Card', 'Audio', 'Network', 'Scanner Driver']
+  },
+  Designer: {
+    icon: <Palette size={20} />,
+    color: '#e11d48',
+    subfolders: ['Adobe', 'Figma', 'CorelDRAW', 'Sketch', '3D Modeling', 'Canva', 'Photo Editor', 'Vector Editor']
   }
 };
 

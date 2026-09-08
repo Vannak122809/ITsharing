@@ -1,6 +1,6 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
-import { Terminal, Video, FileText, BookOpen, Layers, User, LogOut, DownloadCloud, Sun, Moon, Users, HelpCircle, Menu, X, Globe, Gift, Image as ImageIcon, LayoutDashboard } from 'lucide-react';
+import { Terminal, Video, FileText, BookOpen, Layers, User, LogOut, DownloadCloud, Sun, Moon, Users, HelpCircle, Menu, X, Globe, Gift, Image as ImageIcon, LayoutDashboard, Shield } from 'lucide-react';
 import { Toaster, toast } from 'react-hot-toast';
 import { AnimatePresence, motion } from 'framer-motion';
 
@@ -25,6 +25,7 @@ const Assets = lazy(() => import('./pages/Assets'));
 const AdminAssets = lazy(() => import('./pages/AdminAssets'));
 const GiveawayKeys = lazy(() => import('./pages/GiveawayKeys'));
 const SecurityDashboard = lazy(() => import('./pages/SecurityDashboard'));
+const AndroidSecurity = lazy(() => import('./pages/AndroidSecurity'));
 
 import ProtectedRoute from './components/ProtectedRoute';
 import CoffeeDonate from './components/CoffeeDonate';
@@ -150,12 +151,14 @@ function App() {
   const moreNavItems = isLoggedIn ? [
     { name: 'Khmer Frames', path: '/greeting-frames', icon: <ImageIcon size={18} /> },
     { name: t('experiences'), path: '/experiences', icon: <BookOpen size={18} /> },
+    { name: t('android_security') !== 'android_security' ? t('android_security') : 'Android Security', path: '/android-security', icon: <Shield size={18} /> },
     { name: 'Admin Dashboard', path: '/admin/assets', icon: <LayoutDashboard size={18} /> },
     { name: t('giveaway'), path: '/giveaway', icon: <Gift size={18} /> },
     { name: t('request'), path: '/request', icon: <HelpCircle size={18} /> },
   ] : [
     { name: 'Khmer Frames', path: '/greeting-frames', icon: <ImageIcon size={18} /> },
     { name: t('experiences'), path: '/experiences', icon: <BookOpen size={18} /> },
+    { name: t('android_security') !== 'android_security' ? t('android_security') : 'Android Security', path: '/android-security', icon: <Shield size={18} /> },
   ];
 
   const allNavItems = [...mainNavItems, ...moreNavItems];
@@ -430,6 +433,7 @@ function App() {
                     <SecurityDashboard user={user} />
                   </ProtectedRoute>
                 } />
+                <Route path="/android-security" element={<AndroidSecurity />} />
                 <Route path="/login" element={<Login />} />
               </Routes>
             </motion.div>
