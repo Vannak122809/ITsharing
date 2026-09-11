@@ -2,12 +2,10 @@
 
 .artistic-upload-container {
     position: relative;
-    padding: 16px;
-    min-height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
+    padding: 32px 36px;
+    width: 100%;
+    display: block;
+    overflow: visible;
     transition: background-color 0.5s ease;
 }
 
@@ -24,19 +22,19 @@
     transition: background-color 0.8s ease, opacity 0.8s ease;
     transform: translateZ(0);
     will-change: background-color;
+    pointer-events: none;
 }
 
 .upload-master-content {
     position: relative;
     z-index: 10;
     width: 100%;
-    max-width: 1040px;
-    border-radius: 36px;
-    padding: 36px;
-    border: 1px solid var(--surface-border);
-    box-shadow: 0 50px 100px -20px rgba(0, 0, 0, 0.25);
-    transition: background-color 0.5s, border-color 0.5s, box-shadow 0.5s;
-    background: var(--surface);
+    max-width: 100%;
+    border-radius: 0;
+    padding: 0;
+    border: none;
+    box-shadow: none;
+    background: transparent;
 }
 
 .glass-morphism {
@@ -631,6 +629,116 @@
 @keyframes slideDown {
     from { opacity: 0; transform: translateY(-16px); }
     to { opacity: 1; transform: translateY(0); }
+}
+
+/* Storage Target & Adobe Enforced Policy Banner */
+.storage-policy-banner {
+    background: var(--surface-badge);
+    border: 1.5px solid var(--surface-border);
+    border-radius: 20px;
+    padding: 14px 18px;
+    margin-bottom: 24px;
+    transition: all 0.3s ease;
+}
+
+.storage-policy-banner.b2-active {
+    background: rgba(59, 130, 246, 0.05);
+    border-color: rgba(59, 130, 246, 0.35);
+    box-shadow: 0 8px 24px -6px rgba(59, 130, 246, 0.15);
+}
+
+.storage-policy-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.policy-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.policy-indicator strong {
+    color: var(--text-main);
+    font-weight: 800;
+}
+
+.policy-name {
+    color: var(--text-main);
+    font-weight: 700;
+}
+
+.policy-pulse {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+.adobe-mandatory-pill {
+    background: rgba(239, 68, 68, 0.12);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    font-size: 0.7rem;
+    font-weight: 800;
+    padding: 3px 8px;
+    border-radius: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.storage-switch-btns {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.btn-storage-pill {
+    padding: 6px 12px;
+    border-radius: 10px;
+    border: 1.5px solid var(--surface-border);
+    background: var(--surface);
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+}
+
+.btn-storage-pill:hover {
+    border-color: var(--text-main);
+    color: var(--text-main);
+}
+
+.btn-storage-pill.active {
+    background: #2563eb;
+    color: white;
+    border-color: #2563eb;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.policy-note {
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--surface-border);
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+}
+
+.policy-note b {
+    color: var(--text-main);
 }
 
 @media (max-width: 900px) {

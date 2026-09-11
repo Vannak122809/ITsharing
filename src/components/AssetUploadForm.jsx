@@ -18,7 +18,11 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
     const [mainFiles, setMainFiles] = useState([]);
     const [coverFiles, setCoverFiles] = useState([]);
     const [title, setTitle] = useState(editData?.title || '');
-    const [tags, setTags] = useState(editData?.tags?.join(', ') || '');
+    const [tags, setTags] = useState(
+        Array.isArray(editData?.tags) 
+            ? editData.tags.join(', ') 
+            : (typeof editData?.tags === 'string' ? editData.tags : '')
+    );
     const [isUploading, setIsUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
     const [autoWebP, setAutoWebP] = useState(true);
@@ -26,10 +30,14 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
     const [selectedBucket, setSelectedBucket] = useState(editData?.bucket || 'image');
     const [selectedCategories, setSelectedCategories] = useState(
         Array.isArray(editData?.collection) ? editData.collection : 
-        (editData?.collection ? [editData.collection] : ['Chinese New Year'])
+        (editData?.collection ? [editData.collection] : ['General'])
     );
     const [customPublicUrl, setCustomPublicUrl] = useState(ASSETS_PUBLIC_URL);
     const [showAdvanced, setShowAdvanced] = useState(false);
+
+    // Direct / Mirror links for external or pre-uploaded CDN assets
+    const [directImageUrl, setDirectImageUrl] = useState(editData?.url || '');
+    const [directSourceUrl, setDirectSourceUrl] = useState(editData?.sourceUrl || '');
 
     useEffect(() => {
         if (selectedCategories.includes('Chinese New Year')) {
@@ -42,9 +50,10 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
     const coverFileInputRef = useRef(null);
 
     const bucketPresets = [
-        { id: 'image', name: 'Cloud Storage: IMAGES', url: 'https://pub-d1a291624a2449dfa5dc29dc91b022ce.r2.dev' },
-        { id: 'template', name: 'Cloud Storage: TEMPLATES', url: ASSETS_PUBLIC_URL },
-        { id: 'documents', name: 'Cloud Storage: DOCUMENTS', url: ASSETS_PUBLIC_URL }
+        { id: 'image', name: 'Cloud Storage: IMAGES (R2)', url: 'https://pub-d1a291624a2449dfa5dc29dc91b022ce.r2.dev' },
+        { id: 'adobefamily', name: 'Backblaze B2: ADOBE FAMILY', url: 'https://f005.backblazeb2.com/file/Adobefamily' },
+        { id: 'template', name: 'Cloud Storage: TEMPLATES (R2)', url: ASSETS_PUBLIC_URL },
+        { id: 'documents', name: 'Cloud Storage: DOCUMENTS (R2)', url: ASSETS_PUBLIC_URL }
     ];
 
     const [availableCategories, setAvailableCategories] = useState([
@@ -133,7 +142,7 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
         { id: 'Software', name: 'Software / OS', desc: 'ZIP, RAR, EXE, DMG, ISO', icon: <HardDrive size={22} />, color: '#111827', accent: '#a855f7', folder: 'Software' }
     ];
 
-    const currentFormat = softwareFormats.find(c => c.id === softwareType);
+    const currentFormat = softwareFormats.find(c => c.id === softwareType) || softwareFormats[0];
 
     const formatFileNameToTitle = (fileName) => {
         if (!fileName) return '';
@@ -179,8 +188,11 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
     };
 
     const handleUpload = async () => {
-        if (!isEditMode && mainFiles.length === 0) {
-            toast.error('Please select files to proceed.');
+        const hasLocalFiles = mainFiles.length > 0;
+        const hasDirectUrl = Boolean(directImageUrl.trim());
+
+        if (!isEditMode && !hasLocalFiles && !hasDirectUrl) {
+            toast.error('Please select files to proceed, or enter an Image/Source URL.');
             return;
         }
 
@@ -189,24 +201,23 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
 
         try {
             if (isEditMode) {
-                // Edit handles only the first selected file or none
+                // Edit handles first selected file, direct URL, or metadata changes
                 let currentFile = mainFiles[0];
-                let displayUrl = editData?.url || '';
-                let galleryUrls = editData?.gallery || (editData?.url ? [editData.url] : []);
-                let sourceUrl = editData?.sourceUrl || '';
+                let displayUrl = directImageUrl.trim() || editData?.url || '';
+                let galleryUrls = displayUrl ? [displayUrl] : (editData?.gallery || []);
+                let sourceUrl = directSourceUrl.trim() || editData?.sourceUrl || '';
                 
-                // 1. Upload Source File (only if new file selected)
+                // 1. Upload Source File (only if new local file selected)
                 if (currentFile) {
                     const sourceKey = await uploadAssetToR2(currentFile, currentFormat.folder, selectedBucket, (percent) => {
-                        // Source file upload progress counts as 5% to 55% (50% range)
                         setUploadProgress(5 + Math.round(percent * 0.5));
                     });
                     sourceUrl = `${customPublicUrl}/${sourceKey}`;
                 }
                 setUploadProgress(55);
 
-                // 2. Upload/Convert Cover Images (only if new files selected)
-                if (coverFiles.length > 0 || (currentFile && !isEditMode && coverFiles.length === 0)) {
+                // 2. Upload/Convert Cover Images (only if new local files selected)
+                if (coverFiles.length > 0 || (currentFile && !displayUrl && coverFiles.length === 0)) {
                     let displayUrls = [];
                     const filesToUpload = coverFiles.length > 0 ? coverFiles : [currentFile];
                     
@@ -214,7 +225,6 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
                         const fileToCover = filesToUpload[i];
                         let finalDisplayFile = fileToCover;
                         
-                        // Only attempt WebP conversion for standard web images, but SKIP PNGs to preserve transparency
                         const isWebImage = fileToCover.type.match(/^image\/(jpeg|webp)$/i) || 
                                           fileToCover.name.match(/\.(jpg|jpeg|webp)$/i);
 
@@ -236,13 +246,11 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
                 }
                 setUploadProgress(85);
 
-                // Determine technical 'type' (Primary type for filtering)
                 let technicalType = selectedCategories[0] || 'Template';
                 if (softwareType === 'PNG' && !selectedCategories.includes('Frame')) technicalType = 'Image';
                 if (softwareType === 'AI' && !selectedCategories.includes('Chinese New Year') && !selectedCategories.includes('Khmer New Year')) technicalType = 'Illustration';
                 if (softwareType === 'Software') technicalType = 'Software';
                 
-                // Add categories as extra tags for search robustness
                 const expandedTags = [
                     ...tags.split(',').map(tag => tag.trim()).filter(Boolean),
                     ...selectedCategories
@@ -250,10 +258,10 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
                 const uniqueTags = [...new Set(expandedTags)];
 
                 const assetData = {
-                    title,
-                    type: technicalType, // Primary Display Type
+                    title: title.trim(),
+                    type: technicalType,
                     category: softwareType,
-                    collection: selectedCategories, // Stored as array
+                    collection: selectedCategories,
                     url: displayUrl,
                     gallery: galleryUrls,
                     sourceUrl: sourceUrl,
@@ -262,6 +270,44 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
                 };
 
                 await updateDoc(doc(db, 'assets', editData.id), assetData);
+                toast.success('Asset updated successfully!');
+            } else if (!hasLocalFiles && hasDirectUrl) {
+                // Direct URL Publish Mode (no file upload required)
+                setUploadProgress(50);
+                let technicalType = selectedCategories[0] || 'Template';
+                if (softwareType === 'PNG' && !selectedCategories.includes('Frame')) technicalType = 'Image';
+                if (softwareType === 'AI' && !selectedCategories.includes('Chinese New Year') && !selectedCategories.includes('Khmer New Year')) technicalType = 'Illustration';
+                if (softwareType === 'Software') technicalType = 'Software';
+
+                const expandedTags = [
+                    ...tags.split(',').map(tag => tag.trim()).filter(Boolean),
+                    ...selectedCategories
+                ];
+                const uniqueTags = [...new Set(expandedTags)];
+
+                const assetData = {
+                    title: title.trim() || 'Untitled Asset',
+                    type: technicalType,
+                    category: softwareType,
+                    collection: selectedCategories,
+                    url: directImageUrl.trim(),
+                    gallery: [directImageUrl.trim()],
+                    sourceUrl: directSourceUrl.trim() || directImageUrl.trim(),
+                    tags: uniqueTags,
+                    format: softwareType === 'PNG' ? 'PNG' : softwareType === 'AI' ? 'AI' : softwareType === 'Photoshop' ? 'PSD' : 'ZIP',
+                    downloads: 0,
+                    likes: 0,
+                    featured: false,
+                    dimensions: 'High-Res',
+                    size: directSourceUrl.trim() ? 'External Link' : 'Direct Link',
+                    bucket: selectedBucket,
+                    createdAt: serverTimestamp(),
+                    updatedAt: serverTimestamp()
+                };
+
+                await addDoc(collection(db, 'assets'), assetData);
+                setUploadProgress(100);
+                toast.success('Asset published successfully via Direct URL!');
             } else {
                 // Batch Upload Mode for New Records
                 const totalFiles = mainFiles.length;
@@ -560,6 +606,65 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
                             />
                         </div>
 
+                        {/* Direct URL / CDN Links (Allows publishing without manual file upload, and editing existing links) */}
+                        <div style={{
+                            background: 'var(--surface-badge)',
+                            border: '1px solid var(--surface-border)',
+                            borderRadius: '18px',
+                            padding: '16px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '12px'
+                        }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <span style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                                    <Globe size={14} /> Direct CDN / External URLs {isEditMode ? '(Edit Mode)' : '(Or Upload Below)'}
+                                </span>
+                                <div style={{ display: 'flex', gap: '6px' }}>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            if (!directImageUrl) setDirectImageUrl('https://pub-d1a291624a2449dfa5dc29dc91b022ce.r2.dev/');
+                                        }}
+                                        style={{ background: 'rgba(59, 130, 246, 0.12)', border: '1px solid rgba(59, 130, 246, 0.3)', color: 'var(--primary)', borderRadius: '8px', padding: '3px 8px', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer' }}
+                                    >
+                                        ⚡ R2 Images
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            if (!directSourceUrl) setDirectSourceUrl('https://f005.backblazeb2.com/file/Adobefamily/');
+                                        }}
+                                        style={{ background: 'rgba(16, 185, 129, 0.12)', border: '1px solid rgba(16, 185, 129, 0.3)', color: '#10b981', borderRadius: '8px', padding: '3px 8px', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer' }}
+                                    >
+                                        📦 B2 Adobefamily
+                                    </button>
+                                </div>
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                                <div className="master-input-group">
+                                    <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}><ImageIcon size={12} /> Preview Image URL</label>
+                                    <input 
+                                        type="url" 
+                                        placeholder="https://... cover image or thumbnail URL"
+                                        value={directImageUrl}
+                                        onChange={(e) => setDirectImageUrl(e.target.value)}
+                                        style={{ padding: '10px 14px', fontSize: '0.9rem', borderRadius: '12px' }}
+                                    />
+                                </div>
+                                <div className="master-input-group">
+                                    <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}><HardDrive size={12} /> Master File / Download URL</label>
+                                    <input 
+                                        type="url" 
+                                        placeholder="https://... PSD, AI, or ZIP source download link"
+                                        value={directSourceUrl}
+                                        onChange={(e) => setDirectSourceUrl(e.target.value)}
+                                        style={{ padding: '10px 14px', fontSize: '0.9rem', borderRadius: '12px' }}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
                         <div className="dropzone-duo">
                             <div className={`master-dropzone ${mainFiles.length > 0 ? 'ready' : ''}`} onClick={() => mainFileInputRef.current.click()}>
                                 <input type="file" ref={mainFileInputRef} onChange={handleMainFileSelect} multiple hidden />
@@ -674,7 +779,9 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
                                             </div>
                                         )}
                                     </>
-                                ) : <ImageIcon size={40} color="#eee" />}
+                                ) : directImageUrl ? (
+                                    <img src={directImageUrl} alt="" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                                ) : <ImageIcon size={40} color="var(--text-muted)" />}
                             </div>
                             <div className="card-bottom-info">
                                 <div className="badge-row">
@@ -711,7 +818,7 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
                             <button className="btn-discard" onClick={() => onComplete && onComplete()}>
                                 Discard & Close
                             </button>
-                            <button className="master-publish-btn" disabled={isUploading || (!isEditMode && mainFiles.length === 0)} onClick={handleUpload}>
+                            <button className="master-publish-btn" disabled={isUploading || (!isEditMode && mainFiles.length === 0 && !directImageUrl.trim())} onClick={handleUpload}>
                                 {isUploading ? (
                                     <><RefreshCw className="spinning" size={22} /> Sycing {uploadProgress}%</>
                                 ) : (

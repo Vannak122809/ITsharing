@@ -410,19 +410,37 @@ const Software = () => {
 
     setDownloadingId(id);
     try {
-      const response = await fetch(url + '?t=' + Date.now());
-      const blob = await response.blob();
-      const downloadUrl = window.URL.createObjectURL(blob);
+      // 1. Backblaze B2 (Adobefamily) downloads: Route through authorized 24h streaming redirect
+      if (url.includes('backblazeb2.com') || url.includes('Adobefamily')) {
+        let key = url;
+        if (key.includes('backblazeb2.com/file/Adobefamily/')) {
+          key = key.split('backblazeb2.com/file/Adobefamily/')[1];
+        } else if (key.includes('s3.us-east-005.backblazeb2.com/Adobefamily/')) {
+          key = key.split('s3.us-east-005.backblazeb2.com/Adobefamily/')[1];
+        }
+        const cleanKey = decodeURIComponent(key.split('?')[0]);
+        const authorizedEndpoint = `/api/download-b2?key=${encodeURIComponent(cleanKey)}`;
+        
+        const link = document.createElement('a');
+        link.href = authorizedEndpoint;
+        link.setAttribute('download', '');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        return;
+      }
+
+      // 2. Direct / R2 downloads: Native download trigger
       const link = document.createElement('a');
-      link.href = downloadUrl;
-      const cleanTitle = (title || 'software').replace(/[^a-zA-Z0-9 ]/g, '');
-      const ext = url.endsWith('.iso') ? '.iso' : url.endsWith('.img') ? '.img' : url.endsWith('.zip') ? '.zip' : '.exe';
-      link.download = `${cleanTitle}${ext}`;
+      link.href = url;
+      link.setAttribute('download', '');
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      window.URL.revokeObjectURL(downloadUrl);
     } catch (error) {
+      console.error('Download error:', error);
       window.open(url, '_blank');
     } finally {
       setDownloadingId(null);

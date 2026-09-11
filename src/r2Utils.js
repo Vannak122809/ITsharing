@@ -2,7 +2,7 @@ import { db } from "./firebase";
 import { collection, addDoc, getDocs, orderBy, query, serverTimestamp } from "firebase/firestore";
 import { uploadAssetToR2 } from "./r2Assets";
 
-const API_BASE = import.meta.env.DEV ? 'http://localhost:3000' : '';
+const API_BASE = '';
 
 /** POST to /api/upload-url and get a signed PUT URL + public URL */
 async function getSignedUploadUrl({ bucket, key, contentType, size }) {

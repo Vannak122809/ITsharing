@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Download, Monitor, Apple, CheckCircle, ShieldAlert, Zap, Box, Rocket, Star } from 'lucide-react';
 import { softwareData, SoftwareIcon, ModernIsoIcon, ModernScriptIcon } from './Software';
@@ -243,6 +243,22 @@ const SoftwareViewer = () => {
     );
   }
 
+  const resolvedDownloadUrl = useMemo(() => {
+    if (!software?.downloadUrl) return '#';
+    const url = software.downloadUrl;
+    if (url.includes('backblazeb2.com') || url.includes('Adobefamily')) {
+      let key = url;
+      if (key.includes('backblazeb2.com/file/Adobefamily/')) {
+        key = key.split('backblazeb2.com/file/Adobefamily/')[1];
+      } else if (key.includes('s3.us-east-005.backblazeb2.com/Adobefamily/')) {
+        key = key.split('s3.us-east-005.backblazeb2.com/Adobefamily/')[1];
+      }
+      const cleanKey = decodeURIComponent(key.split('?')[0]);
+      return `/api/download-b2?key=${encodeURIComponent(cleanKey)}`;
+    }
+    return url;
+  }, [software?.downloadUrl]);
+
   return (
     <div className="container" style={{ paddingTop: '100px', minHeight: '100vh', paddingBottom: '100px' }}>
       
@@ -283,7 +299,7 @@ const SoftwareViewer = () => {
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', minWidth: '240px' }}>
-                <a href={software.downloadUrl} target="_blank" rel="noreferrer" onClick={(e) => { if (isGuest) { e.preventDefault(); navigate('/login'); } }} className="btn btn-primary" style={{ padding: '20px 40px', fontSize: '1.2rem', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', boxShadow: '0 15px 40px rgba(37, 99, 235, 0.3)' }}>
+                <a href={resolvedDownloadUrl} target="_blank" rel="noreferrer" onClick={(e) => { if (isGuest) { e.preventDefault(); navigate('/login'); } }} className="btn btn-primary" style={{ padding: '20px 40px', fontSize: '1.2rem', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', boxShadow: '0 15px 40px rgba(37, 99, 235, 0.3)' }}>
                   <Download size={22} /> Download Now
                 </a>
                 <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: 600 }}>

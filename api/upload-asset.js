@@ -12,16 +12,16 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 // Credentials live in Vercel environment variables — never in the browser bundle.
 const assetsR2 = new S3Client({
   region: 'auto',
-  endpoint: process.env.R2_ASSETS_ENDPOINT,
+  endpoint: process.env.R2_ASSETS_ENDPOINT || process.env.R2_ENDPOINT,
   credentials: {
-    accessKeyId:     process.env.R2_ASSETS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.R2_ASSETS_SECRET_ACCESS_KEY,
+    accessKeyId:     process.env.R2_ASSETS_ACCESS_KEY_ID || process.env.R2_ACCESS_KEY_ID,
+    secretAccessKey: process.env.R2_ASSETS_SECRET_ACCESS_KEY || process.env.R2_SECRET_ACCESS_KEY,
   },
   forcePathStyle: true,
 });
 
-const BUCKET       = process.env.R2_ASSETS_BUCKET || 'image';
-const PUBLIC_URL   = process.env.R2_ASSETS_PUBLIC_URL || 'https://pub-d1a291624a2449dfa5dc29dc91b022ce.r2.dev';
+const BUCKET       = process.env.R2_ASSETS_BUCKET || process.env.R2_IMAGE_BUCKET || 'image';
+const PUBLIC_URL   = process.env.R2_ASSETS_PUBLIC_URL || process.env.R2_IMAGE_PUBLIC_URL || 'https://pub-d1a291624a2449dfa5dc29dc91b022ce.r2.dev';
 
 // Files larger than this go through multipart
 const MULTIPART_THRESHOLD = 10 * 1024 * 1024; // 10 MB

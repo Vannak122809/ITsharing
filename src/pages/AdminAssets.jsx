@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { 
     LayoutDashboard, Plus, Search, Filter, 
     MoreHorizontal, Download, Eye, Trash2,
@@ -139,6 +140,31 @@ const AdminAssets = () => {
     useEffect(() => {
         setCurrentPage(1);
     }, [searchQuery, activeTab, userSearchQuery, softwareSearchQuery]);
+
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape') {
+                setIsUploadModalOpen(false);
+                setIsEditModalOpen(false);
+                setIsSoftwareUploadOpen(false);
+                setIsSoftwareEditOpen(false);
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
+
+    useEffect(() => {
+        const anyModalOpen = isUploadModalOpen || isEditModalOpen || isSoftwareUploadOpen || isSoftwareEditOpen;
+        if (anyModalOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => {
+            document.body.style.overflow = '';
+        };
+    }, [isUploadModalOpen, isEditModalOpen, isSoftwareUploadOpen, isSoftwareEditOpen]);
 
     if (!isAdmin) {
         return (
@@ -495,42 +521,46 @@ const AdminAssets = () => {
                 )}
             </main>
 
-            {isUploadModalOpen && (
-                <div className="upload-modal-overlay">
-                    <div className="modal-inner">
+            {isUploadModalOpen && createPortal(
+                <div className="upload-modal-overlay" onClick={() => setIsUploadModalOpen(false)}>
+                    <div className="modal-inner" onClick={(e) => e.stopPropagation()}>
                         <AssetUploadForm onComplete={() => setIsUploadModalOpen(false)} />
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
 
-            {isEditModalOpen && editingAsset && (
-                <div className="upload-modal-overlay">
-                    <div className="modal-inner">
+            {isEditModalOpen && editingAsset && createPortal(
+                <div className="upload-modal-overlay" onClick={() => setIsEditModalOpen(false)}>
+                    <div className="modal-inner" onClick={(e) => e.stopPropagation()}>
                         <AssetUploadForm 
                             editData={editingAsset} 
                             onComplete={() => setIsEditModalOpen(false)} 
                         />
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
 
-            {isSoftwareUploadOpen && (
-                <div className="upload-modal-overlay">
-                    <div className="modal-inner">
+            {isSoftwareUploadOpen && createPortal(
+                <div className="upload-modal-overlay" onClick={() => setIsSoftwareUploadOpen(false)}>
+                    <div className="modal-inner" onClick={(e) => e.stopPropagation()}>
                         <SoftwareUploadForm onComplete={() => setIsSoftwareUploadOpen(false)} />
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
 
-            {isSoftwareEditOpen && editingSoftware && (
-                <div className="upload-modal-overlay">
-                    <div className="modal-inner">
+            {isSoftwareEditOpen && editingSoftware && createPortal(
+                <div className="upload-modal-overlay" onClick={() => setIsSoftwareEditOpen(false)}>
+                    <div className="modal-inner" onClick={(e) => e.stopPropagation()}>
                         <SoftwareUploadForm 
                             editData={editingSoftware} 
                             onComplete={() => setIsSoftwareEditOpen(false)} 
                         />
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
 
             <style dangerouslySetInnerHTML={{ __html: `
@@ -590,8 +620,8 @@ const AdminAssets = () => {
                 
                 .role-dropdown { padding: 8px 12px; border-radius: 10px; border: 1px solid var(--surface-border); font-weight: 700; color: var(--text-main); background: var(--surface); outline: none; cursor: pointer; }
 
-                .upload-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 5000; display: flex; align-items: center; justify-content: center; padding: 40px; }
-                .modal-inner { background: var(--bg-color); border-radius: 40px; width: 100%; max-width: 1000px; position: relative; max-height: 90vh; overflow-y: auto; border: 1px solid var(--surface-border); }
+                .upload-modal-overlay { position: fixed; inset: 0; background: rgba(5, 7, 12, 0.88); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); z-index: 999999; display: flex; align-items: flex-start; justify-content: center; padding: 32px 16px 60px 16px; overflow-y: auto; overscroll-behavior: contain; }
+                .modal-inner { background: var(--surface); border-radius: 28px; width: 100%; max-width: 1080px; position: relative; border: 1px solid var(--surface-border); box-shadow: 0 30px 80px -15px rgba(0, 0, 0, 0.8), 0 0 0 1px var(--surface-border); margin: 20px auto 40px auto; overflow: visible; }
 
                 .edit-modal-small { max-width: 600px; border-radius: 32px; padding: 32px; }
                 .close-modal { position: absolute; top: 24px; right: 24px; background: white; border: none; cursor: pointer; color: #718096; z-index: 10; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }

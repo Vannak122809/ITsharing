@@ -1,10 +1,16 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
     Upload, X, Monitor, Apple, CheckCircle2, 
     RefreshCw, Save, HardDrive, Layers, Cloud, Sparkles,
     Plus, Info, AlertCircle, ShieldCheck, Database, Globe, Type, Image as ImageIcon, FileCode
 } from 'lucide-react';
 import { uploadFileToR2 } from '../r2Utils';
+import { 
+    uploadSoftwareToB2, 
+    isAdobeProduct, 
+    B2_ADOBE_PUBLIC_URL, 
+    B2_ADOBE_BUCKET_NAME 
+} from '../b2';
 import { db } from '../firebase';
 import { collection, addDoc, serverTimestamp, doc, updateDoc } from 'firebase/firestore';
 import './SoftwareUploadForm.css';
@@ -36,10 +42,18 @@ const SoftwareUploadForm = ({ onComplete, editData = null }) => {
     const [showAdvanced, setShowAdvanced] = useState(false);
     const [selectedBucket, setSelectedBucket] = useState('software');
 
+    // Storage Provider: 'b2' (Backblaze B2) or 'r2' (Cloudflare R2)
+    const [storageProvider, setStorageProvider] = useState(() => {
+        if (editData?.provider === 'backblazeb2' || editData?.bucket === 'Adobefamily') return 'b2';
+        if (isAdobeProduct(editData)) return 'b2';
+        return 'r2';
+    });
+
     const fileInputRef = useRef(null);
     const iconInputRef = useRef(null);
 
     const folderPresets = [
+        'Adobe',
         'Windows',
         'Windows Server',
         'Office',
@@ -50,6 +64,22 @@ const SoftwareUploadForm = ({ onComplete, editData = null }) => {
         'Media',
         'Driver'
     ];
+
+    const isAdobeDetected = isAdobeProduct({
+        title,
+        developer,
+        folder,
+        subfolder,
+        downloadUrl
+    });
+
+    // Auto-lock to Backblaze B2 (Adobefamily) whenever Adobe software is detected
+    useEffect(() => {
+        if (isAdobeDetected && storageProvider !== 'b2') {
+            setStorageProvider('b2');
+            if (folder === 'Software') setFolder('Adobe');
+        }
+    }, [isAdobeDetected, storageProvider, folder]);
 
     const formatFileNameToTitle = (fileName) => {
         if (!fileName) return '';
@@ -67,7 +97,8 @@ const SoftwareUploadForm = ({ onComplete, editData = null }) => {
         const file = e.target.files[0];
         if (!file) return;
 
-        if (!title) setTitle(formatFileNameToTitle(file.name));
+        const inferredTitle = title || formatFileNameToTitle(file.name);
+        if (!title) setTitle(inferredTitle);
         
         const sizeInMb = file.size / (1024 * 1024);
         if (sizeInMb >= 1024) {
@@ -76,20 +107,43 @@ const SoftwareUploadForm = ({ onComplete, editData = null }) => {
             setSize(`${sizeInMb.toFixed(2)} MB`);
         }
 
+        // Strictly verify if this upload belongs to the Adobe ecosystem
+        const isAdobe = storageProvider === 'b2' || isAdobeProduct({
+            title: inferredTitle,
+            developer,
+            fileName: file.name,
+            folder
+        });
+
         setIsUploadingFile(true);
         setUploadProgress(0);
 
         try {
-            const fileKey = await uploadFileToR2(file, 'software', (percent) => {
-                setUploadProgress(percent);
-            });
-            
-            const publicUrl = `${import.meta.env.VITE_R2_PUBLIC_URL}/${fileKey}`;
-            setDownloadUrl(publicUrl);
-            toast.success('Binary file uploaded successfully to Cloudflare R2!');
+            if (isAdobe) {
+                setStorageProvider('b2');
+                if (folder === 'Software') setFolder('Adobe');
+                if (!developer) setDeveloper('Adobe Systems');
+
+                toast.loading('Detected Adobe software: Routing directly to Backblaze B2 (Adobefamily)...', { id: 'software-upload' });
+                
+                const b2Res = await uploadSoftwareToB2(file, folder === 'Adobe' ? '' : folder, (percent) => {
+                    setUploadProgress(percent);
+                });
+                
+                setDownloadUrl(b2Res.publicUrl);
+                toast.success('Successfully uploaded to Backblaze B2 (Adobefamily)!', { id: 'software-upload' });
+            } else {
+                const fileKey = await uploadFileToR2(file, 'software', (percent) => {
+                    setUploadProgress(percent);
+                });
+                
+                const publicUrl = `${import.meta.env.VITE_R2_PUBLIC_URL}/${fileKey}`;
+                setDownloadUrl(publicUrl);
+                toast.success('Binary file uploaded successfully to Cloudflare R2!');
+            }
         } catch (error) {
-            console.error('[Software Upload] R2 upload failed:', error);
-            toast.error(`File upload failed: ${error.message || 'Check R2 CORS/credentials.'}`);
+            console.error('[Software Upload] Upload failed:', error);
+            toast.error(`Upload failed: ${error.message || 'Check storage connection.'}`, { id: 'software-upload' });
         } finally {
             setIsUploadingFile(false);
         }
@@ -134,12 +188,20 @@ const SoftwareUploadForm = ({ onComplete, editData = null }) => {
             .map(f => f.trim())
             .filter(Boolean);
 
+        const isAdobe = storageProvider === 'b2' || isAdobeProduct({
+            title,
+            developer,
+            downloadUrl,
+            folder,
+            subfolder
+        });
+
         const softwareDataObj = {
             title: title.trim(),
             os,
             version: version.trim() || 'Latest',
             size: size.trim() || 'Unknown',
-            developer: developer.trim() || 'Unknown Developer',
+            developer: developer.trim() || (isAdobe ? 'Adobe Systems' : 'Unknown Developer'),
             downloadUrl: downloadUrl.trim(),
             url: downloadUrl.trim(),
             iconUrl: iconUrl.trim() || null,
@@ -148,8 +210,11 @@ const SoftwareUploadForm = ({ onComplete, editData = null }) => {
             desc: description.trim(),
             requirements: requirementsArray.length ? requirementsArray : ['Compatible Operating System', 'Standard Hardware Specifications'],
             features: featuresArray.length ? featuresArray : ['Direct Download', 'Verified Integrity'],
-            folder,
+            folder: isAdobe && folder === 'Software' ? 'Adobe' : folder,
             subfolder: subfolder.trim() || null,
+            provider: isAdobe ? 'backblazeb2' : 'r2',
+            bucket: isAdobe ? B2_ADOBE_BUCKET_NAME : 'software',
+            storage: isAdobe ? 'Backblaze B2 (Adobefamily)' : 'Cloudflare R2',
             updatedAt: serverTimestamp()
         };
 
@@ -157,14 +222,14 @@ const SoftwareUploadForm = ({ onComplete, editData = null }) => {
             if (isEditMode) {
                 const docRef = doc(db, 'software', editData.id);
                 await updateDoc(docRef, softwareDataObj);
-                toast.success('Software record updated successfully!');
+                toast.success(isAdobe ? 'Adobe software updated in Backblaze B2!' : 'Software record updated successfully!');
             } else {
                 const docRef = collection(db, 'software');
                 await addDoc(docRef, {
                     ...softwareDataObj,
                     createdAt: serverTimestamp()
                 });
-                toast.success('Software package published successfully!');
+                toast.success(isAdobe ? 'Adobe software published to Backblaze B2 (Adobefamily)!' : 'Software package published successfully!');
             }
 
             if (onComplete) onComplete();
@@ -284,6 +349,52 @@ const SoftwareUploadForm = ({ onComplete, editData = null }) => {
                 <div className="upload-body-grid">
                     {/* Left Column: Form Inputs Stack */}
                     <div className="input-vertical-stack">
+                        {/* Storage Target Selector & Adobe Enforced Policy Banner */}
+                        <div className={`storage-policy-banner ${storageProvider === 'b2' ? 'b2-active' : ''}`}>
+                            <div className="storage-policy-header">
+                                <div className="policy-indicator">
+                                    <span className="policy-pulse" style={{ background: storageProvider === 'b2' ? '#3b82f6' : '#10b981' }} />
+                                    <strong>Storage Target:</strong>
+                                    <span className="policy-name">
+                                        {storageProvider === 'b2' ? 'Backblaze B2 (Adobefamily)' : 'Cloudflare R2 (General)'}
+                                    </span>
+                                    {isAdobeDetected && (
+                                        <span className="adobe-mandatory-pill">
+                                            🅰️ Adobe Rule Enforced
+                                        </span>
+                                    )}
+                                </div>
+
+                                <div className="storage-switch-btns">
+                                    <button
+                                        type="button"
+                                        className={`btn-storage-pill ${storageProvider === 'b2' ? 'active' : ''}`}
+                                        onClick={() => setStorageProvider('b2')}
+                                    >
+                                        <HardDrive size={13} /> Backblaze B2 (Adobefamily)
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={`btn-storage-pill ${storageProvider === 'r2' ? 'active' : ''}`}
+                                        onClick={() => {
+                                            if (isAdobeDetected) {
+                                                toast.error('All Adobe software must be stored in Backblaze B2 (Adobefamily).');
+                                                return;
+                                            }
+                                            setStorageProvider('r2');
+                                        }}
+                                    >
+                                        <Cloud size={13} /> Cloudflare R2
+                                    </button>
+                                </div>
+                            </div>
+                            {isAdobeDetected && (
+                                <p className="policy-note">
+                                    ⚡ All Adobe Family software files, installers, and mirrors automatically and strictly upload to your <b>.backblazeb2 (Adobefamily)</b> bucket.
+                                </p>
+                            )}
+                        </div>
+
                         {/* Title Input */}
                         <div className="master-input-group">
                             <label><Type size={14} /> Software Title</label>
@@ -328,10 +439,10 @@ const SoftwareUploadForm = ({ onComplete, editData = null }) => {
                                     </strong>
                                     <p>
                                         {isUploadingFile 
-                                            ? 'Uploading to Cloudflare R2...' 
+                                            ? (storageProvider === 'b2' ? 'Uploading to Backblaze B2 (Adobefamily)...' : 'Uploading to Cloudflare R2...') 
                                             : size 
-                                            ? `Size: ${size}` 
-                                            : 'Supports ISO, EXE, DMG, ZIP over 300MB'}
+                                            ? `Size: ${size} • ${storageProvider === 'b2' ? 'Backblaze B2' : 'Cloudflare R2'}` 
+                                            : (storageProvider === 'b2' ? 'Direct upload to Backblaze B2 Adobefamily' : 'Supports ISO, EXE, DMG, ZIP over 300MB')}
                                     </p>
                                 </div>
                                 {downloadUrl && <CheckCircle2 className="checked-indicator" size={18} />}
@@ -391,10 +502,110 @@ const SoftwareUploadForm = ({ onComplete, editData = null }) => {
                                 <label><Globe size={14} /> Download URL / Mirror Link</label>
                                 <input 
                                     type="url" 
-                                    placeholder="Direct link or R2 public URL" 
+                                    placeholder="Direct link, Backblaze B2 URL, or R2 link" 
                                     value={downloadUrl} 
                                     onChange={(e) => setDownloadUrl(e.target.value)} 
                                 />
+                                <div style={{ display: 'flex', gap: '8px', marginTop: '6px', flexWrap: 'wrap' }}>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            if (!downloadUrl || !downloadUrl.includes('backblazeb2.com')) {
+                                                setDownloadUrl('https://f005.backblazeb2.com/file/Adobefamily/');
+                                            }
+                                        }}
+                                        style={{
+                                            background: 'rgba(59, 130, 246, 0.12)',
+                                            border: '1px solid rgba(59, 130, 246, 0.3)',
+                                            color: 'var(--primary)',
+                                            borderRadius: '8px',
+                                            padding: '4px 10px',
+                                            fontSize: '0.75rem',
+                                            fontWeight: 700,
+                                            cursor: 'pointer',
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            gap: '4px'
+                                        }}
+                                    >
+                                        📦 Backblaze B2 (Adobefamily) Prefix
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setTitle('Adobe Photoshop 2025');
+                                            setDeveloper('Adobe Systems');
+                                            setFolder('Software');
+                                            setSubfolder('Graphics');
+                                            setDownloadUrl('https://f005.backblazeb2.com/file/Adobefamily/Adobe_Photoshop_2025.zip');
+                                            setVersion('v26.0');
+                                            setRequirements('Windows 10/11 64-bit, 8GB RAM, 4GB GPU');
+                                            setFeatures('Generative Fill, Neural Filters, Pre-Activated');
+                                        }}
+                                        style={{
+                                            background: 'rgba(0, 168, 255, 0.12)',
+                                            border: '1px solid rgba(0, 168, 255, 0.3)',
+                                            color: '#00a8ff',
+                                            borderRadius: '8px',
+                                            padding: '4px 8px',
+                                            fontSize: '0.72rem',
+                                            fontWeight: 700,
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        🎨 Photoshop 2025
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setTitle('Adobe Illustrator 2025');
+                                            setDeveloper('Adobe Systems');
+                                            setFolder('Software');
+                                            setSubfolder('Graphics');
+                                            setDownloadUrl('https://f005.backblazeb2.com/file/Adobefamily/Adobe_Illustrator_2025.zip');
+                                            setVersion('v29.0');
+                                            setRequirements('Windows 10/11 64-bit, 8GB RAM');
+                                            setFeatures('Vector AI, Retype, Mockup, Pre-Activated');
+                                        }}
+                                        style={{
+                                            background: 'rgba(255, 136, 0, 0.12)',
+                                            border: '1px solid rgba(255, 136, 0, 0.3)',
+                                            color: '#ff8800',
+                                            borderRadius: '8px',
+                                            padding: '4px 8px',
+                                            fontSize: '0.72rem',
+                                            fontWeight: 700,
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        📐 Illustrator 2025
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setTitle('Adobe Premiere Pro 2025');
+                                            setDeveloper('Adobe Systems');
+                                            setFolder('Software');
+                                            setSubfolder('Video');
+                                            setDownloadUrl('https://f005.backblazeb2.com/file/Adobefamily/Adobe_Premiere_Pro_2025.zip');
+                                            setVersion('v25.0');
+                                            setRequirements('Windows 10/11 64-bit, 16GB RAM, Dedicated GPU');
+                                            setFeatures('Text-Based Editing, Enhance Speech, Pre-Activated');
+                                        }}
+                                        style={{
+                                            background: 'rgba(168, 85, 247, 0.12)',
+                                            border: '1px solid rgba(168, 85, 247, 0.3)',
+                                            color: '#a855f7',
+                                            borderRadius: '8px',
+                                            padding: '4px 8px',
+                                            fontSize: '0.72rem',
+                                            fontWeight: 700,
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        🎬 Premiere Pro 2025
+                                    </button>
+                                </div>
                             </div>
                             <div className="master-input-group">
                                 <label><Layers size={14} /> Subfolder / Category Tag</label>
@@ -465,10 +676,10 @@ const SoftwareUploadForm = ({ onComplete, editData = null }) => {
                         <div className="utility-switch-rack">
                             <div className="switch-item">
                                 <div className="s-info">
-                                    <strong>Cloudflare R2 Direct</strong>
-                                    <span>High-speed global CDN</span>
+                                    <strong>{storageProvider === 'b2' ? 'Backblaze B2' : 'Cloudflare R2'}</strong>
+                                    <span>{storageProvider === 'b2' ? 'Bucket: Adobefamily (Strict)' : 'High-speed global CDN'}</span>
                                 </div>
-                                <div className="status-dot-art active" />
+                                <div className="status-dot-art active" style={{ background: storageProvider === 'b2' ? '#3b82f6' : '#10b981' }} />
                             </div>
                             <div className="switch-item">
                                 <div className="s-info">

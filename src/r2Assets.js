@@ -9,7 +9,7 @@
  *  - Large files  (≥ 10 MB):  server-assisted multipart upload
  */
 
-const API_BASE = import.meta.env.DEV ? 'http://localhost:3000' : '';
+const API_BASE = '';
 
 // Public CDN base URL (read-only, safe to expose)
 export const ASSETS_PUBLIC_URL = import.meta.env.VITE_R2_ASSETS_PUBLIC_URL
