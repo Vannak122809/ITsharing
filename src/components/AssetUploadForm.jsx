@@ -607,26 +607,18 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
                         </div>
 
                         {/* Direct URL / CDN Links (Allows publishing without manual file upload, and editing existing links) */}
-                        <div style={{
-                            background: 'var(--surface-badge)',
-                            border: '1px solid var(--surface-border)',
-                            borderRadius: '18px',
-                            padding: '16px',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: '12px'
-                        }}>
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                <span style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                        <div className="direct-urls-panel">
+                            <div className="direct-urls-header">
+                                <span className="direct-urls-title">
                                     <Globe size={14} /> Direct CDN / External URLs {isEditMode ? '(Edit Mode)' : '(Or Upload Below)'}
                                 </span>
-                                <div style={{ display: 'flex', gap: '6px' }}>
+                                <div className="direct-urls-quick-btns">
                                     <button
                                         type="button"
                                         onClick={() => {
                                             if (!directImageUrl) setDirectImageUrl('https://pub-d1a291624a2449dfa5dc29dc91b022ce.r2.dev/');
                                         }}
-                                        style={{ background: 'rgba(59, 130, 246, 0.12)', border: '1px solid rgba(59, 130, 246, 0.3)', color: 'var(--primary)', borderRadius: '8px', padding: '3px 8px', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer' }}
+                                        className="btn-cdn-quick btn-cdn-r2"
                                     >
                                         ⚡ R2 Images
                                     </button>
@@ -635,13 +627,13 @@ const AssetUploadForm = ({ onComplete, editData = null }) => {
                                         onClick={() => {
                                             if (!directSourceUrl) setDirectSourceUrl('https://f005.backblazeb2.com/file/Adobefamily/');
                                         }}
-                                        style={{ background: 'rgba(16, 185, 129, 0.12)', border: '1px solid rgba(16, 185, 129, 0.3)', color: '#10b981', borderRadius: '8px', padding: '3px 8px', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer' }}
+                                        className="btn-cdn-quick btn-cdn-b2"
                                     >
                                         📦 B2 Adobefamily
                                     </button>
                                 </div>
                             </div>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                            <div className="direct-urls-grid">
                                 <div className="master-input-group">
                                     <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}><ImageIcon size={12} /> Preview Image URL</label>
                                     <input 

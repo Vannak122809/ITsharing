@@ -741,14 +741,215 @@
     color: var(--text-main);
 }
 
-@media (max-width: 900px) {
+/* ==========================================================================
+   Comprehensive Responsive Adaptations for SoftwareUploadForm
+   ========================================================================== */
+
+/* Laptops & Tablets Landscape (< 1024px) */
+@media (max-width: 1024px) {
     .upload-body-grid {
         grid-template-columns: 1fr;
+        gap: 36px;
     }
-    .input-two-col-grid, .dropzone-duo {
+    .drawer-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+    .final-actions-sidebar {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        align-items: start;
+    }
+    .final-actions-sidebar .action-button-group {
+        grid-column: span 2;
+    }
+    .final-actions-sidebar .master-security-disclaimer {
+        grid-column: span 2;
+    }
+}
+
+/* Tablets Portrait (< 768px) */
+@media (max-width: 768px) {
+    .artistic-upload-container {
+        padding: 24px 18px;
+    }
+    .upload-master-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 18px;
+        padding-right: 48px;
+        margin-bottom: 24px;
+    }
+    .header-brand-info {
+        gap: 14px;
+    }
+    .artistic-cat-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 16px;
+    }
+    .text-meta h2 {
+        font-size: 1.45rem;
+    }
+    .upload-header-controls {
+        width: 100%;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .collection-master-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        padding: 14px 16px;
+        margin-bottom: 24px;
+    }
+    .bar-label {
+        border-right: none;
+        border-bottom: 1.5px solid var(--surface-border);
+        padding-right: 0;
+        padding-bottom: 8px;
+        width: 100%;
+    }
+    .collection-pills-scroll {
+        width: 100%;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+    .drawer-grid {
         grid-template-columns: 1fr;
+        gap: 14px;
     }
-    .upload-master-content {
-        padding: 24px;
+    .storage-policy-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    .storage-switch-btns {
+        width: 100%;
+        gap: 6px;
+    }
+    .btn-storage-pill {
+        flex: 1;
+        justify-content: center;
+        text-align: center;
+    }
+    .input-two-col-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    .dropzone-duo {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+    .final-actions-sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+    .drawer-field select,
+    .drawer-field input,
+    .master-input-group input,
+    .master-input-group textarea {
+        font-size: 16px; /* Prevents auto-zoom in iOS Safari */
+    }
+}
+
+/* Mobile Devices (< 480px) */
+@media (max-width: 480px) {
+    .artistic-upload-container {
+        padding: 16px 12px;
+    }
+    .upload-master-header {
+        padding-right: 40px;
+        margin-bottom: 16px;
+    }
+    .text-meta h2 {
+        font-size: 1.25rem;
+    }
+    .text-meta p {
+        font-size: 0.8rem;
+    }
+    .artistic-cat-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+    }
+    .btn-close-dashboard {
+        top: 14px;
+        right: 14px;
+        width: 34px;
+        height: 34px;
+    }
+    .col-pill {
+        padding: 8px 12px;
+        font-size: 0.78rem;
+        border-radius: 10px;
+    }
+    .storage-policy-banner {
+        padding: 12px 14px;
+    }
+    .policy-indicator {
+        font-size: 0.78rem;
+        flex-wrap: wrap;
+    }
+    .btn-storage-pill {
+        padding: 6px 10px;
+        font-size: 0.72rem;
+    }
+    .master-dropzone {
+        padding: 14px;
+        gap: 12px;
+        border-radius: 18px;
+    }
+    .drop-status-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+    }
+    .drop-labels strong {
+        font-size: 0.9rem;
+        max-width: 170px;
+    }
+    .drop-labels p {
+        font-size: 0.75rem;
+    }
+    .card-top-preview {
+        height: 140px;
+    }
+    .card-bottom-info {
+        padding: 16px;
+    }
+    .btn-discard {
+        padding: 14px;
+        font-size: 0.9rem;
+        border-radius: 14px;
+    }
+    .master-publish-btn {
+        padding: 16px;
+        font-size: 0.95rem;
+        border-radius: 16px;
+    }
+}
+
+/* Ultra-compact Phones (< 360px) */
+@media (max-width: 360px) {
+    .artistic-upload-container {
+        padding: 12px 8px;
+    }
+    .text-meta h2 {
+        font-size: 1.15rem;
+    }
+    .cloud-setup-btn {
+        padding: 8px 12px;
+        font-size: 0.75rem;
+    }
+    .pill-os {
+        padding: 6px 10px;
+        font-size: 0.75rem;
+    }
+    .drop-labels strong {
+        max-width: 130px;
     }
 }

@@ -87,14 +87,14 @@ const RequestResource = () => {
   };
 
   return (
-    <div className="container" style={{ paddingTop: '90px', paddingBottom: '60px', minHeight: '85vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+    <div className="container req-resource-container" style={{ paddingTop: '80px', paddingBottom: '50px', minHeight: '85vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
       <div className="form-panel form-panel-wide classic-card" style={{ maxWidth: '640px', width: '100%' }}>
         
-        <div className="form-header" style={{ marginBottom: '28px' }}>
+        <div className="form-header" style={{ marginBottom: '24px' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 14px', borderRadius: '20px', background: 'var(--surface-badge)', color: 'var(--secondary)', fontSize: '0.78rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '12px' }}>
             <Sparkles size={14} /> Classic Archive Request
           </div>
-          <h1 className="text-gold-gradient" style={{ fontSize: '2.1rem', marginBottom: '6px' }}>{t('request_resource_title')}</h1>
+          <h1 className="text-gold-gradient" style={{ fontSize: 'clamp(1.5rem, 4vw, 2.1rem)', marginBottom: '6px' }}>{t('request_resource_title')}</h1>
           <p style={{ fontSize: '0.92rem', color: 'var(--text-muted)' }}>{t('request_resource_desc')}</p>
         </div>
 
@@ -130,7 +130,7 @@ const RequestResource = () => {
             </div>
 
             {/* Visual indicator of selected type */}
-            <div style={{ 
+            <div className="req-type-pill-grid" style={{ 
               display: 'flex', gap: '10px', marginBottom: '24px', flexWrap: 'wrap' 
             }}>
               {Object.entries(typeIcons).map(([key, icon]) => (
@@ -139,13 +139,15 @@ const RequestResource = () => {
                   type="button"
                   onClick={() => setType(key)}
                   style={{
-                    display: 'flex', alignItems: 'center', gap: '8px',
-                    padding: '9px 18px', borderRadius: '12px',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                    padding: '9px 16px', borderRadius: '12px',
                     border: `1.5px solid ${type === key ? 'var(--secondary)' : 'var(--surface-border-subtle)'}`,
                     background: type === key ? 'var(--surface-badge)' : 'transparent',
                     color: type === key ? 'var(--secondary)' : 'var(--text-muted)',
                     fontWeight: 600, fontSize: '0.84rem', cursor: 'pointer',
                     fontFamily: 'inherit',
+                    flex: '1 1 calc(50% - 10px)',
+                    minWidth: '120px',
                     transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
                   }}
                 >

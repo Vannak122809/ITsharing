@@ -129,3 +129,257 @@
 .add-new-trigger:hover { opacity: 1; border-style: solid; }
 
 @keyframes slideRight { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+
+/* Direct CDN Panel Styles */
+.direct-urls-panel {
+    background: var(--surface-badge);
+    border: 1px solid var(--surface-border);
+    border-radius: 18px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: background-color 0.3s, border-color 0.3s;
+}
+
+.direct-urls-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.direct-urls-title {
+    font-size: 0.78rem;
+    font-weight: 800;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.direct-urls-quick-btns {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.btn-cdn-quick {
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.15s, opacity 0.2s;
+}
+.btn-cdn-quick:hover {
+    transform: translateY(-1px);
+    opacity: 0.9;
+}
+.btn-cdn-r2 {
+    background: rgba(59, 130, 246, 0.12);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    color: var(--primary);
+}
+.btn-cdn-b2 {
+    background: rgba(16, 185, 129, 0.12);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    color: #10b981;
+}
+
+.direct-urls-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+/* ==========================================================================
+   Responsive Adaptations for AssetUploadForm
+   ========================================================================== */
+
+/* Laptops & Tablets Landscape (< 1024px) */
+@media (max-width: 1024px) {
+    .upload-body-grid {
+        grid-template-columns: 1fr;
+        gap: 36px;
+    }
+    .drawer-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+    .final-actions-sidebar {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        align-items: start;
+    }
+    .final-actions-sidebar .action-button-group {
+        grid-column: span 2;
+    }
+    .final-actions-sidebar .master-security-disclaimer {
+        grid-column: span 2;
+    }
+}
+
+/* Tablets Portrait (< 768px) */
+@media (max-width: 768px) {
+    .artistic-upload-container {
+        padding: 24px 18px;
+    }
+    .upload-master-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 18px;
+        padding-right: 48px;
+        margin-bottom: 24px;
+    }
+    .header-brand-info {
+        gap: 14px;
+    }
+    .artistic-cat-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 16px;
+    }
+    .text-meta h2 {
+        font-size: 1.45rem;
+    }
+    .upload-header-controls {
+        width: 100%;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .collection-master-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        padding: 14px 16px;
+        margin-bottom: 24px;
+    }
+    .bar-label {
+        border-right: none;
+        border-bottom: 1.5px solid var(--surface-border);
+        padding-right: 0;
+        padding-bottom: 8px;
+        width: 100%;
+    }
+    .collection-pills-scroll {
+        width: 100%;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+    .drawer-grid {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+    .direct-urls-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    .direct-urls-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    .dropzone-duo {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+    .final-actions-sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+    .drawer-field select,
+    .drawer-field input,
+    .master-input-group input {
+        font-size: 16px; /* Prevents auto-zoom in iOS Safari */
+    }
+}
+
+/* Mobile Devices (< 480px) */
+@media (max-width: 480px) {
+    .artistic-upload-container {
+        padding: 16px 12px;
+    }
+    .upload-master-header {
+        padding-right: 40px;
+        margin-bottom: 16px;
+    }
+    .text-meta h2 {
+        font-size: 1.25rem;
+    }
+    .text-meta p {
+        font-size: 0.8rem;
+    }
+    .artistic-cat-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+    }
+    .btn-close-dashboard {
+        top: 14px;
+        right: 14px;
+        width: 34px;
+        height: 34px;
+    }
+    .col-pill {
+        padding: 8px 12px;
+        font-size: 0.78rem;
+        border-radius: 10px;
+    }
+    .master-dropzone {
+        padding: 14px;
+        gap: 12px;
+        border-radius: 18px;
+    }
+    .drop-status-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+    }
+    .drop-labels strong {
+        font-size: 0.9rem;
+        max-width: 170px;
+    }
+    .drop-labels p {
+        font-size: 0.75rem;
+    }
+    .card-top-preview {
+        height: 140px;
+    }
+    .card-bottom-info {
+        padding: 16px;
+    }
+    .btn-discard {
+        padding: 14px;
+        font-size: 0.9rem;
+        border-radius: 14px;
+    }
+    .master-publish-btn {
+        padding: 16px;
+        font-size: 0.95rem;
+        border-radius: 16px;
+    }
+}
+
+/* Ultra-compact Phones (< 360px) */
+@media (max-width: 360px) {
+    .artistic-upload-container {
+        padding: 12px 8px;
+    }
+    .text-meta h2 {
+        font-size: 1.15rem;
+    }
+    .cloud-setup-btn {
+        padding: 8px 12px;
+        font-size: 0.75rem;
+    }
+    .drop-labels strong {
+        max-width: 130px;
+    }
+}

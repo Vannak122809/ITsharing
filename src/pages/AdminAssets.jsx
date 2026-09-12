@@ -565,7 +565,7 @@ const AdminAssets = () => {
 
             <style dangerouslySetInnerHTML={{ __html: `
                 .unified-admin-page { display: flex; min-height: 100vh; background: var(--bg-color); color: var(--text-main); }
-                .admin-sidebar { width: 280px; background: var(--surface); border-right: 1px solid var(--surface-border); padding: 40px 24px; display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; backdrop-filter: var(--blur); }
+                .admin-sidebar { width: 280px; background: var(--surface); border-right: 1px solid var(--surface-border); padding: 40px 24px; display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; backdrop-filter: var(--blur); transition: all 0.3s ease; }
                 .sidebar-brand { display: flex; align-items: center; gap: 12px; margin-bottom: 48px; }
                 .b-icon { background: var(--primary); color: white; width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 900; }
                 .sidebar-brand span { font-size: 1.1rem; font-weight: 800; color: var(--text-main); }
@@ -583,7 +583,7 @@ const AdminAssets = () => {
                 .pulse { width: 8px; height: 8px; border-radius: 50%; background: #10b981; animation: pulse 2s infinite; }
                 @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(16,185,129,0.4); } 70% { box-shadow: 0 0 0 10px rgba(16,185,129,0); } 100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); } }
 
-                .admin-content { flex: 1; padding: 48px; max-width: 1400px; margin: 0 auto; width: 100%; }
+                .admin-content { flex: 1; padding: 48px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing: border-box; }
                 .content-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
                 .h-text h1 { font-size: 2rem; font-weight: 900; color: var(--text-main); margin-bottom: 4px; }
                 .h-text p { color: var(--text-muted); font-size: 1rem; }
@@ -594,17 +594,17 @@ const AdminAssets = () => {
                 .stat-pill { background: var(--surface); padding: 8px 16px; border-radius: 12px; font-size: 0.85rem; display: flex; align-items: center; gap: 8px; border: 1px solid var(--surface-border); color: var(--text-muted); }
                 .stat-pill strong { color: var(--text-main); }
 
-                .table-wrapper { background: var(--surface); border-radius: 28px; padding: 0; overflow: hidden; border: 1px solid var(--surface-border); box-shadow: var(--shadow-glass); }
-                .table-controls { padding: 24px; border-bottom: 1px solid var(--surface-border); display: flex; justify-content: space-between; }
+                .table-wrapper { background: var(--surface); border-radius: 28px; padding: 0; overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--surface-border); box-shadow: var(--shadow-glass); }
+                .table-controls { padding: 24px; border-bottom: 1px solid var(--surface-border); display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
                 .search-bar { display: flex; align-items: center; gap: 12px; background: var(--surface-badge); padding: 12px 20px; border-radius: 14px; width: 400px; }
                 .search-bar input { border: none; background: transparent; outline: none; width: 100%; font-weight: 600; font-size: 0.95rem; color: var(--text-main); }
 
-                .modern-table { width: 100%; border-collapse: collapse; text-align: left; }
+                .modern-table { width: 100%; min-width: 720px; border-collapse: collapse; text-align: left; }
                 .modern-table th { padding: 20px 24px; background: var(--surface-badge); font-size: 0.75rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; border-bottom: 1px solid var(--surface-border); }
                 .modern-table td { padding: 20px 24px; border-bottom: 1px solid var(--surface-border); }
                 
                 .asset-cell, .user-cell { display: flex; align-items: center; gap: 16px; }
-                .a-preview, .u-avatar { width: 50px; height: 50px; border-radius: 12px; overflow: hidden; background: var(--surface-badge); display: flex; align-items: center; justify-content: center; }
+                .a-preview, .u-avatar { width: 50px; height: 50px; border-radius: 12px; overflow: hidden; background: var(--surface-badge); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
                 .a-preview img, .u-avatar img { width: 100%; height: 100%; object-fit: cover; }
                 .a-info strong, .u-info strong { display: block; font-size: 1rem; color: var(--text-main); }
                 .a-info span, .u-info span { font-size: 0.8rem; color: var(--text-muted); }
@@ -651,6 +651,135 @@ const AdminAssets = () => {
                 .btn-admin-pagination { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--surface-border); background: var(--surface); color: var(--text-main); cursor: pointer; transition: 0.2s; }
                 .btn-admin-pagination:not(:disabled):hover { background: var(--primary); color: white; border-color: var(--primary); transform: translateY(-2px); }
                 .btn-admin-pagination:disabled { opacity: 0.5; cursor: not-allowed; background: transparent; }
+
+                /* ── Tablets & Laptops (< 1024px) ── */
+                @media (max-width: 1024px) {
+                    .unified-admin-page {
+                        flex-direction: column;
+                    }
+                    .admin-sidebar {
+                        width: 100%;
+                        height: auto;
+                        position: relative;
+                        top: 0;
+                        padding: 16px 20px;
+                        border-right: none;
+                        border-bottom: 1px solid var(--surface-border);
+                        flex-direction: row;
+                        align-items: center;
+                        justify-content: space-between;
+                        flex-wrap: wrap;
+                        gap: 12px;
+                    }
+                    .sidebar-brand {
+                        margin-bottom: 0;
+                    }
+                    .side-nav {
+                        flex-direction: row;
+                        flex-wrap: wrap;
+                        gap: 8px;
+                        flex: unset;
+                    }
+                    .side-nav button {
+                        padding: 10px 14px;
+                        border-radius: 12px;
+                        font-size: 0.85rem;
+                    }
+                    .sidebar-footer {
+                        display: none;
+                    }
+                    .admin-content {
+                        padding: 24px 20px;
+                        max-width: 100%;
+                    }
+                    .content-header {
+                        flex-wrap: wrap;
+                        gap: 16px;
+                        margin-bottom: 24px;
+                    }
+                    .stats-row {
+                        flex-wrap: wrap;
+                        gap: 10px;
+                        margin-bottom: 24px;
+                    }
+                    .stat-pill {
+                        flex: 1 1 calc(50% - 10px);
+                        min-width: 130px;
+                    }
+                    .search-bar {
+                        width: 100%;
+                        max-width: 100%;
+                    }
+                    .upload-modal-overlay {
+                        padding: 16px 12px 32px 12px;
+                    }
+                    .modal-inner {
+                        margin: 10px auto;
+                        border-radius: 20px;
+                    }
+                }
+
+                /* ── Mobile Devices (< 640px) ── */
+                @media (max-width: 640px) {
+                    .admin-sidebar {
+                        padding: 12px 14px;
+                    }
+                    .side-nav {
+                        width: 100%;
+                        justify-content: flex-start;
+                        gap: 6px;
+                    }
+                    .side-nav button {
+                        padding: 8px 12px;
+                        font-size: 0.8rem;
+                        gap: 6px;
+                    }
+                    .admin-content {
+                        padding: 16px 12px;
+                    }
+                    .h-text h1 {
+                        font-size: 1.5rem;
+                    }
+                    .h-text p {
+                        font-size: 0.88rem;
+                    }
+                    .btn-upload-new {
+                        width: 100%;
+                        justify-content: center;
+                        padding: 12px 20px;
+                        font-size: 0.92rem;
+                    }
+                    .stat-pill {
+                        flex: 1 1 100%;
+                        padding: 10px 14px;
+                    }
+                    .table-controls {
+                        padding: 16px;
+                    }
+                    .upload-modal-overlay {
+                        padding: 8px 6px 24px 6px;
+                    }
+                    .modal-inner {
+                        border-radius: 16px;
+                        margin: 4px auto;
+                    }
+                    .edit-modal-small {
+                        padding: 20px 16px;
+                        border-radius: 20px;
+                        width: 100%;
+                    }
+                    .edit-grid {
+                        grid-template-columns: 1fr;
+                        gap: 16px;
+                    }
+                    .edit-actions {
+                        flex-direction: column;
+                    }
+                    .btn-cancel, .btn-save {
+                        width: 100%;
+                        justify-content: center;
+                    }
+                }
             `}} />
         </div>
     );

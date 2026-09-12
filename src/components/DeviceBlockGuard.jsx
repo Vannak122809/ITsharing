@@ -49,42 +49,47 @@ const DeviceBlockGuard = ({ children }) => {
 
   // Real-time Firestore Blocked Entities listener
   useEffect(() => {
-    const q = query(collection(db, 'blocked_entities'));
-    const unsub = onSnapshot(q, (snap) => {
-      const blockedList = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      const safeId = (str) => (str || '').toLowerCase().replace(/[^a-zA-Z0-9._-]/g, '_');
+    if (!db) return;
+    try {
+      const q = query(collection(db, 'blocked_entities'));
+      const unsub = onSnapshot(q, (snap) => {
+        const blockedList = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        const safeId = (str) => (str || '').toLowerCase().replace(/[^a-zA-Z0-9._-]/g, '_');
 
-      const matched = blockedList.find(b => {
-        // Device ID match
-        if (b.deviceId && b.deviceId === deviceId) return true;
-        if (b.type === 'device' && b.id === `device_${safeId(deviceId)}`) return true;
+        const matched = blockedList.find(b => {
+          // Device ID match
+          if (b.deviceId && b.deviceId === deviceId) return true;
+          if (b.type === 'device' && b.id === `device_${safeId(deviceId)}`) return true;
 
-        // IP Address match
-        if (userIP) {
-          if (b.type === 'ip' && b.ip && b.ip.trim() === userIP.trim()) return true;
-          if (b.id === `ip_${safeId(userIP)}`) return true;
+          // IP Address match
+          if (userIP) {
+            if (b.type === 'ip' && b.ip && b.ip.trim() === userIP.trim()) return true;
+            if (b.id === `ip_${safeId(userIP)}`) return true;
+          }
+
+          // Account Email match
+          if (currentUser?.email) {
+            const userEmail = currentUser.email.toLowerCase().trim();
+            if (b.email && b.email.toLowerCase().trim() === userEmail) return true;
+            if (b.id === `email_${safeId(userEmail)}`) return true;
+          }
+
+          return false;
+        });
+
+        if (matched) {
+          setIsBlocked(true);
+          setBlockData(matched);
+        } else {
+          setIsBlocked(false);
+          setBlockData(null);
         }
+      }, () => {});
 
-        // Account Email match
-        if (currentUser?.email) {
-          const userEmail = currentUser.email.toLowerCase().trim();
-          if (b.email && b.email.toLowerCase().trim() === userEmail) return true;
-          if (b.id === `email_${safeId(userEmail)}`) return true;
-        }
-
-        return false;
-      });
-
-      if (matched) {
-        setIsBlocked(true);
-        setBlockData(matched);
-      } else {
-        setIsBlocked(false);
-        setBlockData(null);
-      }
-    }, () => {});
-
-    return () => unsub();
+      return () => unsub();
+    } catch (err) {
+      console.warn('[DeviceBlockGuard] listener setup failed:', err);
+    }
   }, [deviceId, userIP, currentUser]);
 
   const handleSignOut = async () => {
