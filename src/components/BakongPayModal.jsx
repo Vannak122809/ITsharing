@@ -1,78 +1,69 @@
-import React, { useMemo, useState, useEffect } from 'react';
-import { BakongKHQR, khqrData, IndividualInfo } from 'bakong-khqr';
+import React, { useState, useEffect } from 'react';
 import { X, Copy, CheckCircle2, Download, QrCode, ShieldCheck, Share2, CornerUpRight } from 'lucide-react';
+import { generateBakongKHQR, createBrandedKhqrCard, formatKhqrAmount, DEFAULT_BAKONG_ACCOUNT, DEFAULT_MERCHANT_NAME } from '../utils/bakongService';
 
 /**
  * BakongPayModal
- * - Generates KHQR string locally using bakong-khqr
- * - Fetches official branded image (with red header) from Bakong Relay API
- * - Falls back to qrserver.com if API fails
+ * - Generates standard Bakong KHQR locally using official NBC EMVCo spec
+ * - Automatically renders official branded card with canvas (red header, merchant name, amount)
+ * - 100% offline-resilient: zero reliance on external relays, eliminating Cloudflare CORS / API failures
  */
 const BakongPayModal = ({
   isOpen,
   onClose,
   amount = 1.0,
   currency = 'USD',
-  accountID = 'vannak_seun@bkrt',
-  merchantName = 'VANNAK SEUN'
+  accountID = DEFAULT_BAKONG_ACCOUNT,
+  merchantName = DEFAULT_MERCHANT_NAME
 }) => {
   const [copied, setCopied] = useState(false);
   const [imgSrc, setImgSrc] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(false);
 
-  // Step 1 — Locally generate the raw KHQR string
-  const qrString = useMemo(() => {
-    try {
-      const info = new IndividualInfo(
-        accountID,
-        currency === 'USD' ? khqrData.currency.usd : khqrData.currency.khr,
-        merchantName,
-        'Phnom Penh',
-        { amount }
-      );
-      const res = new BakongKHQR().generateIndividual(info);
-      if (res.status.code === 0) return res.data.qr;
-      return '';
-    } catch (e) {
-      console.error('KHQR gen error:', e);
-      return '';
-    }
-  }, [amount, currency, accountID, merchantName]);
-
-  // Step 2 — Fetch official branded image from Bakong Relay API
   useEffect(() => {
-    if (!isOpen || !qrString) return;
+    if (!isOpen) return;
 
     setLoading(true);
-    setError(false);
     setImgSrc('');
+    let isMounted = true;
 
-    fetch('https://api.bakongrelay.com/v1/generate_khqr_image', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ qr: qrString })
-    })
-      .then(res => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
-      })
-      .then(data => {
-        if (data.status === 1 && data.data?.base64) {
-          setImgSrc(data.data.base64);
-        } else {
-          throw new Error('No base64 in response');
+    async function generateCard() {
+      try {
+        const { qrDataUrl } = await generateBakongKHQR({
+          accountID,
+          merchantName,
+          amount: Number(amount),
+          currency,
+          storeLabel: 'ITsharing'
+        });
+
+        if (!isMounted) return;
+
+        // Render official Bakong KHQR card with canvas
+        const cardUrl = await createBrandedKhqrCard({
+          qrDataUrl,
+          merchantName,
+          amount: Number(amount),
+          currency,
+          accountID
+        });
+
+        if (isMounted) {
+          setImgSrc(cardUrl || qrDataUrl);
         }
-        setLoading(false);
-      })
-      .catch(err => {
-        console.warn('Relay API failed, using fallback:', err.message);
-        setImgSrc(
-          `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(qrString)}&size=400x400&format=svg`
-        );
-        setLoading(false);
-      });
-  }, [isOpen, qrString]);
+      } catch (err) {
+        console.error('[BakongPayModal] Generation error:', err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+
+    generateCard();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isOpen, amount, currency, accountID, merchantName]);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(accountID);
@@ -81,18 +72,16 @@ const BakongPayModal = ({
   };
 
   const handleDownload = () => {
+    if (!imgSrc) return;
     const link = document.createElement('a');
     link.href = imgSrc;
-    link.download = `KHQR_${merchantName.replace(/\s+/g, '_')}.png`;
+    link.download = `KHQR_${merchantName.replace(/\s+/g, '_')}_${currency}_${amount}.png`;
     link.click();
   };
 
   if (!isOpen) return null;
 
-  const formatAmount = () =>
-    currency === 'USD'
-      ? `$${Number(amount).toFixed(2)}`
-      : `${new Intl.NumberFormat('km-KH').format(amount)} ៛`;
+  const formatAmount = () => formatKhqrAmount(amount, currency);
 
   return (
     <div className="bk-minimal-overlay" onClick={onClose}>

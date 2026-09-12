@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Coffee, X, Heart, QrCode, Download, Clock, Info } from 'lucide-react';
 import { useLanguage } from '../LanguageContext';
 
-const RELAY_BASE = 'https://api.bakongrelay.com/v1';
+import { generateBakongKHQR, createBrandedKhqrCard, formatKhqrAmount, DEFAULT_BAKONG_ACCOUNT } from '../utils/bakongService';
+
 const EXPIRY_TIME = 10 * 60; // 10 minutes
 
 const CoffeeDonate = () => {
@@ -11,6 +12,7 @@ const CoffeeDonate = () => {
   const [amount, setAmount] = useState(1.0);
   const [currency, setCurrency] = useState('USD');
   const [qrImage, setQrImage] = useState('');
+  const [brandedCardImage, setBrandedCardImage] = useState('');
   const [qrString, setQrString] = useState('');
   const [loading, setLoading] = useState(false);
   const [selectedQr, setSelectedQr] = useState(null);
@@ -44,57 +46,59 @@ const CoffeeDonate = () => {
     return () => clearInterval(timerRef.current);
   }, [isOpen, amount, currency]);
 
+  // Generate authentic Bakong KHQR locally in memory (zero external network reliance)
   useEffect(() => {
     if (!isOpen) return;
     setLoading(true);
     setQrImage('');
+    setBrandedCardImage('');
     
-    fetch(`${RELAY_BASE}/generate_qr`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        merchant_name: 'Vannak Tech',
-        bank_account: 'vannak_seun@bkrt',
-        merchant_city: 'Phnom Penh',
-        amount: Number(amount),
-        currency: currency,
-        store_label: 'ITsharing',
-        static: false
-      })
-    })
-    .then(r => r.json())
-    .then(res => {
-      if (res.responseCode === 0 && res.data?.qr) {
-        setQrString(res.data.qr);
-        return fetch(`${RELAY_BASE}/generate_khqr_image`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ qr: res.data.qr })
+    let isMounted = true;
+
+    async function loadKHQR() {
+      try {
+        const { qrString: generatedQr, qrDataUrl } = await generateBakongKHQR({
+          accountID: DEFAULT_BAKONG_ACCOUNT,
+          merchantName: 'Vannak Tech',
+          amount: Number(amount),
+          currency,
+          storeLabel: 'ITsharing'
         });
+
+        if (!isMounted) return;
+        setQrString(generatedQr);
+        setQrImage(qrDataUrl);
+
+        // Generate the authentic official Bakong KHQR stand card on canvas
+        const cardUrl = await createBrandedKhqrCard({
+          qrDataUrl,
+          merchantName: 'Vannak Tech',
+          amount: Number(amount),
+          currency,
+          accountID: DEFAULT_BAKONG_ACCOUNT
+        });
+
+        if (isMounted) {
+          setBrandedCardImage(cardUrl);
+        }
+      } catch (err) {
+        console.error('[CoffeeDonate] Local KHQR generation error:', err);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
       }
-      throw new Error('QR generation failed');
-    })
-    .then(r => r.json())
-    .then(res => {
-      if (res.responseCode === 0 && res.data?.image) {
-        setQrImage(res.data.image);
-      } else {
-        throw new Error('Image generation failed');
-      }
-      setLoading(false);
-    })
-    .catch(err => {
-      console.warn('Fallback due to:', err.message);
-      if (qrString) {
-        setQrImage(`https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(qrString)}&size=300x300`);
-      }
-      setLoading(false);
-    });
+    }
+
+    loadKHQR();
+
+    return () => {
+      isMounted = false;
+    };
   }, [isOpen, amount, currency]);
 
   const formatAmount = (val) => {
-    if (currency === 'KHR') return new Intl.NumberFormat('km-KH').format(val) + ' ៛';
-    return '$' + Number(val).toFixed(2);
+    return formatKhqrAmount(val, currency);
   };
 
   const formatTime = (seconds) => {
@@ -105,9 +109,11 @@ const CoffeeDonate = () => {
 
   const handleDownload = (e) => {
     e?.stopPropagation();
+    const downloadImg = brandedCardImage || qrImage;
+    if (!downloadImg) return;
     const link = document.createElement('a');
-    link.href = qrImage;
-    link.download = `KHQR_Donate.png`;
+    link.href = downloadImg;
+    link.download = `Bakong_KHQR_${currency}_${amount}.png`;
     link.click();
   };
 
@@ -180,7 +186,7 @@ const CoffeeDonate = () => {
               <div className="bakong-payment-card qr-only">
                 <div 
                   className={`qr-display-box-minimal ${loading ? 'is-loading' : ''}`}
-                  onClick={() => qrImage && setSelectedQr({ img: qrImage, title: 'Bakong KHQR' })}
+                  onClick={() => qrImage && setSelectedQr({ img: brandedCardImage || qrImage, title: 'Bakong KHQR' })}
                 >
                   {loading ? (
                     <div className="qr-loader">

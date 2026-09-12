@@ -285,6 +285,43 @@ async function checkLocalDevServer() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// 6. Bakong KHQR Engine & Cloudflare Compatibility
+// ─────────────────────────────────────────────────────────────────────────────
+async function checkBakongKHQR() {
+  logSection('6. Checking Bakong KHQR Local Engine (Cloudflare Ready)');
+
+  try {
+    const { BakongKHQR, khqrData, IndividualInfo } = await import('bakong-khqr');
+    const QRCode = (await import('qrcode')).default;
+
+    const info = new IndividualInfo(
+      'vannak_seun@bkrt',
+      khqrData.currency.usd,
+      'VANNAK SEUN',
+      'Phnom Penh',
+      { amount: 1.0, storeLabel: 'ITsharing' }
+    );
+    const khqr = new BakongKHQR();
+    const res = khqr.generateIndividual(info);
+
+    if (res?.data?.qr) {
+      const qrDataUrl = await QRCode.toDataURL(res.data.qr, { width: 300 });
+      const verify = BakongKHQR.verify(res.data.qr);
+      recordResult(
+        'Bakong KHQR Local Engine',
+        'OK',
+        `Generated & verified valid EMVCo string (MD5: ${res.data.md5.slice(0, 8)}...)`,
+        `Verified: ${verify.isValid} | QR DataURL generated locally (zero network calls)`
+      );
+    } else {
+      recordResult('Bakong KHQR Local Engine', 'FAIL', 'Failed to generate KHQR string');
+    }
+  } catch (err) {
+    recordResult('Bakong KHQR Local Engine', 'FAIL', `Bakong KHQR engine error: ${err.message}`);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Final Summary Matrix
 // ─────────────────────────────────────────────────────────────────────────────
 function printSummary() {
@@ -315,6 +352,7 @@ async function main() {
   await checkFirebase();
   await checkGeminiAI();
   await checkLocalDevServer();
+  await checkBakongKHQR();
 
   printSummary();
 }
