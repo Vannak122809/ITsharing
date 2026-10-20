@@ -40,8 +40,14 @@ self.addEventListener('fetch', (event) => {
   const req = event.request;
   const url = new URL(req.url);
 
-  // Bypass non-GET requests and API calls
-  if (req.method !== 'GET' || url.pathname.startsWith('/api/') || url.hostname.includes('firestore.googleapis.com')) {
+  // Bypass non-GET requests, localhost dev, and API calls
+  if (
+    req.method !== 'GET' ||
+    url.hostname === 'localhost' ||
+    url.hostname === '127.0.0.1' ||
+    url.pathname.startsWith('/api/') ||
+    url.hostname.includes('firestore.googleapis.com')
+  ) {
     return;
   }
 

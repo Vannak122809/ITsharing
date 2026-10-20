@@ -22,11 +22,18 @@ if (import.meta.env.VITE_SENTRY_DSN) {
   });
 }
 
-// ── Service Worker Registration for High-Traffic Static Caching ────
+// ── Service Worker Registration for High-Traffic Static Caching (Prod only) ────
 if ('serviceWorker' in navigator && typeof window !== 'undefined') {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker?.register('/sw.js').catch(() => {});
-  });
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    // In local dev, unregister any lingering service workers to avoid stale cache issues
+    navigator.serviceWorker.getRegistrations().then(regs => {
+      for (const reg of regs) reg.unregister();
+    });
+  } else {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker?.register('/sw.js').catch(() => {});
+    });
+  }
 }
 
 // ── Transparent Error Boundary Fallback ──────────────────────────────

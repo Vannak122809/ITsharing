@@ -8,7 +8,7 @@
  * R2 secret keys NEVER reach the browser.
  */
 
-const API_BASE = import.meta.env.DEV ? 'http://localhost:3000' : '';
+const API_BASE = '';
 
 /**
  * Upload a file to R2 via a server-issued pre-signed URL.

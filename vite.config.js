@@ -77,6 +77,43 @@ function b2DevMiddleware() {
           res.end(JSON.stringify({ error: err.message }));
         }
       });
+
+      server.middlewares.use('/api/check-bakong-payment', async (req, res, next) => {
+        if (req.method === 'OPTIONS') {
+          res.setHeader('Access-Control-Allow-Origin', '*');
+          res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+          res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+          res.statusCode = 200;
+          return res.end();
+        }
+        if (req.method !== 'POST') return next();
+
+        let bodyStr = '';
+        req.on('data', chunk => { bodyStr += chunk; });
+        req.on('end', async () => {
+          try {
+            const body = JSON.parse(bodyStr || '{}');
+            const handler = (await import('./api/check-bakong-payment.js')).default;
+            await handler({ method: 'POST', body }, {
+              setHeader: (k, v) => res.setHeader(k, v),
+              status: (code) => {
+                res.statusCode = code;
+                return {
+                  json: (data) => {
+                    res.setHeader('Content-Type', 'application/json');
+                    res.end(JSON.stringify(data));
+                  },
+                  end: () => res.end()
+                };
+              }
+            });
+          } catch (err) {
+            res.statusCode = 500;
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({ error: err.message }));
+          }
+        });
+      });
     }
   };
 }

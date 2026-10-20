@@ -234,15 +234,6 @@ const SoftwareViewer = () => {
     fetchSoftwareDetails();
   }, [id]);
 
-  if (!software) {
-    return (
-      <div className="container" style={{ paddingTop: '100px', textAlign: 'center', minHeight: '80vh' }}>
-        <h2 className="text-gradient">Software Not Found</h2>
-        <Link to="/software" className="btn btn-outline" style={{ marginTop: '24px' }}><ArrowLeft size={16} /> Back to Software Base</Link>
-      </div>
-    );
-  }
-
   const resolvedDownloadUrl = useMemo(() => {
     if (!software?.downloadUrl) return '#';
     const url = software.downloadUrl;
@@ -258,6 +249,15 @@ const SoftwareViewer = () => {
     }
     return url;
   }, [software?.downloadUrl]);
+
+  if (!software) {
+    return (
+      <div className="container" style={{ paddingTop: '100px', textAlign: 'center', minHeight: '80vh' }}>
+        <h2 className="text-gradient">Software Not Found</h2>
+        <Link to="/software" className="btn btn-outline" style={{ marginTop: '24px' }}><ArrowLeft size={16} /> Back to Software Base</Link>
+      </div>
+    );
+  }
 
   return (
     <div className="container" style={{ paddingTop: '100px', minHeight: '100vh', paddingBottom: '100px' }}>

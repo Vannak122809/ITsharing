@@ -682,7 +682,7 @@ const Courses = () => {
     if (courseId && !selectedCourse) {
       const courseToOpen = courseData.find(c => String(c.id) === courseId);
       if (courseToOpen) {
-        handleStartCourse(courseToOpen);
+        setTimeout(() => handleStartCourse(courseToOpen), 0);
       }
     }
   }, []); // Remove selectedCourse to prevent infinite loop

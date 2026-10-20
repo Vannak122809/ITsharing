@@ -291,24 +291,29 @@ async function checkBakongKHQR() {
   logSection('6. Checking Bakong KHQR Local Engine (Cloudflare Ready)');
 
   try {
-    const { BakongKHQR, khqrData, IndividualInfo } = await import('bakong-khqr');
+    const { KHQR, TAG, CURRENCY } = await import('ts-khqr');
     const QRCode = (await import('qrcode')).default;
 
-    const info = new IndividualInfo(
-      'vannak_seun@bkrt',
-      khqrData.currency.usd,
-      'VANNAK SEUN',
-      'Phnom Penh',
-      { amount: 1.0, storeLabel: 'ITsharing' }
-    );
-    const khqr = new BakongKHQR();
-    const res = khqr.generateIndividual(info);
+    const payload = {
+      tag: TAG.INDIVIDUAL,
+      accountID: 'vannak_seun@bkrt',
+      merchantName: 'VANNAK SEUN',
+      merchantCity: 'Phnom Penh',
+      currency: CURRENCY.USD,
+      amount: 1.0,
+      expirationTimestamp: Date.now() + 10 * 60 * 1000,
+      additionalData: {
+        storeLabel: 'ITsharing'
+      }
+    };
+
+    const res = KHQR.generate(payload);
 
     if (res?.data?.qr) {
       const qrDataUrl = await QRCode.toDataURL(res.data.qr, { width: 300 });
-      const verify = BakongKHQR.verify(res.data.qr);
+      const verify = KHQR.verify(res.data.qr);
       recordResult(
-        'Bakong KHQR Local Engine',
+        'Bakong KHQR Local Engine (ts-khqr)',
         'OK',
         `Generated & verified valid EMVCo string (MD5: ${res.data.md5.slice(0, 8)}...)`,
         `Verified: ${verify.isValid} | QR DataURL generated locally (zero network calls)`

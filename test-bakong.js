@@ -1,25 +1,26 @@
-import { BakongKHQR, khqrData, IndividualInfo } from 'bakong-khqr';
+import { KHQR, TAG, CURRENCY } from 'ts-khqr';
 import qrcode from 'qrcode-terminal';
 
 async function testBakong() {
   console.log('\n╔════════════════════════════════════════╗');
-  console.log('║       Bakong KHQR Generator Test       ║');
+  console.log('║    Bakong KHQR Generator (ts-khqr)     ║');
   console.log('╚════════════════════════════════════════╝\n');
 
   try {
-    const individualInfo = new IndividualInfo(
-      'vannak_seun@bkrt',
-      khqrData.currency.usd,
-      'Vannak Tech',
-      'Phnom Penh',
-      {
-        amount: 1.0,
+    const payload = {
+      tag: TAG.INDIVIDUAL,
+      accountID: 'vannak_seun@bkrt',
+      merchantName: 'Vannak Tech',
+      merchantCity: 'Phnom Penh',
+      currency: CURRENCY.USD,
+      amount: 1.0,
+      expirationTimestamp: Date.now() + 10 * 60 * 1000,
+      additionalData: {
         storeLabel: 'ITsharing'
       }
-    );
+    };
 
-    const khqr = new BakongKHQR();
-    const result = khqr.generateIndividual(individualInfo);
+    const result = KHQR.generate(payload);
 
     if (result.status.code === 0) {
       const qrString = result.data.qr;
@@ -32,8 +33,17 @@ async function testBakong() {
       console.log('🔒 MD5 Hash     :', md5Hash);
 
       // Verify
-      const verify = BakongKHQR.verify(qrString);
+      const verify = KHQR.verify(qrString);
       console.log('✔️  Is Valid      :', verify.isValid ? 'YES ✅' : 'NO ❌');
+
+      // Parse verification
+      const parsed = KHQR.parse(qrString);
+      console.log('🔍 Parsed Data  :', {
+        merchant: parsed.data.merchantName,
+        currency: parsed.data.transactionCurrency === '840' ? 'USD' : 'KHR',
+        amount: parsed.data.transactionAmount,
+        store: parsed.data.storeLabel
+      });
 
       console.log('\n─────────── Scan with Bakong App ───────────\n');
 

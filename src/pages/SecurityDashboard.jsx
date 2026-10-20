@@ -435,9 +435,12 @@ const SecurityDashboard = ({ user }) => {
         if (l.metaEmail) acc[key].emails.add(l.metaEmail);
         // Keep highest threat score
         if ((l.threatScore || 0) > (acc[key].threatScore || 0)) {
+          const currentCount = acc[key].count;
+          const emails = acc[key].emails;
           Object.assign(acc[key], l);
+          acc[key].count = currentCount;
+          acc[key].emails = emails;
         }
-        acc[key].count = acc[key].count; // keep count
         return acc;
       }, {})
   ).filter(g => g.count >= 3).sort((a, b) => b.count - a.count);
