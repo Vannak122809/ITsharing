@@ -24,7 +24,11 @@ export default async function handler(req, res) {
       return res.status ? res.status(400).json(errRes) : new Response(JSON.stringify(errRes), { status: 400 });
     }
 
-    const token = process.env.BAKONG_TOKEN || process.env.VITE_BAKONG_TOKEN;
+    const token =
+      process.env.BAKONG_TOKEN ||
+      process.env.VITE_BAKONG_TOKEN ||
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjp7ImlkIjoiZmI3ZTE0MWI2OGQzNDdkYyJ9LCJpYXQiOjE3OTI0NzQ4MzksImV4cCI6MTgwMDI1MDgzOX0.-Zy6jl7JA1WBzMWZKckjVliOUAwduasLeaVrJlZkBgs';
+
     if (!token) {
       const errRes = { error: 'Bakong token not configured' };
       return res.status ? res.status(500).json(errRes) : new Response(JSON.stringify(errRes), { status: 500 });

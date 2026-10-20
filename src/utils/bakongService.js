@@ -301,7 +301,7 @@ export async function checkBakongPayment(md5, customToken = null) {
   if (!md5) return { isPaid: false };
   const token = customToken || DEFAULT_BAKONG_TOKEN;
 
-  // 1. Try internal proxy first to avoid any CORS preflight issues
+  // 1. Try local/same-origin proxy first
   try {
     const proxyRes = await fetch('/api/check-bakong-payment', {
       method: 'POST',
@@ -313,10 +313,32 @@ export async function checkBakongPayment(md5, customToken = null) {
       if (data && data.responseCode === 0 && data.data) {
         return { isPaid: true, data: data.data, raw: data };
       }
-      return { isPaid: false, raw: data };
+      if (data && typeof data.responseCode === 'number') {
+        return { isPaid: false, raw: data };
+      }
     }
   } catch {
-    // Fallback to direct call
+    // Fallback to production Vercel proxy
+  }
+
+  // 1b. Fallback to production Vercel proxy (handles Cloudflare Pages, custom domains, previews)
+  try {
+    const vercelRes = await fetch('https://itsharing.vercel.app/api/check-bakong-payment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ md5 })
+    });
+    if (vercelRes.ok) {
+      const data = await vercelRes.json();
+      if (data && data.responseCode === 0 && data.data) {
+        return { isPaid: true, data: data.data, raw: data };
+      }
+      if (data && typeof data.responseCode === 'number') {
+        return { isPaid: false, raw: data };
+      }
+    }
+  } catch {
+    // Fallback to direct NBC API
   }
 
   // 2. Direct NBC Bakong Open API request
