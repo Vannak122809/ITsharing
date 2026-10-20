@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Copy, CheckCircle2, Download, QrCode, ShieldCheck, Share2, CornerUpRight, Sparkles, Check, Receipt, CheckCheck } from 'lucide-react';
+import { X, Copy, CheckCircle2, Download, QrCode, ShieldCheck, Share2, CornerUpRight, Sparkles, Check, Receipt, CheckCheck, RefreshCw } from 'lucide-react';
 import {
   generateBakongKHQR,
   createBrandedKhqrCard,
@@ -79,9 +79,31 @@ const BakongPayModal = ({
     };
   }, [isOpen, amount, currency, accountID, merchantName]);
 
-  // Real-time Bakong payment listener (every 3 seconds)
+  const [isRateLimited, setIsRateLimited] = useState(false);
+  const [isCheckingManual, setIsCheckingManual] = useState(false);
+
+  // Manual payment verification trigger
+  const handleVerifyNow = async () => {
+    if (!md5Hash || isCheckingManual) return;
+    setIsCheckingManual(true);
+    try {
+      const res = await checkBakongPayment(md5Hash);
+      if (res && res.isPaid && res.data) {
+        playPaymentSuccessSound();
+        setPaymentSuccess(res.data);
+      } else if (res?.raw?.errorCode === 17) {
+        setIsRateLimited(true);
+      }
+    } catch (err) {
+      console.warn('[BakongPayModal] Manual check error:', err);
+    } finally {
+      setIsCheckingManual(false);
+    }
+  };
+
+  // Real-time Bakong payment listener (every 5 seconds)
   useEffect(() => {
-    if (!isOpen || !md5Hash || paymentSuccess) return;
+    if (!isOpen || !md5Hash || paymentSuccess || isRateLimited) return;
 
     let isSubscribed = true;
     const pollInterval = setInterval(async () => {
@@ -92,17 +114,20 @@ const BakongPayModal = ({
           clearInterval(pollInterval);
           playPaymentSuccessSound();
           setPaymentSuccess(res.data);
+        } else if (res?.raw?.errorCode === 17) {
+          setIsRateLimited(true);
+          clearInterval(pollInterval);
         }
       } catch (err) {
         console.warn('[BakongPayModal] Polling error:', err);
       }
-    }, 3000);
+    }, 5000);
 
     return () => {
       isSubscribed = false;
       clearInterval(pollInterval);
     };
-  }, [isOpen, md5Hash, paymentSuccess]);
+  }, [isOpen, md5Hash, paymentSuccess, isRateLimited]);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(accountID);
@@ -277,9 +302,30 @@ const BakongPayModal = ({
                </button>
             </div>
 
-            <div className="bk-listener-status" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '6px 14px', background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.22)', borderRadius: '20px', fontSize: '0.78rem', color: '#10b981', fontWeight: '600' }}>
-              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981', display: 'inline-block', boxShadow: '0 0 10px #10b981' }} />
-              <span>Real-time Payment Listener Active</span>
+            <div className="bk-listener-status" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', padding: '6px 14px', background: isRateLimited ? 'rgba(239, 68, 68, 0.08)' : 'rgba(16, 185, 129, 0.08)', border: `1px solid ${isRateLimited ? 'rgba(239, 68, 68, 0.25)' : 'rgba(16, 185, 129, 0.22)'}`, borderRadius: '20px', fontSize: '0.78rem', color: isRateLimited ? '#f87171' : '#10b981', fontWeight: '600', width: '100%' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: isRateLimited ? '#ef4444' : '#10b981', display: 'inline-block', boxShadow: isRateLimited ? '0 0 10px #ef4444' : '0 0 10px #10b981' }} />
+                <span>{isRateLimited ? 'NBC Daily Limit (100) Reached' : 'Real-time Payment Listener'}</span>
+              </div>
+              <button
+                onClick={handleVerifyNow}
+                disabled={isCheckingManual}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.08)',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  borderRadius: '8px',
+                  color: '#fff',
+                  padding: '3px 8px',
+                  fontSize: '0.74rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}
+              >
+                <RefreshCw size={12} className={isCheckingManual ? 'spin-anim' : ''} />
+                <span>{isCheckingManual ? 'Checking...' : 'Check'}</span>
+              </button>
             </div>
 
             <p className="bk-minimal-hint">Scan with Bakong or any Cambodian Banking App</p>

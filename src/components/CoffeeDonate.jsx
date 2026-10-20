@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Coffee, X, Heart, QrCode, Download, Clock, Info, CheckCircle2, Sparkles, ShieldCheck, Copy, Check, Receipt, CheckCheck } from 'lucide-react';
+import { Coffee, X, Heart, QrCode, Download, Clock, Info, CheckCircle2, Sparkles, ShieldCheck, Copy, Check, Receipt, CheckCheck, RefreshCw } from 'lucide-react';
 import { useLanguage } from '../LanguageContext';
 
 import {
@@ -134,9 +134,31 @@ const CoffeeDonate = () => {
     };
   }, [isOpen, amount, currency]);
 
-  // Real-time Bakong payment listener (every 3 seconds)
+  const [isRateLimited, setIsRateLimited] = useState(false);
+  const [isCheckingManual, setIsCheckingManual] = useState(false);
+
+  // Manual payment verification trigger
+  const handleVerifyNow = async () => {
+    if (!md5Hash || isCheckingManual) return;
+    setIsCheckingManual(true);
+    try {
+      const res = await checkBakongPayment(md5Hash);
+      if (res && res.isPaid && res.data) {
+        playPaymentSuccessSound();
+        setPaymentSuccess(res.data);
+      } else if (res?.raw?.errorCode === 17) {
+        setIsRateLimited(true);
+      }
+    } catch (err) {
+      console.warn('[CoffeeDonate] Manual verify error:', err);
+    } finally {
+      setIsCheckingManual(false);
+    }
+  };
+
+  // Real-time Bakong payment listener (every 5 seconds)
   useEffect(() => {
-    if (!isOpen || !md5Hash || paymentSuccess) return;
+    if (!isOpen || !md5Hash || paymentSuccess || isRateLimited) return;
 
     let isSubscribed = true;
     const pollInterval = setInterval(async () => {
@@ -147,17 +169,20 @@ const CoffeeDonate = () => {
           clearInterval(pollInterval);
           playPaymentSuccessSound();
           setPaymentSuccess(res.data);
+        } else if (res?.raw?.errorCode === 17) {
+          setIsRateLimited(true);
+          clearInterval(pollInterval);
         }
       } catch (err) {
         console.warn('[CoffeeDonate] Polling check failed:', err);
       }
-    }, 3000);
+    }, 5000);
 
     return () => {
       isSubscribed = false;
       clearInterval(pollInterval);
     };
-  }, [isOpen, md5Hash, paymentSuccess]);
+  }, [isOpen, md5Hash, paymentSuccess, isRateLimited]);
 
   const formatAmount = (val) => {
     return formatKhqrAmount(val, currency);
@@ -419,9 +444,45 @@ const CoffeeDonate = () => {
                     </div>
                   </div>
 
-                  <div className="payment-listener-status" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '6px 14px', background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.22)', borderRadius: '20px', marginTop: '10px', fontSize: '0.78rem', color: '#10b981', fontWeight: '600' }}>
-                    <span className="live-pulse-dot" style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981', display: 'inline-block', boxShadow: '0 0 10px #10b981' }} />
-                    <span>Real-time Payment Listener Active</span>
+                  <div 
+                    className="payment-listener-status" 
+                    style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'space-between', 
+                      padding: '7px 14px', 
+                      background: isRateLimited ? 'rgba(239, 68, 68, 0.08)' : 'rgba(16, 185, 129, 0.08)', 
+                      border: `1px solid ${isRateLimited ? 'rgba(239, 68, 68, 0.25)' : 'rgba(16, 185, 129, 0.22)'}`, 
+                      borderRadius: '16px', 
+                      marginTop: '10px', 
+                      fontSize: '0.78rem', 
+                      color: isRateLimited ? '#f87171' : '#10b981', 
+                      fontWeight: '600' 
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span className="live-pulse-dot" style={{ width: '8px', height: '8px', borderRadius: '50%', background: isRateLimited ? '#ef4444' : '#10b981', display: 'inline-block', boxShadow: isRateLimited ? '0 0 10px #ef4444' : '0 0 10px #10b981' }} />
+                      <span>{isRateLimited ? 'NBC Daily Limit (100) Reached' : 'Real-time Payment Listener'}</span>
+                    </div>
+                    <button
+                      onClick={handleVerifyNow}
+                      disabled={isCheckingManual}
+                      style={{
+                        background: 'rgba(255, 255, 255, 0.08)',
+                        border: '1px solid rgba(255, 255, 255, 0.15)',
+                        borderRadius: '8px',
+                        color: '#fff',
+                        padding: '3px 8px',
+                        fontSize: '0.74rem',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px'
+                      }}
+                    >
+                      <RefreshCw size={12} className={isCheckingManual ? 'spin-anim' : ''} />
+                      <span>{isCheckingManual ? 'Checking...' : 'Check'}</span>
+                    </button>
                   </div>
 
                   <div className="coffee-actions-bar" style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
